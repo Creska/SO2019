@@ -1,0 +1,9 @@
+# IDEs
+.idea
+
+#Build folders
+build
+build-arm
+build-mips
+cmake-build-arm
+cmake-build-mips
