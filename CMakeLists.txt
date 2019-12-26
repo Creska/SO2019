@@ -1,11 +1,9 @@
 # Defines a range of tested CMake versions, important since the language and paradigms have changed a lot between versions
 cmake_minimum_required(VERSION 3.15...3.16)
-
-# This allows our cross compilers to pass CMake tests even without stdlib and standard flags
-set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")
+set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY") # This allows our cross compilers to pass CMake tests even without stdlib and standard flags
 
 
-project(dummy_cross_compiling LANGUAGES C)                              # defines the project name and the enabled languages
+project(bikaya-phase0 LANGUAGES C)                                      # defines the project name and the enabled languages
 
 set(CMAKE_VERBOSE_MAKEFILE TRUE)                                        # TEMPORARY - forces make to show the executed commands
 
