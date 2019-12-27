@@ -1,5 +1,5 @@
 # Defines a range of tested CMake versions, important since the language and paradigms have changed a lot between versions
-cmake_minimum_required(VERSION 3.15...3.16)
+cmake_minimum_required(VERSION 3.13...3.16)
 set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY") # This allows our cross compilers to pass CMake tests even without stdlib and standard flags
 
 

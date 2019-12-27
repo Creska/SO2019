@@ -19,7 +19,7 @@ In this example we're building for the ARM architecture.
 - Run cmake passing it the path of the main *CMakeLists.txt* and a *Toolchain file*, which defines the architecture-specific stuff for the build.
 - Calling make the project is built.
 - The compiled program can be run using the corresponding emulator (uarm in this case). While the `terminal 0` is automatically
-enabled on the emulated machines you might need to enable `printer 0` in not already done in a previous run.
+enabled on the emulated machines you might need to enable `printer 0` if not already done in a previous run.
 
 ### Dependencies
 - `arm-none-eabi-gcc` (arm cross compiler toolchain)
