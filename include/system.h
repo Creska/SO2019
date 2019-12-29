@@ -5,6 +5,7 @@
     #include "libumps.h"
     #include "arch.h"
     #include "types.h"
+    #include "stddef.h"
 #endif
 #ifdef TARGET_UARM
     #include "libuarm.h"
@@ -17,6 +18,7 @@
 #define DEVICE_ST_BUSY              3
 
 #define DEVICE_CMD_ACK              1
+#define DEVICE_CMD_FUNC_SPECIFIC    2
 
 #endif
 

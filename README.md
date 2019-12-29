@@ -38,7 +38,7 @@ and re-run the configuration step.
 If you find those files automatically installed in a different path in your distribution
 you should add that path to the HINT field of the `find_file()`/`find_path()` function that looks for it,
 since it probably is a common install location. 
-- **Wrong CMake version**: I have't tested this with older versions, so the CMake version requirements (first line of `./CMakeLists.txt`) are very strict.
+- **Wrong CMake version**: I haven't tested this with older versions, so the CMake version requirements (first line of `./CMakeLists.txt`) are very strict.
 If you're using an older version bump them down and test the system, it should be fine up to a point (probably at least down to 3.12).
 If everything works we can update the requirements to a larger range.
 - **Can't run ARM build, missing stub file / invalid kernel file**: you're probably using an older version of `uarm`, which requires an 
