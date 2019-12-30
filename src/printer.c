@@ -1,10 +1,10 @@
 #include "printer.h"
 #include "system.h"
 
+
 struct printer {
     dtpreg_t *reg;
 };
-
 
 static printer printers[N_DEV_PER_IL];
 
@@ -15,6 +15,7 @@ int is_printer_installed(printer* printer) {
 
 int printer_putchar(printer* printer, char c)
 {
+
     unsigned int status;
     dtpreg_t *printer_reg = printer->reg;
 

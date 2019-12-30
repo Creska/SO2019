@@ -12,7 +12,7 @@ In this example we're building for the ARM architecture.
 
     mkdir build-arm
     cd build-arm
-    cmake .. -DCMAKE_TOOLCHAIN_FILE=../toolchain/arm.cmake
+    cmake .. -DCMAKE_TOOLCHAIN_FILE=../toolchain/uarm.cmake
     make
     
 - Create a build dir and cd into it (CMake creates its build hierarchy in the working directory, this avoids cluttering of source folders).

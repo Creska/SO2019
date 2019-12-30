@@ -5,7 +5,7 @@
     #include "libumps.h"
     #include "arch.h"
     #include "types.h"
-    #include "stddef.h"
+    #define NULL ((void*)0)                 /* MPS only defines NULL in stddef.h*/
 #endif
 #ifdef TARGET_UARM
     #include "libuarm.h"
