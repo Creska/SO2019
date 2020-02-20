@@ -4,6 +4,6 @@
 #Build folders
 build
 build-arm
-build-mips
+build-mps
 cmake-build-arm
-cmake-build-mips
+cmake-build-mps
