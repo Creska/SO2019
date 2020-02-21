@@ -76,15 +76,38 @@ pcb_t *outProcQ(struct list_head *head, pcb_t *p) {
 
 /* Tree view functions */
 int emptyChild(pcb_t *this) {
-
+    if (list_empty(&this->p_child)) {           // Non basta controllare che la lista sia vuota, perchè p_child potrebbe essere parte di una lista, ma essere l'ultimo elemento. In tal caso l'elemento che "segue" è quello in cima alla catena, dunque avrà parent diverso dal nostro target
+        struct list_head* next_list_head = list_next(&this->p_child);
+        struct pcb_t* next_pcb_in_list = container_of(next_list_head, struct pcb_t, p_child);
+        if (next_pcb_in_list->p_parent!=this) return TRUE;
+        else return FALSE;
+    }
 }
+
 void insertChild(pcb_t *prnt, pcb_t *p) {
 
+    if (p != NULL && prnt != NULL) {
+        p->p_parent = prnt;                                       // p ha prnt come parent, entrambi i membri dell'espressione sono puntatori pcb_t
+        if (emptyChild(prnt)) {
+            list_add(&p->p_child, &prnt->p_child);
+        } else {
+            // Siccome il parent ha già un figlio aggiungiamo il nuovo pcb alla struttura come sibling nella lista in cui il primo figlio funge da sentinella
+            struct list_head* sib_first_child = list_next(&prnt->p_child);
+            struct pcb_t* first_child_pcb = container_of(sib_first_child, struct pcb_t, p_child);
+            list_add(&p->p_sib, &first_child_pcb->p_sib);
+        }
+    } else {
+        // TODO error message
+    }
 }
+
 pcb_t *removeChild(pcb_t *p) {
 
+
 }
+
 pcb_t *outChild(pcb_t *p) {
 
 }
+
 
