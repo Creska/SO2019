@@ -75,13 +75,13 @@ pcb_t *outProcQ(struct list_head *head, pcb_t *p) {
 
 
 /* Tree view functions */
+
+// Implementazione di prova con struttura ad albero come da sketch che vi ho mandato su Telegram.
+// La lista di child è trattata in maniera leggermente diversa dal solito, perchè l'ultimo elemento punta a NULL invece che alla sentinella
+
 int emptyChild(pcb_t *this) {
-    if (list_empty(&this->p_child)) {           // Non basta controllare che la lista sia vuota, perchè p_child potrebbe essere parte di una lista, ma essere l'ultimo elemento. In tal caso l'elemento che "segue" è quello in cima alla catena, dunque avrà parent diverso dal nostro target
-        struct list_head* next_list_head = list_next(&this->p_child);
-        struct pcb_t* next_pcb_in_list = container_of(next_list_head, struct pcb_t, p_child);
-        if (next_pcb_in_list->p_parent!=this) return TRUE;
-        else return FALSE;
-    }
+    if (this->p_child.next == NULL) return TRUE;
+    else return FALSE;
 }
 
 void insertChild(pcb_t *prnt, pcb_t *p) {
@@ -89,7 +89,8 @@ void insertChild(pcb_t *prnt, pcb_t *p) {
     if (p != NULL && prnt != NULL) {
         p->p_parent = prnt;                                       // p ha prnt come parent, entrambi i membri dell'espressione sono puntatori pcb_t
         if (emptyChild(prnt)) {
-            list_add(&p->p_child, &prnt->p_child);
+            prnt->p_child.next = &p->p_child;
+            p->p_child.prev = &prnt->p_child;
         } else {
             // Siccome il parent ha già un figlio aggiungiamo il nuovo pcb alla struttura come sibling nella lista in cui il primo figlio funge da sentinella
             struct list_head* sib_first_child = list_next(&prnt->p_child);
@@ -102,12 +103,53 @@ void insertChild(pcb_t *prnt, pcb_t *p) {
 }
 
 pcb_t *removeChild(pcb_t *p) {
+    if (emptyChild(p)) return NULL;
+    else {
+        struct list_head* first_child_head = p->p_child.next;
+        struct pcb_t* first_child_pcb = container_of(first_child_head, struct pcb_t, p_child);
 
+        // Annulliamo i puntatori (inerenti all'albero) del pcb che stiamo rimuovendo
+        first_child_pcb->p_parent = NULL;
+        first_child_pcb->p_child.next = NULL;
+        first_child_pcb->p_child.prev = NULL;
 
+        // Se la lista di sibling non era vuota dobbiamo prendere il sibling successivo e infilarlo al posto di quello che cancelliamo nella lista di child a cui apparteneva
+        if (!list_empty(&first_child_pcb->p_sib)) {
+            struct list_head* next_sibling_head = list_next(&first_child_pcb->p_sib);
+            struct pcb_t* first_sibling_pcb = container_of(next_sibling_head, struct pcb_t, p_sib);
+
+            p->p_child.next = &first_sibling_pcb->p_child;
+            first_sibling_pcb->p_child.prev = &p->p_child;
+
+        } else {
+            // Se il pcb cancellato non aveva sibling dal punto di vista di p il "next child" ora è NULL
+            p->p_child.next = NULL;
+        }
+
+        return first_child_pcb; // Sulle slide non è chiarissimo ma immagino vada retornato un puntatore al pcb eliminato
+    }
 }
 
 pcb_t *outChild(pcb_t *p) {
+    struct pcb_t* parent_pcb = p->p_parent;
 
+    if (parent_pcb==NULL) return NULL;
+    else {
+        if (!emptyChild(parent_pcb)) {
+            struct list_head* first_child_head = parent_pcb->p_child.next;
+            struct pcb_t* first_child_pcb = container_of(first_child_head, struct pcb_t, p_child);
+
+            // Se p è il primo elemento possiamo usare removeChild(), che fa proprio questo occupandosi delle particolarità di tale situazione (il prossimo sibling deve sostituire quello cancellato nella lista gestita tramite p_child)
+            if (first_child_pcb == p) removeChild(parent_pcb);
+            else {
+                // Visto che abbiamo verificato che non era il primo figlio possiamo semplicemente rimuoverlo normalmente dalla lista di sibling
+                // TODO Forse ci vuole un controllo per verificare che p ci sia nella lista? In teoria dovrebbe essere sempre vero se il resto del sistema funziona
+                list_del(&p->p_sib);
+            }
+        }
+    }
+
+    // TODO error message, couldn't find p
 }
 
 
