@@ -8,7 +8,7 @@ project(bikaya-phase0 LANGUAGES C)                                      # define
 set(CMAKE_VERBOSE_MAKEFILE TRUE)                                        # TEMPORARY - forces make to show the executed commands
 
 add_executable(kernel)                                                  # Creates an executable target
-target_compile_options(kernel PUBLIC -std=c99)
+target_compile_options(kernel PUBLIC -std=gnu99)
 
 target_include_directories(kernel PUBLIC include)                       # Our kernel target needs to include the ./include directory on compilation...
 target_include_directories(kernel PUBLIC ${CORE_INCLUDE_PATH})          # ...and the directory containing the headers for the core libs
