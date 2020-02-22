@@ -51,23 +51,15 @@ pcb_t *allocPcb(void) {
     }
 }
 
-/*Insert the given pcb in the head of the list*/
-void freePcb(pcb_t * p)
-{   
-    list_add(&p->p_next, &pcbFree_h);
-}
-
 /*Initialize the mkEmptyProcQ's queue putting the buddy's element*/
-void mkEmptyProcQ(struct list_head *head)
-{
+void mkEmptyProcQ(struct list_head *head) {
     INIT_LIST_HEAD(head);
-    list_add_tail(head, &head->next);
 }
 
 /*If the buddy's next pointer is equal to NULL the emptyProcQ is empty*/
 int emptyProcQ(struct list_head *head)
 {
-    return &head->next == NULL;
+    return list_empty(head);
 }
 
 /*Iterate each element of the queue. If the element to insert has high priority compared to the current pcb we add it between
@@ -79,18 +71,15 @@ void insertProcQ(struct list_head* head, pcb_t* p)
     
     list_for_each(next_element, head)
     {
-        pcb_t *check = container_of(next_element, PCBlistItem, p_next);
-        int current_priority =  &check->priority;
+        struct pcb_t* check = container_of(next_element, struct pcb_t, p_next);
 
-        if(&p->priority > &check->priority)
+        if (p->priority > check->priority)          // Abbiamo incontrato il primo elemento con priorità minore, inseriamo p tra lui e quello precedente
         {
-            __list_add(&p->p_next, &check->p_next.prev, &check->p_next);
-        }
-        else
-        {
-            __list_add(&p->p_next, &check->p_next, &check->p_next.next);
+            __list_add(&p->p_next, check->p_next.prev, &check->p_next);
+            return;         // ritorniamo in modo da non aggiungere ulteriormente l'elemento
         }
     }
+    list_add_tail(&p->p_next, head);
 }
 
 /*If the queue is not empty we return the pcb's pointer of the first element that is not the buddy otherwise NULL*/
@@ -98,9 +87,9 @@ pcb_t *headProcQ(struct list_head *head)
 {
     if (!list_empty(head))
     {
-        return container_of(&head->next, PCBlistItem, p_next);
+        struct list_head* next_head = list_next(head);
+        return container_of(next_head, struct pcb_t, p_next);
     }
-
     return NULL;
 }
 
@@ -108,16 +97,15 @@ pcb_t *headProcQ(struct list_head *head)
   and we will return the NULL pointer's value*/
 pcb_t *removeProcQ(struct list_head *head)
 {
-    pcb_t *request_pcb = list_next(head);
+    if (list_empty(head)) {
+        return NULL;
+    } else {
+        struct list_head* first_head = list_next(head);
+        pcb_t *request_pcb = container_of(first_head, struct pcb_t, p_next);
 
-    if (request_pcb != head)
-    {
-        list_del(request_pcb);
-
+        list_del(first_head);
         return request_pcb;
     }
-
-    return NULL;
 }
 
 /*Iterate each element of the queue. If the element is inside the structure the pointer called pcb_requested is set to his memory address
@@ -129,16 +117,15 @@ pcb_t *outProcQ(struct list_head *head, pcb_t *p)
 
     list_for_each(next_element, head)
     {
-        
-        pcb_removed = container_of(next_element, PCBlistItem, p_next);
+        pcb_removed = container_of(next_element, struct pcb_t, p_next);
             
-        if (pcb_removed == &p)
+        if (pcb_removed == p)
         {
-            list_del(p);
+            list_del(next_element);
+            return pcb_removed;
         }
     }
-
-    return pcb_removed;
+    return NULL;
 }
 
 
@@ -147,7 +134,6 @@ pcb_t *outProcQ(struct list_head *head, pcb_t *p)
 
 // Implementazione di prova con struttura ad albero come da sketch che vi ho mandato su Telegram.
 // La lista di child è trattata in maniera leggermente diversa dal solito, perchè l'ultimo elemento punta a NULL invece che alla sentinella
-
 int emptyChild(pcb_t *this) {
     if (this->p_child.next == NULL) return TRUE;
     else return FALSE;
