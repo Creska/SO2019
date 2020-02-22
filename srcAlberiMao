@@ -1,0 +1,73 @@
+#include "pcb.h"
+#include "const.h"
+
+/* PCB handling functions */
+
+/* PCB free list handling functions */
+void initPcbs(void) {
+}
+
+void freePcb(pcb_t *p) {
+
+}
+pcb_t *allocPcb(void) {
+
+}
+
+/* PCB queue handling functions */
+void mkEmptyProcQ(struct list_head *head) {
+
+}
+int emptyProcQ(struct list_head *head) {
+
+}
+void insertProcQ(struct list_head *head, pcb_t *p) {
+
+}
+pcb_t *headProcQ(struct list_head *head) {
+
+}
+
+pcb_t *removeProcQ(struct list_head *head) {
+
+}
+pcb_t *outProcQ(struct list_head *head, pcb_t *p) {
+
+}
+
+
+/* Tree view functions */
+int emptyChild(pcb_t *this) {
+int val;
+  if (list_empty(&(this->p_child)))//verifico se p_child.next punta a sè stesso o meno
+  val=TRUE;
+  else
+  val=FALSE;
+return val;
+}
+void insertChild(pcb_t *prnt, pcb_t *p) {
+  if(p!=NULL){
+  p->p_parent=prnt; //p ha prnt come parent, entrambi i membri dell'espressione sono puntatori pcb_t
+    if(prnt!=NULL)
+    list_add_tail(&(p->p_next), &(prnt->p_child)); //aggiunge list_head di p
+  }//in coda alla lista dei figli di prnt, la quale ha come testa il list_head p_child
+}
+pcb_t *removeChild(pcb_t *p) {
+if(p!=NULL){
+  if( emptyChild(p) )//se p non ha figli
+  return NULL;
+container_of(p->p_child.next,struct pcb_t,p_next)->p_parent=NULL;//recupero il puntatore al pcb primo figlio con container_of, accedo al puntatore al padre e lo annichilisco
+list_del(p->p_child.next);//prende il list_head del primo figlio,
+}// ne estrai next e prev e li modifica in modo da escludere il primo figlio dalla lista
+return p;//ritorno p perchè removeChild non è void
+}
+pcb_t *outChild(pcb_t *p) {
+if(p->p_parent=NULL)
+return NULL;
+else
+{
+  p->p_parent=NULL;//p non punta più al genitore
+  list_del(&(p->p_next));//list_del riceve in input l'indirizzo del list_head di p
+}
+return p;
+}
