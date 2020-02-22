@@ -92,9 +92,19 @@ pcb_t* headBlocked(int *key) {
         struct list_head* first_head = list_next(&target_semd->s_procQ);
         return container_of(first_head, struct pcb_t, p_next);
     }
-
 }
 
 void outChildBlocked(pcb_t *p) {
+    outBlocked(p);
+    if (!emptyChild(p)) {
+        struct list_head* first_head = list_next(&p->p_child);
+        struct pcb_t* first_pcb = container_of(first_head, struct pcb_t, p_child);
+        outChildBlocked(p);
 
+        struct list_head* p;
+        list_for_each(p, &first_pcb->p_sib) {                                               // Scorriamo la lista di sibling e chiamiamo ricorsivamente outChildBlocked
+            struct pcb_t* target_pcb = container_of(p, struct pcb_t, p_sib);
+            outChildBlocked(target_pcb);
+        }
+    }
 }
