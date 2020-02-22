@@ -60,7 +60,7 @@ struct list_head qa;
 char *           mp = okbuf;
 
 
-/* Terminal printing functionality was swapped with the one implemented in phase 0 */
+/* Terminal printing functionality was swapped with the one implemented in phase 0, other than that everything stayed the same */
 
 /* This function places the specified character string in okbuf and
  *	causes the string to be written out to terminal0 */
