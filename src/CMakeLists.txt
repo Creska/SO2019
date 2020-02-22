@@ -1,5 +1,8 @@
 target_sources(kernel PRIVATE                   # Adds this files as sources to our target
-        main.c
+        p1test_bikaya_v0.c
+
+        asl.c
+        pcb.c
 
         printer.c
         terminal.c

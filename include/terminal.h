@@ -16,6 +16,7 @@ terminal* get_terminal(unsigned int device_index);
 char term_getchar(terminal* term);
 
 
+
 /* TERMINAL PRINT functionality (not strictly needed, used just for debug strings */
 
 /* Writes a string to the given terminal */

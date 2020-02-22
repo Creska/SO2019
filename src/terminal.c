@@ -36,7 +36,6 @@ int term_putchar(terminal* term, char c) {
         return -1;
 
     term->reg->transm_command = ((c << TERM_CHAR_OFFSET) | DEVICE_CMD_FUNC_SPECIFIC);
-
     while ((stat = term_tx_status(term)) == DEVICE_ST_BUSY)
         ;
 
