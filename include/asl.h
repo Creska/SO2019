@@ -1,8 +1,8 @@
 #ifndef ASL_H
 #define ASL_H
 
-#include "core/const.h"
 #include "pcb.h"
+#include "core/const.h"
 #include "devices/terminal.h"
 
 /* Semaphore Descriptor (SEMD) data structure */

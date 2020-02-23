@@ -1,10 +1,10 @@
 #ifndef PCB_H
 #define PCB_H
 
-#include "devices/terminal.h"
+#include "core/system.h"
 #include "utils/listx.h"
 #include "core/const.h"
-#include "core/system.h"
+#include "devices/terminal.h"
 
 
 typedef struct pcb_t {

@@ -1,9 +1,11 @@
 # Bikaya - Phase 1
 
 This phase implements the PCB and ASL functionality. It uses Linux style lists to arrange PCB in process queues and in trees. 
-Every process queue is handled by a SEMD contained in the ASL, and both the process queue and the tree are relevant to ASL manipulation.
+Every process queue is handled by a SEMD contained in the ASL (also managed through the same kind of lists), and both the process queue and the tree are relevant to ASL manipulation.
 
+The content of a couple of files (types_bikaya and the test file) has been rearranged in order to avoid redundancy. 
 
+See asl.c and pcb.c files for more notes on the implementation.
 
 
 ## Building the project
