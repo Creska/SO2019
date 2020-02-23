@@ -1,10 +1,20 @@
 #ifndef ASL_H
 #define ASL_H
 
-#include "types_bikaya.h"
-#include "const.h"
+#include "core/const.h"
 #include "pcb.h"
-#include "terminal.h"
+#include "devices/terminal.h"
+
+/* Semaphore Descriptor (SEMD) data structure */
+typedef struct semd_t {
+    struct list_head s_next;
+
+    /* Semaphore key */
+    int *s_key;
+
+    /* Queue of PCBs blocked on the semaphore */
+    struct list_head s_procQ;
+} semd_t;
 
 // ASL HANDLING FUNCTIONS----------------------------------------------------------------------------------------------
 

@@ -20,6 +20,10 @@
 #define DEVICE_CMD_ACK              1
 #define DEVICE_CMD_FUNC_SPECIFIC    2
 
+
+// Initialize all the state values to 0
+void resetState(state_t* s);
+
 #endif
 
 

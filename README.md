@@ -1,11 +1,10 @@
-# Bikaya - Phase 0
+# Bikaya - Phase 1
 
-This is the first phase of a a lab project from an [SO course](http://www.cs.unibo.it/~renzo/so/) from the [University of Bologna](https://www.unibo.it/en).
+This phase implements the PCB and ASL functionality. It uses Linux style lists to arrange PCB in process queues and in trees. 
+Every process queue is handled by a SEMD contained in the ASL, and both the process queue and the tree are relevant to ASL manipulation.
 
-The main goal of this phase is the setup of a multi-architecture build system. The actual logic is very 
-simple and closely related to this [example project](https://github.com/Maldus512/umps_uarm_hello_world/tree/example).
-While the example just writes to `terminal 0` a string, this program reads `terminal 0`'s input up to the first *newline* character
-and prints the string to `printer 0`.
+
+
 
 ## Building the project
 In this example we're building for the ARM architecture.

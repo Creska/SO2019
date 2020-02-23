@@ -1,5 +1,5 @@
-#include "terminal.h"
-#include "system.h"
+#include "devices/terminal.h"
+#include "core/system.h"
 
 
 #define TERM_TX_ST_SPECIFIC             5

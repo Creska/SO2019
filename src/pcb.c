@@ -5,81 +5,65 @@ pcb_t pcbFree_table[MAXPROC];           // L'array in cui effettivamente risiedo
 struct list_head pcbFree_h;             // L'elemento sentinella della lista di PCB liberi
 
 
-/* PCB free list handling functions */
 void initPcbs(void) {
     INIT_LIST_HEAD(&pcbFree_h);
 
-    for (int i = 0; i < MAXPROC; ++i) {
+    for (int i = 0; i < MAXPROC; ++i) {                             // Aggiunge tutti i pcb alla lista dei pcb liberi
         freePcb(&pcbFree_table[i]);
     }
 }
 
+
 void freePcb(pcb_t *p) {
-    // Ci appoggiamo al list_head p_next contenuto in ogni pcb_t, quando il pcb non è free questa credo serva a gestire la queue di processi, però
-    // mentre il pcb è free ci possiamo appoggiare a questo list_head come a qualsiasi altro contenuto in pcb_t, tanto quando il PCB viene recuperato con allocPcb tutti i puntatori vengono inizializzati a NULL
-    list_add(&p->p_next, &pcbFree_h);
+    list_add(&p->p_next, &pcbFree_h);                               // Utilizziamo p_next per gestire la coda dei pcb liberi
 }
+
 
 pcb_t *allocPcb(void) {
     if (list_empty(&pcbFree_h)) {
         return NULL;
     } else {
-        // Visto che la lista non è vuota recuperiamo un puntatore al list head successivo a quello della sentinella, ovvero il list head contenuto nel primo elemento della lista
         struct list_head* first_list_head = list_next(&pcbFree_h);
-        list_del(first_list_head);      // Rimuoviamo il list_head dalla lista
-
-        // Questa macro ci permette di recuperare il puntatore ad un oggetto che contiene un list head avendo solo il puntatore a quest'ultimo, il tipo che lo contiene e il nome del list head dentro alla struttura.
-        // Noi ci appoggiamo a p_next per rappresentare la nostra lista di free pcb, quindi gli diamo lui
+        list_del(first_list_head);                                              // Rimuoviamo il list_head dalla lista
+                                                                                // recuperiamo il pcb e inizializziamo a 0/NULL tutti i valori
         struct pcb_t* first_free_pcb = container_of(first_list_head, struct pcb_t, p_next);
-
-        // Inizializziamo tutti i campi a 0/NULL
         first_free_pcb->priority = 0;
         first_free_pcb->p_semkey = NULL;
-        INIT_LIST_HEAD(&first_free_pcb->p_next);
+        first_free_pcb->p_parent = NULL;
         first_free_pcb->p_child.next = NULL;
         first_free_pcb->p_child.prev = NULL;
-        first_free_pcb->p_sib.next = NULL;
-        first_free_pcb->p_sib.prev = NULL;
-        first_free_pcb->p_parent = NULL;
-
-        // first_free_pcb->p_s ...  TODO inizializzare questo campo a zero è un po' più difficile perchè cambia a seconda della piattaforma, probabilmente si tratta di fare una funzione statica in system che mette a 0 i campi diversi a seconda delle architetture, ma ce ne possiamo preoccupare in un secondo momento
+        INIT_LIST_HEAD(&first_free_pcb->p_next);
+        INIT_LIST_HEAD(&first_free_pcb->p_sib);
+        resetState(&first_free_pcb->p_s);
 
         return first_free_pcb;
     }
 }
 
-/*Initialize the mkEmptyProcQ's queue putting the buddy's element*/
+
 void mkEmptyProcQ(struct list_head *head) {
     INIT_LIST_HEAD(head);
 }
 
-/*If the buddy's next pointer is equal to NULL the emptyProcQ is empty*/
-int emptyProcQ(struct list_head *head)
-{
+
+int emptyProcQ(struct list_head *head) {
     return list_empty(head);
 }
 
 
-void insertProcQ(struct list_head* head, pcb_t* p)
-{
-    struct list_head *next_element;
-    
-    list_for_each(next_element, head)
-    {
-        struct pcb_t* check = container_of(next_element, struct pcb_t, p_next);
-
-        if (p->priority > check->priority)          // Abbiamo incontrato il primo elemento con priorità minore, inseriamo p tra lui e quello precedente
-        {
-            __list_add(&p->p_next, check->p_next.prev, &check->p_next);
-            return;         // ritorniamo in modo da non aggiungere ulteriormente l'elemento
+void insertProcQ(struct list_head* head, pcb_t* p) {
+    struct pcb_t *target_pcb;
+    list_for_each_entry(target_pcb, head, p_next) {
+        if (p->priority > target_pcb->priority) {                                   // Abbiamo incontrato il primo elemento con priorità minore, inseriamo p tra lui e quello precedente
+            __list_add(&p->p_next, target_pcb->p_next.prev, &target_pcb->p_next);
+            return;
         }
     }
-    list_add_tail(&p->p_next, head);
+    list_add_tail(&p->p_next, head);                                                // Aggiungiamo p in fondo alla lista
 }
 
-/*If the queue is not empty we return the pcb's pointer of the first element that is not the buddy otherwise NULL*/
-pcb_t *headProcQ(struct list_head *head)
-{
+
+pcb_t *headProcQ(struct list_head *head) {
     if (!list_empty(head))
     {
         struct list_head* next_head = list_next(head);
@@ -98,37 +82,32 @@ pcb_t *removeProcQ(struct list_head *head)
         pcb_t *request_pcb = container_of(first_head, struct pcb_t, p_next);
 
         list_del(first_head);
-        INIT_LIST_HEAD(first_head);
         return request_pcb;
     }
 }
 
-/*Iterate each element of the queue. If the element is inside the structure the pointer called pcb_requested is set to his memory address
-  and deleted from the queue instead if the pcb is not present inside the queue we can return the pcb_requested pointer set by default to NULL.*/
-pcb_t *outProcQ(struct list_head *head, pcb_t *p)
-{
-    pcb_t *target_pcb;
-    struct list_head *target_element;
 
-    list_for_each(target_element, head)
-    {
-        addokbuf("iter");
-        target_pcb = container_of(target_element, struct pcb_t, p_next);
+pcb_t *outProcQ(struct list_head *head, pcb_t *p) {
+    pcb_t *target_pcb;
+    list_for_each_entry(target_pcb, head, p_next) {     // Scorriamo la lista di processi
         if (target_pcb == p)
         {
-            list_del(target_element);
+            list_del(&p->p_next);                       // se troviamo p lo rimuoviamo
             return target_pcb;
         }
     }
-    return NULL;
+    return NULL;                                        // se non abbiamo trovato p ritorniamo NULL
 }
 
 
 
-/* Tree view functions */
+// TREE FUNCTIONS -----------------------------------------------------------------------------------------------------
+// La struttura ad albero è rappresentata nel modo seguente:
+//      - il primo figlio di un nodo è concatenato al nodo tramite p_child
+//      - il primo figlio di un nodo funge da nodo sentinella per la lista di sibling basata su p_sib
+//      - la lista p_child non è circolare per facilitare controlli di parentela
 
-// Implementazione di prova con struttura ad albero come da sketch che vi ho mandato su Telegram.
-// La lista di child è trattata in maniera leggermente diversa dal solito, perchè l'ultimo elemento punta a NULL invece che alla sentinella
+
 int emptyChild(pcb_t *this) {
     if (this->p_child.next == NULL) return TRUE;
     else return FALSE;
@@ -143,7 +122,7 @@ void insertChild(pcb_t *prnt, pcb_t *p) {
             p->p_child.prev = &prnt->p_child;
             p->p_sib.next = NULL;
 
-            INIT_LIST_HEAD(&p->p_sib);          // initialize/reset sibling concatenator
+            INIT_LIST_HEAD(&p->p_sib);
         } else {
             // Siccome il parent ha già un figlio aggiungiamo il nuovo pcb alla struttura come sibling nella lista in cui il primo figlio funge da sentinella
             struct list_head* first_child_head = list_next(&prnt->p_child);
@@ -154,7 +133,8 @@ void insertChild(pcb_t *prnt, pcb_t *p) {
             p->p_child.next = NULL;
         }
     } else {
-        // TODO error message
+        adderrbuf("ERROR: insertChild() received invalid pointers");
+        PANIC();
     }
 }
 
@@ -164,19 +144,17 @@ pcb_t *removeChild(pcb_t *p) {
         struct list_head* first_child_head = p->p_child.next;
         struct pcb_t* first_child_pcb = container_of(first_child_head, struct pcb_t, p_child);
 
-        // Annulliamo i puntatori (inerenti all'albero) del pcb che stiamo rimuovendo
-        first_child_pcb->p_parent = NULL;
+        first_child_pcb->p_parent = NULL;                                                                   // Annulliamo i puntatori inerenti alla parte di struttura che stiamo rimuovendo
         first_child_pcb->p_child.prev = NULL;
 
-
-        if (!list_empty(&first_child_pcb->p_sib)) {                                                                 // Se la lista di sibling non era vuota dobbiamo prendere il sibling successivo e infilarlo al posto di quello che cancelliamo nella lista di child a cui apparteneva
+        if (!list_empty(&first_child_pcb->p_sib)) {                                                         // Se la lista di sibling non era vuota dobbiamo prendere il sibling successivo e infilarlo al posto di quello che cancelliamo nella lista di child a cui apparteneva
             struct list_head* next_sibling_head = list_next(&first_child_pcb->p_sib);
             struct pcb_t* first_sibling_pcb = container_of(next_sibling_head, struct pcb_t, p_sib);
 
             p->p_child.next = &first_sibling_pcb->p_child;
             first_sibling_pcb->p_child.prev = &p->p_child;
 
-            list_del(&first_child_pcb->p_sib);                                                                      // Rimuoviamo il child rimosso dalla lista di sibling a cui apparteneva
+            list_del(&first_child_pcb->p_sib);                                                              // Rimuoviamo il child rimosso dalla lista di sibling a cui apparteneva
 
         } else {
             p->p_child.next = NULL;
@@ -200,17 +178,19 @@ pcb_t *outChild(pcb_t *p) {
             }
             else {
                 // Visto che abbiamo verificato che non era il primo figlio possiamo semplicemente rimuoverlo normalmente dalla lista di sibling
-                // TODO Forse ci vuole un controllo per verificare che p ci sia nella lista? In teoria dovrebbe essere sempre vero se il resto del sistema funziona
                 list_del(&p->p_sib);
                 return p;
             }
         }
     }
     // TODO error message, couldn't find p
-    return NULL;
+    adderrbuf("ERROR: outChild() couldn't find the received p, something must be broken with the tree structure");
+    PANIC();
+    return NULL;                                // Serve solo ad evitare warning, PANIC dovrebbe causare un system halt
 }
 
-struct pcb_t* nextSibling(struct pcb_t* p, struct pcb_t* first_sibling){
+
+struct pcb_t* nextSibling(struct pcb_t* p, struct pcb_t* first_sibling) {       // Semplice metodo per facilitare l'iterazione sulla lista di fratelli, siccome ha una struttura particolare
     if (p->p_sib.next==&first_sibling->p_sib) {
         return NULL;
     } else {

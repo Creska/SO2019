@@ -32,12 +32,11 @@
  *
  */
 
-#include "const.h"
-#include "system.h"
-#include "listx.h"
+#include "core/const.h"
+#include "core/system.h"
+#include "devices/terminal.h"
 #include "pcb.h"
 #include "asl.h"
-#include "terminal.h"
 
 #define MAXSEM MAXPROC
 
@@ -54,13 +53,13 @@ int     sem[MAXSEM + 1];
 struct list_head qa;
 
 
-/* Terminal printing functionality was swapped with the one implemented in phase 0, other than that everything stayed the same */
+// La funzionalità di stampa dichiarata qui è stata sostituita con quella della fase 0 per evitare ridondanza.
+// Il resto del file è stato lasciato inalterato.
 
 
 /******************************************************************************
  * Main Test File
  ******************************************************************************/
-
 
 int main() {
     int i;
@@ -315,3 +314,4 @@ int main() {
 
     return 0;
 }
+
