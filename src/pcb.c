@@ -35,8 +35,7 @@ pcb_t *allocPcb(void) {
         // Inizializziamo tutti i campi a 0/NULL
         first_free_pcb->priority = 0;
         first_free_pcb->p_semkey = NULL;
-        first_free_pcb->p_next.next = NULL;
-        first_free_pcb->p_next.prev = NULL;
+        INIT_LIST_HEAD(&first_free_pcb->p_next);
         first_free_pcb->p_child.next = NULL;
         first_free_pcb->p_child.prev = NULL;
         first_free_pcb->p_sib.next = NULL;
@@ -60,9 +59,7 @@ int emptyProcQ(struct list_head *head)
     return list_empty(head);
 }
 
-/*Iterate each element of the queue. If the element to insert has high priority compared to the current pcb we add it between
-  the previous element and the current pcb instead if che element to insert has less priority it will be put between the current 
-  pcb and his next element*/
+
 void insertProcQ(struct list_head* head, pcb_t* p)
 {
     struct list_head *next_element;
@@ -91,8 +88,7 @@ pcb_t *headProcQ(struct list_head *head)
     return NULL;
 }
 
-/*Set the pointer request_pcb to the next item of the buddy. If the pcb is not the buddy we can remove it otherwise the queue is empty
-  and we will return the NULL pointer's value*/
+
 pcb_t *removeProcQ(struct list_head *head)
 {
     if (list_empty(head)) {
@@ -102,6 +98,7 @@ pcb_t *removeProcQ(struct list_head *head)
         pcb_t *request_pcb = container_of(first_head, struct pcb_t, p_next);
 
         list_del(first_head);
+        INIT_LIST_HEAD(first_head);
         return request_pcb;
     }
 }
@@ -110,17 +107,17 @@ pcb_t *removeProcQ(struct list_head *head)
   and deleted from the queue instead if the pcb is not present inside the queue we can return the pcb_requested pointer set by default to NULL.*/
 pcb_t *outProcQ(struct list_head *head, pcb_t *p)
 {
-    pcb_t *pcb_removed;
-    struct list_head *next_element;
+    pcb_t *target_pcb;
+    struct list_head *target_element;
 
-    list_for_each(next_element, head)
+    list_for_each(target_element, head)
     {
-        pcb_removed = container_of(next_element, struct pcb_t, p_next);
-            
-        if (pcb_removed == p)
+        addokbuf("iter");
+        target_pcb = container_of(target_element, struct pcb_t, p_next);
+        if (target_pcb == p)
         {
-            list_del(next_element);
-            return pcb_removed;
+            list_del(target_element);
+            return target_pcb;
         }
     }
     return NULL;
@@ -144,7 +141,7 @@ void insertChild(pcb_t *prnt, pcb_t *p) {
         if (emptyChild(prnt)) {
             prnt->p_child.next = &p->p_child;
             p->p_child.prev = &prnt->p_child;
-            p->p_next.next = NULL;
+            p->p_sib.next = NULL;
 
             INIT_LIST_HEAD(&p->p_sib);          // initialize/reset sibling concatenator
         } else {
@@ -210,6 +207,7 @@ pcb_t *outChild(pcb_t *p) {
         }
     }
     // TODO error message, couldn't find p
+    return NULL;
 }
 
 struct pcb_t* nextSibling(struct pcb_t* p, struct pcb_t* first_sibling){

@@ -20,7 +20,10 @@ void initASL() {
 
     INIT_LIST_HEAD(&semdFree_h);
     for (int i = 0; i < MAXPROC; ++i) {
+        INIT_LIST_HEAD(&semd_table[i].s_next);
         list_add(&semd_table[i].s_next, &semdFree_h);
+
+        INIT_LIST_HEAD(&semd_table[i].s_procQ);
     }
 }
 
@@ -33,11 +36,11 @@ int insertBlocked(int *key,pcb_t* p) {
              // La lista dei semd liberi non è vuota, ne spostiamo uno nella ASL e settiamo i suoi campi
              struct list_head* first_free_semd_head = list_next(&semdFree_h);
              list_del(first_free_semd_head);
-             list_add(first_free_semd_head, &semd_h);
+             list_add(first_free_semd_head, &semd_h);                                                       // Spostiamo un semd dalla lista free all'ASL
 
              target_semd = container_of(first_free_semd_head, struct semd_t, s_next);
              target_semd->s_key = key;
-             p->p_semkey = key;         // FIXME Dobbiamo occuparci noi di aggiornare semkey nel processo? penso di si
+             p->p_semkey = key;                                                                             // FIXME Dobbiamo occuparci noi di aggiornare semkey nel processo? penso di si
              INIT_LIST_HEAD(&target_semd->s_procQ);
          }
     }
