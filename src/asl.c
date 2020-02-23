@@ -97,14 +97,13 @@ pcb_t* headBlocked(int *key) {
 void outChildBlocked(pcb_t *p) {
     outBlocked(p);
     if (!emptyChild(p)) {
-        struct list_head* first_head = list_next(&p->p_child);
-        struct pcb_t* first_pcb = container_of(first_head, struct pcb_t, p_child);
-        outChildBlocked(p);
+        struct list_head* first_child_head = list_next(&p->p_child);
+        struct pcb_t* first_pcb = container_of(first_child_head, struct pcb_t, p_child);
 
-        struct list_head* p;
-        list_for_each(p, &first_pcb->p_sib) {                                               // Scorriamo la lista di sibling e chiamiamo ricorsivamente outChildBlocked
-            struct pcb_t* target_pcb = container_of(p, struct pcb_t, p_sib);
+        struct pcb_t* target_pcb = first_pcb;
+        do {
             outChildBlocked(target_pcb);
-        }
+            target_pcb = nextSibling(target_pcb, first_pcb);
+        } while (target_pcb!=NULL);
     }
 }

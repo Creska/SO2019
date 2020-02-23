@@ -1,7 +1,5 @@
 #include "pcb.h"
-#include "listx.h"
-#include "const.h"
-#include "types_bikaya.h"
+
 
 pcb_t pcbFree_table[MAXPROC];           // L'array in cui effettivamente risiedono i nostri PCB
 struct list_head pcbFree_h;             // L'elemento sentinella della lista di PCB liberi
@@ -146,11 +144,17 @@ void insertChild(pcb_t *prnt, pcb_t *p) {
         if (emptyChild(prnt)) {
             prnt->p_child.next = &p->p_child;
             p->p_child.prev = &prnt->p_child;
+            p->p_next.next = NULL;
+
+            INIT_LIST_HEAD(&p->p_sib);          // initialize/reset sibling concatenator
         } else {
             // Siccome il parent ha già un figlio aggiungiamo il nuovo pcb alla struttura come sibling nella lista in cui il primo figlio funge da sentinella
-            struct list_head* sib_first_child = list_next(&prnt->p_child);
-            struct pcb_t* first_child_pcb = container_of(sib_first_child, struct pcb_t, p_child);
-            list_add(&p->p_sib, &first_child_pcb->p_sib);
+            struct list_head* first_child_head = list_next(&prnt->p_child);
+            struct pcb_t* first_child_pcb = container_of(first_child_head, struct pcb_t, p_child);
+
+            list_add_tail(&p->p_sib, &first_child_pcb->p_sib);
+
+            p->p_child.next = NULL;
         }
     } else {
         // TODO error message
@@ -165,23 +169,22 @@ pcb_t *removeChild(pcb_t *p) {
 
         // Annulliamo i puntatori (inerenti all'albero) del pcb che stiamo rimuovendo
         first_child_pcb->p_parent = NULL;
-        first_child_pcb->p_child.next = NULL;
         first_child_pcb->p_child.prev = NULL;
 
-        // Se la lista di sibling non era vuota dobbiamo prendere il sibling successivo e infilarlo al posto di quello che cancelliamo nella lista di child a cui apparteneva
-        if (!list_empty(&first_child_pcb->p_sib)) {
+
+        if (!list_empty(&first_child_pcb->p_sib)) {                                                                 // Se la lista di sibling non era vuota dobbiamo prendere il sibling successivo e infilarlo al posto di quello che cancelliamo nella lista di child a cui apparteneva
             struct list_head* next_sibling_head = list_next(&first_child_pcb->p_sib);
             struct pcb_t* first_sibling_pcb = container_of(next_sibling_head, struct pcb_t, p_sib);
 
             p->p_child.next = &first_sibling_pcb->p_child;
             first_sibling_pcb->p_child.prev = &p->p_child;
 
+            list_del(&first_child_pcb->p_sib);                                                                      // Rimuoviamo il child rimosso dalla lista di sibling a cui apparteneva
+
         } else {
-            // Se il pcb cancellato non aveva sibling dal punto di vista di p il "next child" ora è NULL
             p->p_child.next = NULL;
         }
-
-        return first_child_pcb; // Sulle slide non è chiarissimo ma immagino vada retornato un puntatore al pcb eliminato
+        return first_child_pcb;
     }
 }
 
@@ -195,14 +198,24 @@ pcb_t *outChild(pcb_t *p) {
             struct pcb_t* first_child_pcb = container_of(first_child_head, struct pcb_t, p_child);
 
             // Se p è il primo elemento possiamo usare removeChild(), che fa proprio questo occupandosi delle particolarità di tale situazione (il prossimo sibling deve sostituire quello cancellato nella lista gestita tramite p_child)
-            if (first_child_pcb == p) removeChild(parent_pcb);
+            if (first_child_pcb == p) {
+                return removeChild(parent_pcb);
+            }
             else {
                 // Visto che abbiamo verificato che non era il primo figlio possiamo semplicemente rimuoverlo normalmente dalla lista di sibling
                 // TODO Forse ci vuole un controllo per verificare che p ci sia nella lista? In teoria dovrebbe essere sempre vero se il resto del sistema funziona
                 list_del(&p->p_sib);
+                return p;
             }
         }
     }
-
     // TODO error message, couldn't find p
 }
+
+struct pcb_t* nextSibling(struct pcb_t* p, struct pcb_t* first_sibling){
+    if (p->p_sib.next==&first_sibling->p_sib) {
+        return NULL;
+    } else {
+        return container_of(p->p_sib.next, struct pcb_t, p_sib);
+    }
+};

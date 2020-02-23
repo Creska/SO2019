@@ -67,3 +67,41 @@ void term_putstr(terminal* term_reg, const char *str) {
         if (term_putchar(term_reg, *str++))
             return;
 }
+
+/* This function places the specified character string in okbuf and
+ *	causes the string to be written out to terminal0 */
+void addokbuf(char *strp) {
+    term_putstr(get_terminal(0), strp);
+}
+
+
+/* This function places the specified character string in errbuf and
+ *	causes the string to be written out to terminal0.  After this is done
+ *	the system shuts down with a panic message */
+void adderrbuf(char *strp) {
+
+    term_putstr(get_terminal(0), strp);
+
+    PANIC();
+}
+
+char* itoa(int i, char b[]) {
+    char const digit[] = "0123456789";
+    char* p = b;
+
+    if(i<0){
+        *p++ = '-';
+        i *= -1;
+    }
+    int shifter = i;
+    do{ //Move to where representation ends
+        ++p;
+        shifter = shifter/10;
+    }while(shifter);
+    *p = '\0';
+    do{ //Move back, inserting digits as u go
+        *--p = digit[i%10];
+        i = i/10;
+    }while(i);
+    return b;
+}

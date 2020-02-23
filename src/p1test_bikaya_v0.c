@@ -45,11 +45,6 @@
 #define MIN_PCB_PRIORITY     0
 #define DEFAULT_PCB_PRIORITY 5
 
-char okbuf[2048]; /* sequence of progress messages */
-char errbuf[128]; /* contains reason for failing */
-char msgbuf[128]; /* nonrecoverable error message before shut down */
-
-
 
 int     onesem;
 pcb_t * procp[MAXPROC], *p, *q, *maxproc, *minproc, *proc;
@@ -57,27 +52,9 @@ semd_t *semd[MAXSEM];
 int     sem[MAXSEM + 1];
 
 struct list_head qa;
-char *           mp = okbuf;
 
 
 /* Terminal printing functionality was swapped with the one implemented in phase 0, other than that everything stayed the same */
-
-/* This function places the specified character string in okbuf and
- *	causes the string to be written out to terminal0 */
-void addokbuf(char *strp) {
-    term_putstr(get_terminal(0), strp);
-}
-
-
-/* This function places the specified character string in errbuf and
- *	causes the string to be written out to terminal0.  After this is done
- *	the system shuts down with a panic message */
-void adderrbuf(char *strp) {
-
-    term_putstr(get_terminal(0), strp);
-
-    PANIC();
-}
 
 
 /******************************************************************************

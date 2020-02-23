@@ -1,6 +1,9 @@
 #ifndef PCB_H
 #define PCB_H
 #include "types_bikaya.h"
+#include "terminal.h"
+#include "listx.h"
+#include "const.h"
 
 /* PCB handling functions */
 
@@ -40,5 +43,8 @@ pcb_t *removeChild(pcb_t *p);
 // Rimuove il PCB puntato da p dalla lista dei figli del padre.
 // Se il PCB puntato da p non ha un padre, restituisce NULL
 pcb_t *outChild(pcb_t *p);
+
+
+pcb_t *nextSibling(pcb_t *p,  struct pcb_t* first_sibling);
 
 #endif

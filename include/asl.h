@@ -4,7 +4,7 @@
 #include "types_bikaya.h"
 #include "const.h"
 #include "pcb.h"
-
+#include "terminal.h"
 
 // ASL HANDLING FUNCTIONS----------------------------------------------------------------------------------------------
 
