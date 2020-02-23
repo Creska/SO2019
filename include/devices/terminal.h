@@ -27,4 +27,16 @@ void term_putstr(terminal* term_reg, const char *str);
 int term_putchar(terminal* term, char c);
 
 
+/* This function places the specified character string in okbuf and
+ *	causes the string to be written out to terminal0 */
+void addokbuf(char *strp);
+
+/* This function places the specified character string in errbuf and
+ *	causes the string to be written out to terminal0.  After this is done
+ *	the system shuts down with a panic message */
+void adderrbuf(char *strp);
+
+char* itoa(int i, char b[]);
+
+
 #endif

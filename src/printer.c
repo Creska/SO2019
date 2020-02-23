@@ -1,5 +1,5 @@
-#include "printer.h"
-#include "system.h"
+#include "devices/printer.h"
+#include "core/system.h"
 
 
 struct printer {
