@@ -6,9 +6,9 @@
 *UMPS p13* | *UARM p23-24* (info sullo status register)
 
 - inizializzare il PC all'indirizzo dell' **handler** del nucleo che gestisce quell'eccezione
-- inizializzare `$SP` a `RAMPTOP`
+- inizializzare `$SP` a `RAMTOP` (*RAMPTOP è un errore?*)
 - inizializzare il registro di **status**: 
-    - mascherare interrupts             *(mascherarli in che modo? Forse la risposta è nella slide 25 delle specifiche*)
+    - mascherare interrupts *(mascherarli in che modo? Forse la risposta è nella slide 25 delle specifiche*)
     - disabilitare virtual memory
     - settare kernel mode on
     - abilitare un timer
@@ -26,8 +26,7 @@
     - settare PC all'entry point dei test
 - inserire i processi nella ready queue
 
-
-
+*UMPS non fornisce una macro SYS_NEWAREA, dobbiamo definirla noi*
 
 # Scheduler
 
@@ -58,6 +57,7 @@ Nel caso delle syscall il registro a0 identifica la syscall specifica richiesta
 
 - *UMPS p10 | UARM p14*
 - *UMPS p31 note sugli interrupt per i device*
+- *UMPS p35 Processor Local Timer*
 
 *Quindi il Process Local Timer va gestito, ma solo per UMPS?*
 *Se vanno gestiti entrambi i timer (dove presenti) cosa intende il tutor dicendo che ci conviene sfruttare l'IT? Per innescare un controllo dello scheduler?*
