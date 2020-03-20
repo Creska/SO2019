@@ -39,8 +39,6 @@
 
 *Dunque dovremo aggiungere un campo `original_priority` nello struct `pcb_t` in modo da poter salvare la priorità originale del processo*
 
----
-
 *Il punto quindi sarebbe avere un interrupt ogni 3ms dell'Interrupt Timer che innesca il controllo e l'eventuale switch nello scheduler?*
 
 # Syscall
@@ -61,9 +59,8 @@ Nel caso delle syscall il registro a0 identifica la syscall specifica richiesta
 - *UMPS p10 | UARM p14*
 - *UMPS p31 note sugli interrupt per i device*
 
-
-### Timing
-L'unico timer presente su entrambe le piattaforme è l'**Interval Timer (IT)**, ovvero il timer del BUS di sistema, dunque è consigliato utilizzare questo per la gestione degli interrupt.
+*Quindi il Process Local Timer va gestito, ma solo per UMPS?*
+*Se vanno gestiti entrambi i timer (dove presenti) cosa intende il tutor dicendo che ci conviene sfruttare l'IT? Per innescare un controllo dello scheduler?*
 
 ---
 
