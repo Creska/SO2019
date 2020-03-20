@@ -114,7 +114,6 @@ int emptyChild(pcb_t *this) {
 }
 
 void insertChild(pcb_t *prnt, pcb_t *p) {
-
     if (p != NULL && prnt != NULL) {
         p->p_parent = prnt;                                       // p ha prnt come parent, entrambi i membri dell'espressione sono puntatori pcb_t
         if (emptyChild(prnt)) {
@@ -183,7 +182,6 @@ pcb_t *outChild(pcb_t *p) {
             }
         }
     }
-    // TODO error message, couldn't find p
     adderrbuf("ERROR: outChild() couldn't find the received p, something must be broken with the tree structure");
     PANIC();
     return NULL;                                // Serve solo ad evitare warning, PANIC dovrebbe causare un system halt
