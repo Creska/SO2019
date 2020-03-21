@@ -6,6 +6,7 @@
     #include "libumps.h"
     #include "arch.h"
     #include "types.h"
+    #include "cp0.h"
 
     // MPS only defines NULL in stddef.h
     #define NULL ((void*)0)
@@ -44,6 +45,9 @@ void set_interrupt_mask(state_t* s, unsigned int mask);
 
 // Sets the stack pointer value for the given state
 void set_sp(state_t* s, unsigned int sp_val);
+
+
+void set_pc(state_t* s, unsigned int pc_val);
 
 
 // BUS Register -------------------------------------------------------------------------------------------------------

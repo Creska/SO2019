@@ -8,6 +8,7 @@ target_sources(kernel PRIVATE                   # Adds this files as sources to 
 
         asl.c
         pcb.c
+        utils.c
 
         devices/printer.c
         devices/terminal.c

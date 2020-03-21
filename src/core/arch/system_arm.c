@@ -29,4 +29,10 @@ void set_sp(state_t *s, unsigned int sp_val) {
     s->sp = sp_val;
 }
 
+void set_kernel_mode(state_t *s, unsigned int on) {
+
+}
+
+
+
 

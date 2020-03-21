@@ -67,3 +67,10 @@ Nel caso delle syscall il registro a0 identifica la syscall specifica richiesta
 - interrupts.c
 - utils.c
 - main.c (*riguardo al dubbio sul main che avevamo direi che è come ipotizzavamo, fare il main a sto giro sta a noi e conterrà le chiamate di inizializzazione del sistema e di inizializzazione dei 3 processi di test*)
+
+
+
+
+- Capire il senso di FORK
+- Studiarci un po' i debugger degli emulatori
+- Capire il senso dell'interrupt mask (per le new area e per i pcb)
