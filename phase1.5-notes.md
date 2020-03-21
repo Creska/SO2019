@@ -56,11 +56,9 @@ Nel caso delle syscall il registro a0 identifica la syscall specifica richiesta
 
 - *UMPS p10 | UARM p14*
 - *UMPS p31 note sugli interrupt per i device*
-- *UMPS p35 Processor Local Timer*
+- *UMPS p34 Interrupt timer*
 
-*Quindi il Process Local Timer va gestito, ma solo per UMPS?*
-*Se vanno gestiti entrambi i timer (dove presenti) cosa intende il tutor dicendo che ci conviene sfruttare l'IT? Per innescare un controllo dello scheduler?*
-
+*Sembra vada gestito solo l'interrupt timer alla fine*
 ---
 
 # Esempio strutturazione (da slide)

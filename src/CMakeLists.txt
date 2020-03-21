@@ -2,7 +2,9 @@ target_sources(kernel PRIVATE                   # Adds this files as sources to 
         main.c
         testing/p1.5test_bikaya_v0.c
 
-        core/system.c
+        core/scheduler.c
+        core/interrupts.c
+        core/handler.c
 
         asl.c
         pcb.c
@@ -11,4 +13,6 @@ target_sources(kernel PRIVATE                   # Adds this files as sources to 
         devices/terminal.c
 
         )
+
+add_subdirectory(core/arch)
 

@@ -1,25 +1,6 @@
 #include "core/system.h"
 
-
-
-void resetState(state_t* s) {
-
-#ifdef TARGET_UMPS
-
-    s->pc_epc = 0;
-    s->hi = 0;
-    s->entry_hi = 0;
-    s->cause = 0;
-    s->status = 0;
-    s->lo = 0;
-    for (int i = 0; i < STATE_GPR_LEN; ++i) {
-        s->gpr[i] = 0;
-    }
-
-#endif
-
-#ifdef TARGET_UARM
-
+void reset_state(state_t* s) {
     s->a1 = 0;
     s->a2 = 0;
     s->a3 = 0;
@@ -42,8 +23,10 @@ void resetState(state_t* s) {
     s->v5 = 0;
     s->v6 = 0;
     s->CP15_EntryHi = 0;
-
-#endif
-
 }
+
+void set_sp(state_t *s, unsigned int sp_val) {
+    s->sp = sp_val;
+}
+
 

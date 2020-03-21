@@ -1,11 +1,13 @@
 #include "devices/terminal.h"
+#include "core/system.h"
 
 int main() {
 
-    // If you want to test the emulators just compile this for your target emulator and run it
-    // The following string should be printed in terminal 0
-    term_putstr(get_terminal(0), "If you're reading this the emulator is working");
+    // Inizializzazione new areas
 
-    return 0;
+    state_t* interrupt = get_new_area_interrupt();
+    set_kernel_mode(interrupt, 1);
+    set_virtual_mem(interrupt, 0);
+    // set_interrupt_mask(interrupt, ???)
 }
 
