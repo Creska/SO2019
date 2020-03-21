@@ -8,10 +8,9 @@
 - inizializzare il PC all'indirizzo dell' **handler** del nucleo che gestisce quell'eccezione
 - inizializzare `$SP` a `RAMTOP` (*RAMPTOP è un errore?*)
 - inizializzare il registro di **status**: 
-    - mascherare interrupts *(mascherarli in che modo? Forse la risposta è nella slide 25 delle specifiche*)
+    - mascherare interrupts 
     - disabilitare virtual memory
     - settare kernel mode on
-    - abilitare un timer
     
 #### Inizializzazione processi
 - inizializzazione strutture dati fase 1 (*solo i pcb tramite `initpcbs()`*)

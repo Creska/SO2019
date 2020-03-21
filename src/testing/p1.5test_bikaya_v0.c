@@ -1,4 +1,7 @@
+#include "core/const.h"
+#include "utils/listx.h"
 #include "core/system.h"
+
 #include "pcb.h"
 
 #define TOD_LO     *((unsigned int *)BUS_REG_TOD_LO)
@@ -71,12 +74,12 @@ void termprint(char *str) {
 #endif
 
 char *toprint[] = {
-    "1                        \n",  "2          _nnnn_        \n",  "3         dGGGGMMb       \n",
-    "4        @p~qp~~qMb      \n",  "5        M|@||@) M|      \n",  "6        @,----.JM|      \n",
-    "7       JS^\\__/  qKL     \n", "8      dZP        qKRb   \n",  "9     dZP          qKKb  \n",
-    "10   fZP            SMMb \n",  "11   HZM            MMMM \n",  "12   FqM            MMMM \n",
-    "13 __| '.        |\\dS'qML\n", "14 |    `.       | `' \\Zq\n", "15_)      \\.___.,|     .'\n",
-    "16\\____   )MMMMMP|   .'  \n", "17     `-'       `--'    \n",  "18                       \n",
+        "1                        \n",  "2          _nnnn_        \n",  "3         dGGGGMMb       \n",
+        "4        @p~qp~~qMb      \n",  "5        M|@||@) M|      \n",  "6        @,----.JM|      \n",
+        "7       JS^\\__/  qKL     \n", "8      dZP        qKRb   \n",  "9     dZP          qKKb  \n",
+        "10   fZP            SMMb \n",  "11   HZM            MMMM \n",  "12   FqM            MMMM \n",
+        "13 __| '.        |\\dS'qML\n", "14 |    `.       | `' \\Zq\n", "15_)      \\.___.,|     .'\n",
+        "16\\____   )MMMMMP|   .'  \n", "17     `-'       `--'    \n",  "18                       \n",
 };
 
 void test1() {
