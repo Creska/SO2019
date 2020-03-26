@@ -9,7 +9,19 @@
     #include "cp0.h"
 
     // MPS only defines NULL in stddef.h
-    #define NULL ((void*)0)
+    #define NULL            ((void*)0)
+
+    // Addresses for new and old areas
+    #define AREA_SIZE           140
+    #define INT_OLDAREA         RAM_BASE
+    #define INT_NEWAREA         (RAM_BASE + AREA_SIZE)
+    #define TLB_OLDAREA         (RAM_BASE + (2 * AREA_SIZE))
+    #define TLB_NEWAREA         (RAM_BASE + (3 * AREA_SIZE))
+    #define PGMTRAP_OLDAREA     (RAM_BASE + (4 * AREA_SIZE))
+    #define PGMTRAP_NEWAREA     (RAM_BASE + (5 * AREA_SIZE))
+    #define SYSBK_OLDAREA       (RAM_BASE + (6 * AREA_SIZE))
+    #define SYSBK_NEWAREA       (RAM_BASE + (7 * AREA_SIZE))
+
 #endif
 #ifdef TARGET_UARM
     #include "libuarm.h"
@@ -57,12 +69,18 @@ void set_interval_timer(unsigned int val);
 
 
 // New/Old areas ------------------------------------------------------------------------------------------------------
-// Get pointers to the new areas
 
+// Gets a pointer to the system/break new area
 state_t* get_new_area_sys_break();
+
+// Gets a pointer to the program trap new area
 state_t* get_new_area_program_trap();
+
+// Gets a pointer to the TLB new area
 state_t* get_new_area_TLB();
-state_t* get_new_area_interrupt();
+
+// Gets a pointer to the system/break new area
+state_t* get_new_area_int();
 
 #endif
 

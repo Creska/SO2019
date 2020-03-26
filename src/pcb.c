@@ -34,7 +34,7 @@ pcb_t *allocPcb(void) {
         first_free_pcb->p_child.prev = NULL;
         INIT_LIST_HEAD(&first_free_pcb->p_next);
         INIT_LIST_HEAD(&first_free_pcb->p_sib);
-        resetState(&first_free_pcb->p_s);
+        reset_state(&first_free_pcb->p_s);
 
         return first_free_pcb;
     }
