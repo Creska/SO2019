@@ -36,7 +36,33 @@ void addokbuf(char *strp);
  *	the system shuts down with a panic message */
 void adderrbuf(char *strp);
 
-char* itoa(int i, char b[]);
+
+// Values to string conversions ---------------------------------------------------------------------------------------
+
+// Prints a string representation of an int in a buffer
+// returns a pointer to the given buffer
+char* int_to_str(int i, char *b);
+
+// Prints a binary string representation of an int in a buffer
+// returns a pointer to the given buffer
+char* int_to_str_binary(int i, char *b);
+
+// Prints a string representation of a pointer in a buffer
+// returns a pointer to the given buffer
+char* ptr_to_str(void* p, char *b);
+
+// Prints a string representation of a number on a string buffer
+//
+// i                the target number
+// digit            a string containing all the
+// base             the target base for the number
+// b                a char pointer to the address where this method should start writing the string on the buffer
+//
+// returns          a pointer to the char following the last one written in the buffer by this method
+//
+// Remarks:
+//      - this method doesn't terminate the string
+char* num_to_str_buf(int i, const char digit[], int base, char* b);
 
 
 #endif
