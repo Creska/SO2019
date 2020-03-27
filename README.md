@@ -9,7 +9,7 @@ See asl.c and pcb.c files for more notes on the implementation.
 
 ### Dependencies
 - `arm-none-eabi-gcc` (arm cross compiler toolchain)
-- `mipsel-linux-gnu-gcc` (mps cross compiler toolchain)
+- `mipsel-linux-gnu-gcc` (mips cross compiler toolchain)
 - `uarm` (arm emulator, [on github](https://github.com/mellotanica/uARM))
 - `umps` (mps emulator, [on github](https://github.com/tjonjic/umps))
 - `make`
@@ -32,9 +32,16 @@ You can also set directly the path to the toolchain file (which defines the arch
     
     cmake .. -DCMAKE_TOOLCHAIN_FILE=../toolchain/uarm.cmake
 
+### Debug build type
 
+The project can be built in debug mode to enable **DEBUG_LOG** printing and in general the inclusion of debug features 
+that would be otherwise left out of compilation (for example the DEBUG_LOG macros are empty outside of debug mode).
 
-### Troubleshooting
+The cmake cache variable `CMAKE_BUILD_TYPE` should be set to *Debug* (or *DEBUG*), you can do this with `ccmake` or `cmake-gui`.
+This internally cause a -DDEBUG flag to be passed to the compiler.
+Any other value for the cmake build type doesn't trigger the debug flag, therefore disables any debug features.
+
+## Troubleshooting
 - **Missing object files during CMake configuration**: this project needs a bunch of headers and object files for includes and linking
 of the core libraries (provided by the emulators and mainly looked for in the toolchain files).
 If one of this files is not found an error is logged and the project is not built.
@@ -53,8 +60,8 @@ Compile the latest version from [github](https://github.com/mellotanica/uARM), w
 ## Useful material
 - **CMake**
     - [Official CMake documentation](https://cmake.org/cmake/help/v3.16/)
-    - [Introduction to CMake](http://www2.informatik.uni-freiburg.de/~jakobro/files/cmake-an-introduction.pdf)
     - [Modern CMake guide](https://cliutils.gitlab.io/modern-cmake/)
+    - [Cmake cheat sheet](http://www.brianlheim.com/2018/04/09/cmake-cheat-sheet.html)
     - [Official CMake docs about cross compiling](https://cmake.org/cmake/help/v3.16/manual/cmake-toolchains.7.html)
 - **Emulators**
     - **uMPS**

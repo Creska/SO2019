@@ -65,4 +65,36 @@ char* ptr_to_str(void* p, char *b);
 char* num_to_str_buf(int i, const char digit[], int base, char* b);
 
 
+#define LOG(message)    \
+addokbuf(message)
+
+#ifdef DEBUG
+
+// Buffer for val to str conversions used in debug log macros
+char _debug_str_buf[256];
+
+// Logs a message to terminal0 if on debug mode
+#define DEBUG_LOG(message)  \
+addokbuf(message);          \
+addokbuf("\n")
+
+// Logs an int value with a description to terminal0 if on debug mode
+#define DEBUG_LOG_INT(description, val)     \
+addokbuf(description);                      \
+addokbuf(int_to_str(val, _debug_str_buf));  \
+addokbuf("\n")
+
+// Logs a pointer value with a description to terminal0 if on debug mode
+#define DEBUG_LOG_PTR(description, val)     \
+addokbuf(description);                      \
+addokbuf(ptr_to_str(val, _debug_str_buf));  \
+addokbuf("\n")
+
+#else
+#define DEBUG_LOG(message)                              // Empty macro definitions for non-debug compilation
+#define DEBUG_LOG_INT(description, val)
+#define DEBUG_LOG_PTR(description, val)
+#endif
+
+
 #endif

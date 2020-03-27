@@ -6,15 +6,23 @@ if (CMAKE_TOOLCHAIN_FILE MATCHES "")                                            
     endif()
 endif()
 
+# For now defaults to debug build type if not set through the cmake cache or cmake commands flags
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug)
+endif()
+
+if (CMAKE_BUILD_TYPE MATCHES Debug OR CMAKE_BUILD_TYPE MATCHES DEBUG)
+    add_compile_definitions(DEBUG)
+    set(CMAKE_VERBOSE_MAKEFILE TRUE)                                            # forces make to show the executed commands at build time
+elseif(CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES RelMixSize)
+    SET(CMAKE_BUILD_TYPE Custom)                                                # with build type set to Release or similar cmake sets some flags that are incompatible with our cross compilers
+endif()                                                                         # setting the build type to custom prevents that
 
 cmake_minimum_required(VERSION 3.13...3.16)                             # Defines a range of tested CMake versions, important since the language and paradigms have changed a lot between versions
 set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")                     # This allows our cross compilers to pass CMake tests even without stdlib and standard flags
 
 
 project(bikaya-phase0 LANGUAGES C)                                      # defines the project name and the enabled languages
-
-
-# set(CMAKE_VERBOSE_MAKEFILE TRUE)                                        # TEMPORARY - forces make to show the executed commands
 
 add_executable(kernel)                                                  # Creates an executable target
 target_compile_options(kernel PUBLIC -std=gnu99)
