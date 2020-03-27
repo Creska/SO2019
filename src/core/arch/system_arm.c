@@ -25,18 +25,11 @@ void reset_state(state_t* s) {
     s->CP15_EntryHi = 0;
 }
 
-void set_sp(state_t *s, unsigned int sp_val) {
-    s->sp = sp_val;
+//state_t della new_area
+void set_pc(state_t * s, void (*ptr)()) {//ptr puntatore all'handler assumendolo con la signature placeholder void handler()
+s->pc = (unsigned int)ptr;
 }
 
-void set_kernel_mode(state_t *s, unsigned int on) {
-
+void set_sp(state_t *s) {
+    s->sp = RAM_TOP;//RAM_TOP is defined in arch.h with the value needed
 }
-
-
-
-
-
-
-
-
