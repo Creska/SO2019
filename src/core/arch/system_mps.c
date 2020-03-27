@@ -1,7 +1,7 @@
 #include "core/system.h"
 #include "utils/utils.h"
 #define SP_INDEX  28
-#define T_INDEX 26 //t9 register index assuming it is the 26th gpr which is uncertain
+#define T_INDEX 24 //t9 register index assuming it is the 26th gpr which is uncertain
 //the following three lines are copied from p1.5test_bikaya_v0.c
 #define RAMBASE    *((unsigned int *)BUS_REG_RAM_BASE)//BUS_REG_RAM_BASE and BUS_REG_RAM_SIZE are defined in arch.h
 #define RAMSIZE    *((unsigned int *)BUS_REG_RAM_SIZE)//as 0x10000000 and 0x10000004 respectively
