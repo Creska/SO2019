@@ -1,3 +1,12 @@
+if (CMAKE_TOOLCHAIN_FILE MATCHES "")                                                # If no toolchain file was directly specified we can check if our custom ARCH variable
+    if(ARCH MATCHES "uarm" OR ARCH MATCHES "arm")                                   # was set to supported emulators/architectures names
+        SET(CMAKE_TOOLCHAIN_FILE ./toolchain/uarm.cmake)                            # this needs to happen before the call to project(bikaya...) because at that point the toolchain file is executed
+    elseif(ARCH MATCHES "umps" OR ARCH MATCHES "umps2" OR ARCH MATCHES "mips")
+        SET(CMAKE_TOOLCHAIN_FILE ./toolchain/umps2.cmake)
+    endif()
+endif()
+
+
 cmake_minimum_required(VERSION 3.13...3.16)                             # Defines a range of tested CMake versions, important since the language and paradigms have changed a lot between versions
 set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")                     # This allows our cross compilers to pass CMake tests even without stdlib and standard flags
 
@@ -5,7 +14,7 @@ set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")                     # This a
 project(bikaya-phase0 LANGUAGES C)                                      # defines the project name and the enabled languages
 
 
-set(CMAKE_VERBOSE_MAKEFILE TRUE)                                        # TEMPORARY - forces make to show the executed commands
+# set(CMAKE_VERBOSE_MAKEFILE TRUE)                                        # TEMPORARY - forces make to show the executed commands
 
 add_executable(kernel)                                                  # Creates an executable target
 target_compile_options(kernel PUBLIC -std=gnu99)

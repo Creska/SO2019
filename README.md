@@ -7,21 +7,6 @@ The content of a couple of files (types_bikaya and the test file) has been rearr
 
 See asl.c and pcb.c files for more notes on the implementation.
 
-
-## Building the project
-In this example we're building for the ARM architecture.
-
-    mkdir build-arm
-    cd build-arm
-    cmake .. -DCMAKE_TOOLCHAIN_FILE=../toolchain/uarm.cmake
-    make
-    
-- Create a build dir and cd into it (CMake creates its build hierarchy in the working directory, this avoids cluttering of source folders).
-- Run cmake passing it the path of the main *CMakeLists.txt* and a *Toolchain file*, which defines the architecture-specific stuff for the build.
-- Calling make the project is built.
-- The compiled program can be run using the corresponding emulator (uarm in this case). While the `terminal 0` is automatically
-enabled on the emulated machines you might need to enable `printer 0` if not already done in a previous run.
-
 ### Dependencies
 - `arm-none-eabi-gcc` (arm cross compiler toolchain)
 - `mipsel-linux-gnu-gcc` (mps cross compiler toolchain)
@@ -29,6 +14,25 @@ enabled on the emulated machines you might need to enable `printer 0` if not alr
 - `umps` (mps emulator, [on github](https://github.com/tjonjic/umps))
 - `make`
 - `cmake`
+
+## Building the project
+In this example we're building for the ARM architecture.
+
+    mkdir build-arm
+    cd build-arm
+    cmake .. -DARCH=uarm     
+    make
+    
+- Create a build dir and cd into it (CMake creates its build hierarchy in the working directory, this avoids cluttering of source folders).
+- Run cmake passing it the path of the main *CMakeLists.txt* and a value for the `ARCH` variable (*uarm/arm* or *umps/umps2/mips*).
+- Calling make the project is built.
+- The compiled program can be run using the corresponding emulator (uarm in this case).
+
+You can also set directly the path to the toolchain file (which defines the architecture-specific stuff for the build), in the previous example you would have to call cmake with:
+    
+    cmake .. -DCMAKE_TOOLCHAIN_FILE=../toolchain/uarm.cmake
+
+
 
 ### Troubleshooting
 - **Missing object files during CMake configuration**: this project needs a bunch of headers and object files for includes and linking
