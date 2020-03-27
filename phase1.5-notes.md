@@ -70,7 +70,7 @@ Nel caso delle syscall il registro a0 identifica la syscall specifica richiesta
 
 
 
-
+# TODO
 - Capire il senso di FORK
 - Studiarci un po' i debugger degli emulatori
 - Capire il senso dell'interrupt mask (per le new area e per i pcb)

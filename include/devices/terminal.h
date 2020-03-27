@@ -64,7 +64,7 @@ char* ptr_to_str(void* p, char *b);
 //      - this method doesn't terminate the string
 char* num_to_str_buf(int i, const char digit[], int base, char* b);
 
-
+// Logs a message to terminal0
 #define LOG(message)    \
 addokbuf(message)
 
@@ -83,6 +83,14 @@ addokbuf("\n")
 addokbuf(description);                      \
 addokbuf(int_to_str(val, _debug_str_buf));  \
 addokbuf("\n")
+
+
+// Logs an int value with a description to terminal0 if on debug mode
+#define DEBUG_LOG_BININT(description, val)     \
+addokbuf(description);                      \
+addokbuf(int_to_str_binary(val, _debug_str_buf));  \
+addokbuf("\n")
+
 
 // Logs a pointer value with a description to terminal0 if on debug mode
 #define DEBUG_LOG_PTR(description, val)     \

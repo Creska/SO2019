@@ -30,6 +30,6 @@ void set_pc(state_t * s, void (*ptr)()) {//ptr puntatore all'handler assumendolo
 s->pc = (unsigned int)ptr;
 }
 
-void set_sp(state_t *s) {
-    s->sp = RAM_TOP;//RAM_TOP is defined in arch.h with the value needed
+void set_sp(state_t *s, unsigned int sp_val) {
+    s->sp = sp_val;         //RAM_TOP is defined in arch.h with the value needed
 }

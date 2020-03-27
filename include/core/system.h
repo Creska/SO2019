@@ -22,6 +22,14 @@
     #define SYSBK_OLDAREA       (RAM_BASE + (6 * AREA_SIZE))
     #define SYSBK_NEWAREA       (RAM_BASE + (7 * AREA_SIZE))
 
+
+    #define SP_INDEX  28
+    #define T_INDEX 26 //t9 register index in state's gpr vector
+    //the following three lines are copied from p1.5test_bikaya_v0.c
+    #define RAMBASE    *((unsigned int *)BUS_REG_RAM_BASE)      //BUS_REG_RAM_BASE and BUS_REG_RAM_SIZE are defined in arch.h
+    #define RAMSIZE    *((unsigned int *)BUS_REG_RAM_SIZE)      //as 0x10000000 and 0x10000004 respectively
+    #define RAM_TOP     (RAMBASE + RAMSIZE)
+
 #endif
 #ifdef TARGET_UARM
     #include "libuarm.h"
@@ -59,7 +67,7 @@ void set_interrupt_mask(state_t* s, unsigned int mask);
 void set_sp(state_t* s, unsigned int sp_val);
 
 
-void set_pc(state_t* s, unsigned int pc_val);
+void set_pc(state_t* s, void (*ptr)());
 
 
 // BUS Register -------------------------------------------------------------------------------------------------------
@@ -81,6 +89,11 @@ state_t* get_new_area_TLB();
 
 // Gets a pointer to the system/break new area
 state_t* get_new_area_int();
+
+
+// System initialization routines -------------------------------------------------------------------------------------
+
+void init_area(state_t* area, unsigned int int_mask, void (*handler)());
 
 #endif
 
