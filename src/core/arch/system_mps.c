@@ -24,7 +24,7 @@ s->gpr[T_INDEX] = (unsigned int)ptr;
 }
 
 void set_sp(state_t *s) {
-    s->gpr[SP_INDEX] = RAMTOP;
+   s->gpr[SP_INDEX] = RAMTOP;
 }
 
 
