@@ -33,5 +33,12 @@ s->pc = (unsigned int)ptr;
 void set_sp(state_t *s, unsigned int sp_val) {
     s->sp = sp_val;         //RAM_TOP is defined in arch.h with the value needed
 
-    
+}
+void set_virtual_mem(state_t* s, unsigned int on){
+    if(on){
+        s->CP15_Control = CP15_ENABLE_VM(s->CP15_Control);
+    }
+    else{
+        s->CP15_Control = CP15_DISABLE_VM(s->CP15_Control);
+    }
 }
