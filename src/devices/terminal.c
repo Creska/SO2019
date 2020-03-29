@@ -8,6 +8,9 @@
 #define TERM_STATUS_MASK                0xFF
 
 
+#define POINTERS_BITS                   32
+#define POINTERS_DIGITS                 32/4
+
 struct terminal {
     termreg_t *reg;
 };
@@ -85,23 +88,68 @@ void adderrbuf(char *strp) {
     PANIC();
 }
 
-char* itoa(int i, char b[]) {
-    char const digit[] = "0123456789";
+char* int_to_str(int i, char *b) {
     char* p = b;
-
     if(i<0){
         *p++ = '-';
         i *= -1;
     }
-    int shifter = i;
+    p = num_to_str_buf(i, "0123456789", 10, p);
+    *p = '\0';
+    return b;
+}
+
+char *int_to_str_binary(int i, char *b) {
+    char* p = b;
+    if(i<0){
+        *p++ = '-';
+        i *= -1;
+    }
+    p = num_to_str_buf(i, "01", 2, p);
+    *p = '\0';
+    return b;
+}
+
+char* ptr_to_str(void* p, char *b) {
+    b[0] = '0';
+    b[1] = 'x';
+
+    char* buf_p = b+2;      // Add leading 0s
+    int digits = 0;
+    int i = (int)p;
+    while (i) {
+        i = i / 16;
+        digits++;
+    }
+    digits = POINTERS_DIGITS - digits;
+    while (digits) {
+        *buf_p = '0';
+        buf_p++;
+        digits--;
+    }
+
+    char* first_free_char = num_to_str_buf((int)p, "0123456789ABCD", 16, buf_p);
+    *first_free_char = '\0';
+    return b;
+}
+
+
+char* num_to_str_buf(int i, const char digit[], int base, char* b) {
+    char* p = b;
+
+    unsigned int shifter = i;
     do{ //Move to where representation ends
         ++p;
-        shifter = shifter/10;
+        shifter = shifter/base;
     }while(shifter);
-    *p = '\0';
+    b = p;
     do{ //Move back, inserting digits as u go
-        *--p = digit[i%10];
-        i = i/10;
+        *--p = digit[i%base];
+        i = i/base;
     }while(i);
     return b;
 }
+
+
+
+

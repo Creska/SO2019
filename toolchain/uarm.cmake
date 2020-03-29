@@ -42,7 +42,13 @@ if (NOT EXISTS ${CORE_OBJ_CRTSO})
     message(SEND_ERROR "Couldn't find the core crtso object file.")
 endif()
 
-set(CORE_LIBS ${CORE_OBJ_CRTSO} ${CORE_OBJ_UMPS})
+find_file(CORE_OBJ_LIBDIV libdiv.o REQUIRED                  # We need to link libdiv in order to be able to do divisions
+        /usr/include/uarm)
+if (NOT EXISTS ${CORE_OBJ_LIBDIV})
+    message(SEND_ERROR "Couldn't find the core libdiv object file.")
+endif()
+
+set(CORE_LIBS ${CORE_OBJ_CRTSO} ${CORE_OBJ_UMPS} ${CORE_OBJ_LIBDIV})
 
 
 # Macro for executable targets that might need a conversion in order to be run on their emulator

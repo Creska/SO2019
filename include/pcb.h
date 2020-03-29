@@ -18,8 +18,11 @@ typedef struct pcb_t {
     /* processor state, etc */
     state_t p_s;
 
-    /* process priority */
+    /* process priority, increased while the process stays in the ready queue */
     int priority;
+
+    /* original priority of the process at schedule */
+    int original_priority;                                          // this was added for phase 1.5
 
     /* key of the semaphore on which the process is eventually blocked */
     int *p_semkey;
