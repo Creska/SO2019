@@ -3,5 +3,7 @@
 #include "core/handler.h"
 
 void handle_interrupt() {
+    // acknowledge
 
+    // chiamata allo scheduler
 }

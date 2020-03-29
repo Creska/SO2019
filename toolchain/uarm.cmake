@@ -37,13 +37,13 @@ if (NOT EXISTS ${CORE_OBJ_UMPS})
 endif()
 
 find_file(CORE_OBJ_CRTSO crtso.o REQUIRED
-        /usr/include/uarm)
+        HINTS /usr/include/uarm)
 if (NOT EXISTS ${CORE_OBJ_CRTSO})
     message(SEND_ERROR "Couldn't find the core crtso object file.")
 endif()
 
 find_file(CORE_OBJ_LIBDIV libdiv.o REQUIRED                  # We need to link libdiv in order to be able to do divisions
-        /usr/include/uarm)
+        HINTS /usr/include/uarm)
 if (NOT EXISTS ${CORE_OBJ_LIBDIV})
     message(SEND_ERROR "Couldn't find the core libdiv object file.")
 endif()

@@ -26,7 +26,7 @@ void reset_state(state_t* s) {
 }
 
 //state_t della new_area
-void set_pc(state_t * s, void (*ptr)()) {//ptr puntatore all'handler assumendolo con la signature placeholder void handler()
+void set_pc(state_t * s, void (*ptr)()) { //ptr puntatore all'handler assumendolo con la signature placeholder void handler()
 s->pc = (unsigned int)ptr;
 }
 

@@ -105,6 +105,8 @@ addokbuf("\n")
 #define DEBUG_LOG(message)                              // Empty macro definitions for non-debug compilation
 #define DEBUG_LOG_INT(description, val)
 #define DEBUG_LOG_PTR(description, val)
+#define DEBUG_LOG_BININT(description, val)
+
 #endif
 
 

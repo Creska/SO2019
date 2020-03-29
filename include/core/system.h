@@ -90,6 +90,8 @@ state_t* get_new_area_TLB();
 // Gets a pointer to the system/break new area
 state_t* get_new_area_int();
 
+unsigned int get_clock_ticks(unsigned int microseconds);
+
 
 // System initialization routines -------------------------------------------------------------------------------------
 
