@@ -28,5 +28,5 @@ void set_sp(state_t *s, unsigned int sp_val) {
 
 void set_interrupt_mask(state_t* s, unsigned int mask) {
     unsigned int bit_mask = 0xFF00;                             // Mask where only the bits corresponding to the interrupt masks are 1 TODO declare it as a umps system macro
-    s->status = (~bit_mask & s->status) | mask << 8 | 1;
+    s->status = (~bit_mask & s->status) | mask << 8;
 }

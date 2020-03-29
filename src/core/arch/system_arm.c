@@ -32,4 +32,6 @@ s->pc = (unsigned int)ptr;
 
 void set_sp(state_t *s, unsigned int sp_val) {
     s->sp = sp_val;         //RAM_TOP is defined in arch.h with the value needed
+
+    
 }

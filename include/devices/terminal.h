@@ -64,6 +64,9 @@ char* ptr_to_str(void* p, char *b);
 //      - this method doesn't terminate the string
 char* num_to_str_buf(int i, const char digit[], int base, char* b);
 
+
+// LOG FUNCTIONALITY --------------------------------------------------------------------------------------------------
+
 // Logs a message to terminal0
 #define LOG(message)    \
 addokbuf(message)
