@@ -17,12 +17,12 @@ void reset_state(state_t* s) {
 //state_t della new_area
 void set_pc(state_t * s, void (*ptr)()) {       //ptr puntatore all'handler assumendolo con la signature void handler()
 s->pc_epc = (unsigned int)ptr;
-s->gpr[T_INDEX] = (unsigned int)ptr;
+s->reg_t9 = (unsigned int)ptr;
 }
 
 
 void set_sp(state_t *s, unsigned int sp_val) {
-   s->gpr[SP_INDEX] = sp_val;
+   s->reg_sp = sp_val;
 }
 
 

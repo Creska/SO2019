@@ -9,7 +9,6 @@ if (CMAKE_TOOLCHAIN_FILE MATCHES "")                                            
 endif()
 
 
-
 # BUILD TYPE MANAGEMENT -----------------------------------------------------------------------------------------------
 
 # For now defaults to debug build type if not set through the cmake cache or cmake commands flags

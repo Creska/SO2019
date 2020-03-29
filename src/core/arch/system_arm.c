@@ -1,3 +1,4 @@
+#include <utils/utils.h>
 #include "core/system.h"
 
 void reset_state(state_t *s)
@@ -27,43 +28,29 @@ void reset_state(state_t *s)
 }
 
 //state_t della new_area
-<<<<<<< HEAD
-void set_pc(state_t *s, void (*ptr)())
-{ //ptr puntatore all'handler assumendolo con la signature placeholder void handler()
-    s->pc = (unsigned int)ptr;
-=======
 void set_pc(state_t * s, void (*ptr)()) { //ptr puntatore all'handler assumendolo con la signature placeholder void handler()
 s->pc = (unsigned int)ptr;
->>>>>>> b247e9cad4a9d8fe519d61f64183fcfdb3368a1e
 }
 
 void set_sp(state_t *s, unsigned int sp_val)
 {
     s->sp = sp_val; //RAM_TOP is defined in arch.h with the value needed
 }
+
 void set_virtual_mem(state_t *s, unsigned int on)
 {
-    if (on)
-    {
+    if (on) {
         s->CP15_Control = CP15_ENABLE_VM(s->CP15_Control);
-    }
-    else
-    {
+    } else {
         s->CP15_Control = CP15_DISABLE_VM(s->CP15_Control);
     }
 }
 
 void set_kernel_mode(state_t *s, unsigned int on)
 {
-    int mask = 0x0000001F;
-    if (on)
-    {
-        s->cpsr = set_bits(s->cpsr, mask, 0x0000001F);
-                                    
-    }
-    else
-    {
-        s->cpsr = set_bits(s->cpsr, mask, 0x00000010);
-                                    
+    if (on) {
+        s->cpsr = set_bits(s->cpsr, ~STATUS_CLEAR_MODE, STATUS_SYS_MODE);
+    } else {
+        s->cpsr = set_bits(s->cpsr, ~STATUS_CLEAR_MODE, STATUS_USER_MODE);
     }
 }
