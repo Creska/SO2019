@@ -33,7 +33,7 @@ endif()                                                                         
 cmake_minimum_required(VERSION 3.13...3.17)                             # Defines a range of tested CMake versions, important since the language and paradigms have changed a lot between versions
 set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")                     # This allows our cross compilers to pass CMake tests even without stdlib and standard flags
 
-
+message("Pre project setup")
 project(bikaya-phase0 LANGUAGES C)                                      # defines the project name and the enabled languages
 
 add_executable(kernel)                                                  # Creates an executable target
