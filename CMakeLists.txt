@@ -2,8 +2,10 @@
 
 if (CMAKE_TOOLCHAIN_FILE MATCHES "")                                                # If no toolchain file was directly specified we can check if our custom ARCH variable
     if(ARCH MATCHES "uarm" OR ARCH MATCHES "arm")                                   # was set to supported emulators/architectures names
+        message("UARM set")
         SET(CMAKE_TOOLCHAIN_FILE ./toolchain/uarm.cmake)                            # this needs to happen before the call to project(bikaya...) because at that point the toolchain file is executed
     elseif(ARCH MATCHES "umps" OR ARCH MATCHES "umps2" OR ARCH MATCHES "mips")
+        message("UMPS set")
         SET(CMAKE_TOOLCHAIN_FILE ./toolchain/umps2.cmake)
     endif()
 endif()
@@ -14,6 +16,7 @@ endif()
 # For now defaults to debug build type if not set through the cmake cache or cmake commands flags
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
+    message("Debug mode set")
 endif()
 
 if (CMAKE_BUILD_TYPE MATCHES Debug OR CMAKE_BUILD_TYPE MATCHES DEBUG)

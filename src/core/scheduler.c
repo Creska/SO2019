@@ -14,6 +14,9 @@ void init_scheduler() {
 
 
 void time_slice_expired_callback() {
+
+    // logica processi
+
     set_interval_timer(clock_ticks_per_time_slice);
 }
 

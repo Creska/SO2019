@@ -5,10 +5,6 @@
 
 int main() {
 
-    DEBUG_LOG("Modules initialization");
-    init_scheduler();
-
-
 
     // Testing get_areas and pointer printing functionality
 
@@ -16,8 +12,14 @@ int main() {
 
     state_t* int_new_area = get_new_area_int();
     init_area(int_new_area, 255, &handle_interrupt);
+//
+//    DEBUG_LOG_PTR("Interrupt new area address: ", int_new_area);
 
-    DEBUG_LOG_PTR("Interrupt new area address: ", int_new_area);
+
+    DEBUG_LOG("Modules initialization");
+
+
+    init_scheduler();
 
 
     while (1) {
