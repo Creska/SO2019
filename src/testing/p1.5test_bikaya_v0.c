@@ -1,7 +1,5 @@
 #include "core/const.h"
-#include "utils/listx.h"
 #include "core/system.h"
-
 #include "pcb.h"
 
 #define TOD_LO     *((unsigned int *)BUS_REG_TOD_LO)

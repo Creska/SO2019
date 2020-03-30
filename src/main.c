@@ -1,8 +1,14 @@
 #include "devices/terminal.h"
 #include "core/system.h"
 #include "core/handler.h"
+#include "core/scheduler.h"
 
 int main() {
+
+    DEBUG_LOG("Modules initialization");
+    init_scheduler();
+
+
 
     // Testing get_areas and pointer printing functionality
 
@@ -13,7 +19,10 @@ int main() {
 
     DEBUG_LOG_PTR("Interrupt new area address: ", int_new_area);
 
-    set_interval_timer(1000000);
+
+    while (1) {
+        DEBUG_LOG("yo");
+    }
 
 }
 

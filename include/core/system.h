@@ -1,8 +1,9 @@
 #ifndef BIKAYA_PHASE0_SYSTEM_H
 #define BIKAYA_PHASE0_SYSTEM_H
 
-// Includes architecture specific headers
 #ifdef TARGET_UMPS
+
+    // Architecture-specific headers
     #include "libumps.h"
     #include "arch.h"
     #include "types.h"
@@ -12,15 +13,17 @@
     #define NULL            ((void*)0)
 
     // Addresses for new and old areas
-    #define AREA_SIZE           140
-    #define INT_OLDAREA         RAM_BASE
-    #define INT_NEWAREA         (RAM_BASE + AREA_SIZE)
-    #define TLB_OLDAREA         (RAM_BASE + (2 * AREA_SIZE))
-    #define TLB_NEWAREA         (RAM_BASE + (3 * AREA_SIZE))
-    #define PGMTRAP_OLDAREA     (RAM_BASE + (4 * AREA_SIZE))
-    #define PGMTRAP_NEWAREA     (RAM_BASE + (5 * AREA_SIZE))
-    #define SYSBK_OLDAREA       (RAM_BASE + (6 * AREA_SIZE))
-    #define SYSBK_NEWAREA       (RAM_BASE + (7 * AREA_SIZE))
+    #define STATE_T_SIZE        140
+    #define INT_OLDAREA         (RAM_BASE)
+    #define INT_NEWAREA         (RAM_BASE + STATE_T_SIZE)
+    #define TLB_OLDAREA         (RAM_BASE + (2 * STATE_T_SIZE))
+    #define TLB_NEWAREA         (RAM_BASE + (3 * STATE_T_SIZE))
+    #define PGMTRAP_OLDAREA     (RAM_BASE + (4 * STATE_T_SIZE))
+    #define PGMTRAP_NEWAREA     (RAM_BASE + (5 * STATE_T_SIZE))
+    #define SYSBK_OLDAREA       (RAM_BASE + (6 * STATE_T_SIZE))
+    #define SYSBK_NEWAREA       (RAM_BASE + (7 * STATE_T_SIZE))
+
+    #define STATUS_INT_MASK_BIT 8
 
 
     #define SP_INDEX  28
@@ -32,11 +35,15 @@
 
 #endif
 #ifdef TARGET_UARM
+
+    // Architecture-specific headers
     #include "libuarm.h"
     #include "arch.h"
     #include "uARMtypes.h"
+
 #endif
 
+// Device stuff, probably TO BE MOVED
 #define DEVICE_ST_NOT_INSTALLED     0
 #define DEVICE_ST_READY             1
 #define DEVICE_ST_BUSY              3
@@ -94,6 +101,11 @@ state_t* get_new_area_int();
 // System initialization routines -------------------------------------------------------------------------------------
 
 void init_area(state_t* area, unsigned int int_mask, void (*handler)());
+
+// Returns the number of clock ticks expected to happen in a time period defined in microseconds
+//
+// Remarks: the TIME_SCALE (number of ticks per microseconds) is set at boot/reset, so we don't need to worry about it changing during execution.
+unsigned int clock_ticks_per_period(unsigned int microseconds);
 
 #endif
 

@@ -54,3 +54,8 @@ void set_kernel_mode(state_t *s, unsigned int on)
         s->cpsr = set_bits(s->cpsr, ~STATUS_CLEAR_MODE, STATUS_USER_MODE);
     }
 }
+
+void set_interrupt_mask(state_t* s, unsigned int mask) {
+    s->cpsr = STATUS_DISABLE_INT(s->cpsr);
+    s->cpsr = STATUS_DISABLE_TIMER(s->cpsr);
+}
