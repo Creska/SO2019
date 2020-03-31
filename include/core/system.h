@@ -26,8 +26,6 @@
     #define STATUS_INT_MASK_BIT 8
 
 
-    #define SP_INDEX  28
-    #define T_INDEX 26 //t9 register index in state's gpr vector
     //the following three lines are copied from p1.5test_bikaya_v0.c
     #define RAMBASE    *((unsigned int *)BUS_REG_RAM_BASE)      //BUS_REG_RAM_BASE and BUS_REG_RAM_SIZE are defined in arch.h
     #define RAMSIZE    *((unsigned int *)BUS_REG_RAM_SIZE)      //as 0x10000000 and 0x10000004 respectively
@@ -87,15 +85,19 @@ void set_interval_timer(unsigned int val);
 
 // Gets a pointer to the system/break new area
 state_t* get_new_area_sys_break();
+state_t* get_old_area_sys_break();
 
 // Gets a pointer to the program trap new area
 state_t* get_new_area_program_trap();
+state_t* get_old_area_program_trap();
 
 // Gets a pointer to the TLB new area
 state_t* get_new_area_TLB();
+state_t* get_old_area_TLB();
 
 // Gets a pointer to the system/break new area
 state_t* get_new_area_int();
+state_t* get_old_area_int();
 
 
 // System initialization routines -------------------------------------------------------------------------------------

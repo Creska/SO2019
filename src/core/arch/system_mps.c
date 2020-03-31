@@ -1,3 +1,4 @@
+#include <devices/terminal.h>
 #include "core/system.h"
 #include "utils/utils.h"
 
@@ -41,4 +42,7 @@ void set_virtual_mem(state_t *s, unsigned int on)
 {
     s->status = set_bits(s->status, STATUS_VMc, on << STATUS_VMc_BIT);
 }
+
+
+
 
