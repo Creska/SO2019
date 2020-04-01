@@ -8,7 +8,7 @@ struct list_head pcbFree_h;             // L'elemento sentinella della lista di 
 void initPcbs(void) {
     INIT_LIST_HEAD(&pcbFree_h);
 
-    for (int i = 0; i < MAXPROC; ++i) {                             // Aggiunge tutti i pcb alla lista dei pcb liberi
+    for (int i = MAXPROC-1; i >= 0; --i) {                             // Aggiunge tutti i pcb alla lista dei pcb liberi
         freePcb(&pcbFree_table[i]);
     }
 }
@@ -194,4 +194,8 @@ struct pcb_t* nextSibling(struct pcb_t* p, struct pcb_t* first_sibling) {       
     } else {
         return container_of(p->p_sib.next, struct pcb_t, p_sib);
     }
+}
+
+unsigned int get_process_index(pcb_t *p) {
+    return p-pcbFree_table;
 };

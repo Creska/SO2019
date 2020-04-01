@@ -1,4 +1,3 @@
-#include <devices/terminal.h>
 #include "core/system.h"
 
 void set_interval_timer(unsigned int val) {
@@ -38,10 +37,10 @@ state_t* get_old_area_int() {
 }
 
 
-void init_area(state_t *area, unsigned int int_mask, void (*handler)()) {
+void init_area(state_t *area, void (*handler)()) {
     set_kernel_mode(area, 1);
     set_virtual_mem(area, 0);
-    set_interrupt_mask(area, int_mask);
+    set_interrupts(area, 0);
     set_sp(area, RAM_TOP);
     set_pc(area, handler);
 }

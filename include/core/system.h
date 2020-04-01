@@ -31,6 +31,8 @@
     #define RAMSIZE    *((unsigned int *)BUS_REG_RAM_SIZE)      //as 0x10000000 and 0x10000004 respectively
     #define RAM_TOP     (RAMBASE + RAMSIZE)
 
+    #define FRAMESIZE 1024
+
 #endif
 #ifdef TARGET_UARM
 
@@ -64,9 +66,7 @@ void set_kernel_mode(state_t* s, unsigned int on);
 // Sets the Virtual Memory bit in the status register of the given CPU state
 void set_virtual_mem(state_t* s, unsigned int on);
 
-// Sets the Virtual Memory bits in the status register of the given CPU state,
-// mask is an 8-bit mask that enables/disables external interrupts
-void set_interrupt_mask(state_t* s, unsigned int mask);
+void set_interrupts(state_t* s, unsigned int on);
 
 // Sets the stack pointer value for the given state
 void set_sp(state_t* s, unsigned int sp_val);
@@ -74,6 +74,7 @@ void set_sp(state_t* s, unsigned int sp_val);
 
 void set_pc(state_t* s, void (*ptr)());
 
+unsigned int is_interrupt_pending(unsigned int line);
 
 // BUS Register -------------------------------------------------------------------------------------------------------
 
@@ -102,7 +103,7 @@ state_t* get_old_area_int();
 
 // System initialization routines -------------------------------------------------------------------------------------
 
-void init_area(state_t* area, unsigned int int_mask, void (*handler)());
+void init_area(state_t* area, void (*handler)());
 
 // Returns the number of clock ticks expected to happen in a time period defined in microseconds
 //

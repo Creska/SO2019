@@ -1,0 +1,6 @@
+#ifndef BIKAYA_PHASE0_OUR_TESTS_H
+#define BIKAYA_PHASE0_OUR_TESTS_H
+
+void loop_test();
+
+#endif //BIKAYA_PHASE0_OUR_TESTS_H

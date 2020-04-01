@@ -28,9 +28,9 @@ void set_sp(state_t *s, unsigned int sp_val) {
 }
 
 
-void set_interrupt_mask(state_t* s, unsigned int mask) {
-    s->status = (~STATUS_IM_MASK & s->status) | (mask << STATUS_INT_MASK_BIT) | 1;          // TEMP the last |1
-}
+//void set_interrupt_mask(state_t* s, unsigned int mask) {
+//    s->status = (~STATUS_IM_MASK & s->status) | (mask << STATUS_INT_MASK_BIT) | 1;          // TEMP the last |1
+//}
 
 
 
@@ -41,7 +41,21 @@ void set_kernel_mode(state_t *s, unsigned int on) {
 void set_virtual_mem(state_t *s, unsigned int on)
 {
     s->status = set_bits(s->status, STATUS_VMc, on << STATUS_VMc_BIT);
+
 }
+
+unsigned int is_interrupt_pending(unsigned int line) {
+    return (getCAUSE() & CAUSE_IP(line)) >> CAUSE_IP_BIT(line);
+}
+
+void set_interrupts(state_t *s, unsigned int on) {
+    if (on) {
+        s->status = s->status | STATUS_IM_MASK | 1;         // Turn on all bits of the interrupt mask (plus the global bit)
+    } else {
+        s->status = s->status & ~STATUS_IM_MASK & ~1;       // Turn off all bits
+    }
+}
+
 
 
 

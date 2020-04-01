@@ -1,4 +1,5 @@
 #include <utils/utils.h>
+#include <devices/terminal.h>
 #include "core/system.h"
 
 void reset_state(state_t *s)
@@ -55,7 +56,15 @@ void set_kernel_mode(state_t *s, unsigned int on)
     }
 }
 
-void set_interrupt_mask(state_t* s, unsigned int mask) {
-    s->cpsr = STATUS_DISABLE_INT(s->cpsr);
-    s->cpsr = STATUS_DISABLE_TIMER(s->cpsr);
+
+unsigned int is_interrupt_pending(unsigned int line) {
+    return CAUSE_IP_GET(getCAUSE(), line);
+}
+
+void set_interrupts(state_t *s, unsigned int on) {
+    if (on) {
+        s->cpsr = STATUS_ENABLE_INT(s->cpsr);
+    } else {
+        s->cpsr = STATUS_DISABLE_INT(s->cpsr);      // Turn off all bits
+    }
 }
