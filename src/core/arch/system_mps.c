@@ -35,7 +35,11 @@ void set_sp(state_t *s, unsigned int sp_val) {
 
 
 void set_kernel_mode(state_t *s, unsigned int on) {
-    s->status = set_bits(s->status, STATUS_KUc, on << STATUS_KUc_BIT);
+    if (on) {
+        s->status = s->status & (~STATUS_KUc);                                            // the kernel mode is on when the bit is 0
+    } else {
+        s->status = s->status | (~STATUS_KUc);
+    }
 }
 
 void set_virtual_mem(state_t *s, unsigned int on)

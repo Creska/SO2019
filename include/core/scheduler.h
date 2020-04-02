@@ -4,7 +4,7 @@
 #include "core/system.h"
 #include "pcb.h"
 
-#define SCHEDULER_TIME_SLICE 30000
+#define SCHEDULER_TIME_SLICE 300000
 
 
 // Initialization routine for the scheduler
@@ -18,9 +18,11 @@ void time_slice_expired_callback();
 // If called before scheduler initialization returns 0.
 unsigned int get_ticks_per_slice();
 
-void add_process(void* method, unsigned int priority, unsigned int vm_on, unsigned int km_on, unsigned int int_on);
+pcb_t* add_process(void* method, unsigned int priority, unsigned int vm_on, unsigned int km_on, unsigned int int_on);
 
 // temp function that runs the head process of the ready queue
-void run();
+void launch();
+
+pcb_t* get_running_proc();
 
 #endif //BIKAYA_PHASE0_SCHEDULER_H
