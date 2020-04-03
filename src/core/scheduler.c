@@ -65,7 +65,7 @@ pcb_t* add_process(void* method, unsigned int priority, unsigned int vm_on, unsi
             p->p_s.status = p->p_s.status | STATUS_VMp;
         }
 
-#elif                                           // On architectures without these mini-stacks (arm) we can just set the values normally
+#elif TARGET_UARM                                       // On architectures without these mini-stacks (arm) we can just set the values normally
         set_virtual_mem(&p->p_s, vm_on);
         set_kernel_mode(&p->p_s, km_on);
         set_interrupts(&p->p_s, int_on);
