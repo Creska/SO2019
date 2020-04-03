@@ -7,14 +7,16 @@ void consume_interrupts() {
     // if (is_interrupt_pending(0)) { }
 
     // PROCESSOR LOCAL TIMER INTERRUPTS
-    // if (is_interrupt_pending(1)) { }
+    // if (is_interrupt_pending(1)) {  }
 
     // INTERVAL TIMER INTERRUPT
     if (is_interrupt_pending(2)) {
-        time_slice_expired_callback();                      // Allows the scheduler to switch process execution if necessary
+        on_scheduler_callback();                      // Allows the scheduler to switch process execution if necessary
         set_interval_timer(get_ticks_per_slice());          // reset the interval timer (acknowledging the interrupt)
     }
 
     // DEVICE INTERRUPTS ----------------------------------------------------------------------------------------------
+
+
 
 }

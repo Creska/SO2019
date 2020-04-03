@@ -5,9 +5,10 @@ void handle_interrupt() {
     state_t* interrupted_process = get_old_area_int();
 
     consume_interrupts();
-    LDST(interrupted_process);                                 // Resume the execution of the process
 
-    // TODO check that the process is resumed with the pc at the right address (there could be an offset of a few instructions)
+
+    LDST(&get_running_proc()->p_s);                                 // Resume the execution of the process
+
 }
 
 void handle_sysbreak() {

@@ -3,6 +3,6 @@
 
 void loop_test() {
     while (1) {
-        DEBUG_LOG("yoooooooo");
+        DEBUG_LOG("yoooooooooo");
     }
 }

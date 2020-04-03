@@ -4,15 +4,14 @@
 #include "core/system.h"
 #include "pcb.h"
 
-#define SCHEDULER_TIME_SLICE 300000
+#define SCHEDULER_TIME_SLICE 30000
 
 
 // Initialization routine for the scheduler
 void init_scheduler();
 
 // The method called right after an interval timer interrupt
-// Takes the state_t* of the process that was interrupted and returns the state_t* of the process that needs to be resumed
-void time_slice_expired_callback();
+void on_scheduler_callback();
 
 // Returns the number of clock ticks per time slice as calculated during initialization.
 // If called before scheduler initialization returns 0.

@@ -45,7 +45,6 @@ void set_kernel_mode(state_t *s, unsigned int on) {
 void set_virtual_mem(state_t *s, unsigned int on)
 {
     s->status = set_bits(s->status, STATUS_VMc, on << STATUS_VMc_BIT);
-
 }
 
 unsigned int is_interrupt_pending(unsigned int line) {

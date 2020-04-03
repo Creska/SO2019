@@ -63,8 +63,10 @@ unsigned int is_interrupt_pending(unsigned int line) {
 
 void set_interrupts(state_t *s, unsigned int on) {
     if (on) {
-        s->cpsr = STATUS_ENABLE_INT(s->cpsr);
+        s->cpsr = STATUS_ENABLE_TIMER(s->cpsr);
+        s->cpsr = STATUS_DISABLE_INT(s->cpsr);
     } else {
-        s->cpsr = STATUS_DISABLE_INT(s->cpsr);      // Turn off all bits
+        s->cpsr = STATUS_DISABLE_TIMER(s->cpsr);      // Turn off all bits
+        s->cpsr = STATUS_DISABLE_INT(s->cpsr);
     }
 }

@@ -111,6 +111,8 @@ void init_area(state_t* area, void (*handler)());
 // Remarks: the TIME_SCALE (number of ticks per microseconds) is set at boot/reset, so we don't need to worry about it changing during execution.
 unsigned int clock_ticks_per_period(unsigned int microseconds);
 
+
+
 #endif
 
 

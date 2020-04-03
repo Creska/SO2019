@@ -3,7 +3,6 @@
 
 unsigned int clock_ticks_per_time_slice = 0;
 struct list_head ready_queue;
-
 pcb_t* running_proc;
 
 
@@ -19,23 +18,29 @@ unsigned int get_ticks_per_slice() {
 }
 
 
-void time_slice_expired_callback() {
+void on_scheduler_callback() {
 
     // logica processi (cambia processo in esecuzione se necessario)
 
     // Increments the priority of each process in the ready_queue
-//    struct pcb_t* target_proc;
-//    list_for_each_entry(target_proc, &ready_queue, p_next) {
-//        target_proc->priority += 1;
-//    }
-//
-//    // Swap execution if the first ready process has a greater priority than the one executing
-//    if (running_proc->priority < headProcQ(&ready_queue)->priority) {
-//        running_proc->priority = running_proc->original_priority;       // Reset the previously running process' priority to the original
-//        insertProcQ(&ready_queue, running_proc);
-//
-//        running_proc = removeProcQ(&ready_queue);
-//    }
+    struct pcb_t* target_proc;
+    list_for_each_entry(target_proc, &ready_queue, p_next) {
+        target_proc->priority += 1;
+    }
+
+
+
+    // Swap execution if the first ready process has a greater priority than the one executing
+    if (list_empty(&ready_queue) || running_proc->priority < headProcQ(&ready_queue)->priority) {
+
+        state_t* old_process_state = get_old_area_int();
+        mem_cpy(old_process_state, &running_proc->p_s, sizeof(state_t));        // Copies the state_t saved in the old area in the pcb's state (otherwise data modified during execution would be lost)
+
+        running_proc->priority = running_proc->original_priority;               // Reset the previously running process' priority to the original
+        insertProcQ(&ready_queue, running_proc);
+
+        running_proc = removeProcQ(&ready_queue);
+    }
 }
 
 
@@ -85,7 +90,7 @@ pcb_t* add_process(void* method, unsigned int priority, unsigned int vm_on, unsi
 void launch() {
     running_proc = removeProcQ(&ready_queue);
     set_interval_timer(get_ticks_per_slice());
-    LDST(&running_proc->p_s);                                           // Launches the first process in the ready queue
+    LDST(&running_proc->p_s);                                         // Launches the first process in the ready queue
 }
 
 pcb_t *get_running_proc() {
