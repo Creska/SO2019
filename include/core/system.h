@@ -112,6 +112,12 @@ void init_area(state_t* area, void (*handler)());
 unsigned int clock_ticks_per_period(unsigned int microseconds);
 
 
+#define EXCODE_BP           1
+#define EXCODE_SYS          2
+#define EXCODE_OTHER        3
+
+unsigned int get_exccode(unsigned int cause);
+
 
 #endif
 

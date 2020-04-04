@@ -60,6 +60,22 @@ void set_interrupts(state_t *s, unsigned int on) {
 }
 
 
+unsigned int get_exccode(unsigned int cause) {
+    unsigned int val = CAUSE_GET_EXCCODE(cause);
+
+    switch (val) {
+        case EXC_BP:
+            return EXCODE_BP;
+
+        case EXC_SYS:
+            return EXCODE_SYS;
+
+        default:
+            return EXCODE_OTHER;
+    }
+}
+
+
 
 
 

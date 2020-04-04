@@ -14,8 +14,8 @@ int main() {
     init_area(int_new_area, handle_interrupt);
 
     // Initialize syscall/breakpoint new area
-//     state_t* sysbrk_new_area = get_new_area_sys_break();
-//     init_area(sysbrk_new_area, 0, handle_sysbreak);
+     state_t* sysbrk_new_area = get_new_area_sys_break();
+     init_area(sysbrk_new_area, handle_sysbreak);
 
 
 
@@ -23,12 +23,17 @@ int main() {
     init_scheduler();
 
 
-    add_process(loop_test, 1, 0, 1, 1);
+    add_process(empty_loop, 1, 0, 1, 1);
+//    add_process(test2, 1, 0, 1, 1);
+//    add_process(test3, 1, 0, 1, 1);
+
 //    add_process(test2, 2, 0, 1, 1);
 //    add_process(test3, 3, 0, 1, 1);
 
 
     launch();
+
+
 
 }
 

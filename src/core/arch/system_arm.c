@@ -70,3 +70,19 @@ void set_interrupts(state_t *s, unsigned int on) {
         s->cpsr = STATUS_DISABLE_INT(s->cpsr);
     }
 }
+
+
+unsigned int get_exccode(unsigned int cause) {
+    unsigned int val = CAUSE_EXCCODE_GET(cause);
+
+    switch (val) {
+        case EXC_BREAKPOINT:
+            return EXCODE_BP;
+
+        case EXC_SYSCALL:
+            return EXCODE_SYS;
+
+        default:
+            return EXCODE_OTHER;
+    }
+}

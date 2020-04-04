@@ -3,4 +3,8 @@
 
 void loop_test();
 
+void loop_test2();
+
+void empty_loop();
+
 #endif //BIKAYA_PHASE0_OUR_TESTS_H

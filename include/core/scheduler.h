@@ -4,7 +4,7 @@
 #include "core/system.h"
 #include "pcb.h"
 
-#define SCHEDULER_TIME_SLICE 30000
+#define SCHEDULER_TIME_SLICE 3000
 
 
 // Initialization routine for the scheduler
