@@ -33,7 +33,11 @@ void on_scheduler_callback() {
     // Swap execution if the first ready process has a greater priority than the one executing
     if (list_empty(&ready_queue) || running_proc->priority < headProcQ(&ready_queue)->priority) {
 
+
         state_t* old_process_state = get_old_area_int();
+        #ifdef TARGET_UARM
+        old_process_state->pc -= 4;
+        #endif
         mem_cpy(old_process_state, &running_proc->p_s, sizeof(state_t));        // Copies the state_t saved in the old area in the pcb's state (otherwise data modified during execution would be lost)
 
         running_proc->priority = running_proc->original_priority;               // Reset the previously running process' priority to the original
