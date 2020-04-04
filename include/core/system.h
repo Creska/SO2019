@@ -32,6 +32,7 @@
     #define RAM_TOP     (RAMBASE + RAMSIZE)
 
     #define FRAMESIZE 1024
+
 #define  FRAME_SIZE 4096
 
 #endif
@@ -116,7 +117,7 @@ unsigned int clock_ticks_per_period(unsigned int microseconds);
 #define EXCODE_SYS          2
 #define EXCODE_OTHER        3
 
-unsigned int get_exccode(unsigned int cause);
+unsigned int get_exccode(state_t* state);
 
 
 #endif

@@ -17,7 +17,7 @@ void loop_test2() {
 void empty_loop() {
     SYSCALL(1,42,11,6);
 
-    LOG("asfdasfdafs");
+    DEBUG_LOG("asfdasfdafs");
 
     SYSCALL(3,41,11,6);
 }

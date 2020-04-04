@@ -24,4 +24,6 @@ void launch();
 
 pcb_t* get_running_proc();
 
+void syscall3();
+
 #endif //BIKAYA_PHASE0_SCHEDULER_H

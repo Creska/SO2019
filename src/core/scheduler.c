@@ -105,4 +105,33 @@ pcb_t *get_running_proc() {
 }
 
 
+void recurse_remove_child(pcb_t* p) {
+
+    pcb_t* first_child = removeChild(p);
+    if (first_child != NULL) {
+        outProcQ(&ready_queue, first_child);
+
+        pcb_t* sib = nextSibling(first_child, first_child);
+        while (sib!=NULL) {
+            outProcQ(&ready_queue, sib);
+            recurse_remove_child(sib);
+            freePcb(sib);
+            sib = nextSibling(sib, first_child);
+        }
+    }
+}
+
+void syscall3() {
+
+    LOG("SYSCALL3");
+
+    outProcQ(&ready_queue, running_proc);
+    recurse_remove_child(running_proc);
+
+    // TODO resume first process in ready_queue (what to do if empty? maybe just HALT?)
+
+
+}
+
+
 

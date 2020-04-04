@@ -1,4 +1,3 @@
-#include <devices/terminal.h>
 #include "core/system.h"
 #include "utils/utils.h"
 
@@ -28,12 +27,6 @@ void set_sp(state_t *s, unsigned int sp_val) {
 }
 
 
-//void set_interrupt_mask(state_t* s, unsigned int mask) {
-//    s->status = (~STATUS_IM_MASK & s->status) | (mask << STATUS_INT_MASK_BIT) | 1;          // TEMP the last |1
-//}
-
-
-
 void set_kernel_mode(state_t *s, unsigned int on) {
     if (on) {
         s->status = s->status & (~STATUS_KUc);                                            // the kernel mode is on when the bit is 0
@@ -60,8 +53,8 @@ void set_interrupts(state_t *s, unsigned int on) {
 }
 
 
-unsigned int get_exccode(unsigned int cause) {
-    unsigned int val = CAUSE_GET_EXCCODE(cause);
+unsigned int get_exccode(state_t* state) {
+    unsigned int val = CAUSE_GET_EXCCODE(state->cause);
 
     switch (val) {
         case EXC_BP:

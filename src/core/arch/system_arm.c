@@ -64,16 +64,17 @@ unsigned int is_interrupt_pending(unsigned int line) {
 void set_interrupts(state_t *s, unsigned int on) {
     if (on) {
         s->cpsr = STATUS_ENABLE_TIMER(s->cpsr);
-        s->cpsr = STATUS_DISABLE_INT(s->cpsr);
+        s->cpsr = STATUS_DISABLE_INT(s->cpsr);              // TODO makes no sense
     } else {
-        s->cpsr = STATUS_DISABLE_TIMER(s->cpsr);      // Turn off all bits
+        s->cpsr = STATUS_DISABLE_TIMER(s->cpsr);            // Turn off all bits
         s->cpsr = STATUS_DISABLE_INT(s->cpsr);
     }
 }
 
 
-unsigned int get_exccode(unsigned int cause) {
-    unsigned int val = CAUSE_EXCCODE_GET(cause);
+unsigned int get_exccode(state_t* state) {
+
+    unsigned int val = CAUSE_EXCCODE_GET(state->CP15_Cause);
 
     switch (val) {
         case EXC_BREAKPOINT:

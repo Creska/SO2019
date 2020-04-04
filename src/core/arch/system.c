@@ -1,3 +1,4 @@
+#include <devices/terminal.h>
 #include "core/system.h"
 
 void set_interval_timer(unsigned int val) {

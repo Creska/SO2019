@@ -188,11 +188,11 @@ pcb_t *outChild(pcb_t *p) {
 }
 
 
-struct pcb_t* nextSibling(struct pcb_t* p, struct pcb_t* first_sibling) {       // Semplice metodo per facilitare l'iterazione sulla lista di fratelli, siccome ha una struttura particolare
-    if (p->p_sib.next==&first_sibling->p_sib) {
+struct pcb_t* nextSibling(struct pcb_t* target_sibling, struct pcb_t* first_sibling) {       // Semplice metodo per facilitare l'iterazione sulla lista di fratelli, siccome ha una struttura particolare
+    if (target_sibling->p_sib.next == &first_sibling->p_sib) {
         return NULL;
     } else {
-        return container_of(p->p_sib.next, struct pcb_t, p_sib);
+        return container_of(target_sibling->p_sib.next, struct pcb_t, p_sib);
     }
 }
 
