@@ -7,8 +7,6 @@
 int main() {
 
 
-    // Testing get_areas and pointer printing functionality
-
     // Initialize interrupt new area
     state_t* int_new_area = get_new_area_int();
     init_area(int_new_area, handle_interrupt);
@@ -27,12 +25,11 @@ int main() {
     add_process(test2, 1, 0, 1, 1);
     add_process(test3, 1, 0, 1, 1);
 
-//    add_process(test2, 2, 0, 1, 1);
-//    add_process(test3, 3, 0, 1, 1);
-
 
     launch();
 
+
+    // TODO do we need to enable the local timer on umps?
 
 
 }

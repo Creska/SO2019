@@ -19,7 +19,7 @@ unsigned int get_ticks_per_slice();
 
 pcb_t* add_process(void* method, unsigned int priority, unsigned int vm_on, unsigned int km_on, unsigned int int_on);
 
-// temp function that runs the head process of the ready queue
+// TEMP function that runs the head process of the ready queue
 void launch();
 
 pcb_t* get_running_proc();
