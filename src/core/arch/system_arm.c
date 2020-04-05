@@ -1,3 +1,5 @@
+// System source file with arm-specific definitions
+
 #include <utils/utils.h>
 #include <devices/terminal.h>
 #include "core/system.h"
@@ -61,15 +63,22 @@ unsigned int is_interrupt_pending(unsigned int line) {
     return CAUSE_IP_GET(getCAUSE(), line);
 }
 
-void set_interrupts(state_t *s, unsigned int on) {
+void set_other_interrupts(state_t *s, unsigned int on) {
     if (on) {
-        s->cpsr = STATUS_ENABLE_TIMER(s->cpsr);
-        s->cpsr = STATUS_DISABLE_INT(s->cpsr);              // TODO makes no sense
+        s->cpsr = STATUS_ENABLE_INT(s->cpsr);
     } else {
-        s->cpsr = STATUS_DISABLE_TIMER(s->cpsr);            // Turn off all bits
         s->cpsr = STATUS_DISABLE_INT(s->cpsr);
     }
 }
+
+void set_interval_timer_interrupts(state_t* s, unsigned int on) {
+    if (on) {
+        s->cpsr = STATUS_ENABLE_TIMER(s->cpsr);
+    } else {
+        s->cpsr = STATUS_DISABLE_TIMER(s->cpsr);            // Turn off all bits
+    }
+}
+
 
 
 unsigned int get_exccode(state_t* state) {

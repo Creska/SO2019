@@ -6,7 +6,6 @@ struct list_head ready_queue;
 pcb_t* running_proc = NULL;
 
 
-#define SCHED_PRIORITY_INC 1
 
 
 void init_scheduler() {
@@ -23,9 +22,6 @@ unsigned int get_ticks_per_slice() {
 
 void on_scheduler_callback() {
 
-    // logica processi (cambia processo in esecuzione se necessario)
-
-
     struct pcb_t* target_proc;
     list_for_each_entry(target_proc, &ready_queue, p_next) {                    // Increments the priority of each process in the ready_queue
         target_proc->priority += SCHED_PRIORITY_INC;
@@ -34,7 +30,7 @@ void on_scheduler_callback() {
     state_t* interrupted_process_state = get_old_area_int();
 
 #ifdef TARGET_UARM
-    interrupted_process_state->pc -= WORD_SIZE;                                       // On arm after an interrupt the pc needs to be decremented by one instruction
+    interrupted_process_state->pc -= WORD_SIZE;                                       // On arm after an interrupt the pc needs to be decremented by one instruction (used ifdef to avoid useless complexity)
 #endif
 
     mem_cpy(interrupted_process_state, &running_proc->p_s, sizeof(state_t));          // Copies the state_t saved in the old area in the pcb's state (otherwise data modified during execution would be lost)
@@ -49,9 +45,7 @@ void on_scheduler_callback() {
 }
 
 
-pcb_t* add_process(void* method, unsigned int priority, unsigned int vm_on, unsigned int km_on, unsigned int int_on) {
-
-DEBUG_LOG_INT("Starting addition of process with priority: ", priority);
+pcb_t* add_process(void* method, unsigned int priority, unsigned int vm_on, unsigned int km_on, unsigned int int_timer_on, unsigned int other_int_on) {
 
     pcb_t* p = allocPcb();
     if (p!=NULL) {
@@ -68,28 +62,25 @@ DEBUG_LOG_INT("Starting addition of process with priority: ", priority);
             p->p_s.status = p->p_s.status & ~STATUS_KUp;                        // Kernel mode is on when the corresponding bit is 0
         }
 
-        if (int_on) {
+        if (int_timer_on) {
             p->p_s.status = p->p_s.status | STATUS_IEp;
-            p->p_s.status = p->p_s.status | (1<<10);                            // TEMP For now just enable interval timer interrupts
+            set_interval_timer_interrupts(&p->p_s, 1);
         }
 
         if (vm_on) {
             p->p_s.status = p->p_s.status | STATUS_VMp;
         }
 
-        //p->p_s.status = p->p_s.status | (1<<28);            // TODO is it necessary?
-
-
 #elif TARGET_UARM                                       // On architectures without these mini-stacks (arm) we can just set the values normally
         set_virtual_mem(&p->p_s, vm_on);
         set_kernel_mode(&p->p_s, km_on);
-        set_interrupts(&p->p_s, int_on);
+        set_interval_timer_interrupts(&p->p_s, int_timer_on);
+        set_other_interrupts(&p->p_s, other_int_on);
 #endif
 
         set_sp(&p->p_s, RAM_TOP - FRAME_SIZE*(get_process_index(p)+1));         // Use the index of the process as index of the frame, this should avoid overlaps at any time
-                                                                                        // TODO does this needs a +1?
 
-
+        // FIXME the instant swap logic on higher priority is not working as expected
         if (running_proc && p->priority > running_proc->priority) {                 // Ensure swap if p has greater priority
 
             DEBUG_LOG("Starting instant process swapping");
@@ -100,11 +91,6 @@ DEBUG_LOG_INT("Starting addition of process with priority: ", priority);
 
             DEBUG_LOG("test");
 
-#ifdef TARGET_UARM
-
-running_proc->p_s.pc -= WORD_SIZE;
-
-#endif
 
 
             //set_interrupts(&get_running_proc()->p_s, 0);
@@ -116,7 +102,7 @@ running_proc->p_s.pc -= WORD_SIZE;
             print_process_queue_priorities(&ready_queue);
             DEBUG_LOG("Resuming process after swap");
 
-            temp->pc_epc = getEPC();
+            // temp->pc_epc = getEPC();
             LDST(&running_proc->p_s);
 
         } else {
@@ -134,9 +120,13 @@ running_proc->p_s.pc -= WORD_SIZE;
 }
 
 void launch() {
-    running_proc = removeProcQ(&ready_queue);
-    set_interval_timer(get_ticks_per_slice());
-    LDST(&running_proc->p_s);                                         // Launches the first process in the ready queue
+    if (!emptyProcQ(&ready_queue)) {
+        running_proc = removeProcQ(&ready_queue);
+        set_interval_timer(get_ticks_per_slice());
+        LDST(&running_proc->p_s);
+    } else {
+        adderrbuf("Impossible to launch the system, no processes in the ready queue");
+    }
 }
 
 pcb_t *get_running_proc() {

@@ -13,22 +13,22 @@ void handle_sysbreak() {
     state_t* s = get_old_area_sys_break();
 
     if (cause_code == EXCODE_SYS) {
-        DEBUG_LOG("SYS");
 
+        unsigned int a0, a1, a2, a3;
 
-        unsigned int a0;
-#ifdef TARGET_UMPS
-
+#ifdef TARGET_UMPS                                  // Handled with ifdef to avoid useless complexity
         s->pc_epc += WORD_SIZE;
 
         a0 = s->reg_a0;
-
+        a1 = s->reg_a1;
+        a2 = s->reg_a2;
+        a3 = s->reg_a3;
 #elif TARGET_UARM
-
         a0 = s->a1;
-
+        a1 = s->a2;
+        a2 = s->a3;
+        a3 = s->a4;
 #endif
-
 
         switch (a0) {
             case 3:
@@ -38,11 +38,9 @@ void handle_sysbreak() {
                 adderrbuf("ERROR: Syscall not recognised");
         }
 
-
     } else if (cause_code == EXCODE_BP) {
-        DEBUG_LOG("BP");
+        adderrbuf("ERROR: BreakPoint launched, handler still not implemented!");
     }
 
     LDST(s);
-
 }

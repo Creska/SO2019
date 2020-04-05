@@ -4,9 +4,7 @@
 #include "core/system.h"
 
 void loop_test() {
-    while (1) {
-        LOG("yoooooooooo");
-    }
+    DEBUG_LOG("ciao");
 }
 
 void loop_test2() {
@@ -26,7 +24,7 @@ void empty_loop() {
 void launcher() {
     LOG("Starting launcher process");
 
-    add_process(loop_test, 4, 0, 1, 1);
+    //add_process(loop_test, 4, 0, 1, 1);
 
     LOG("Ending launcher");
 }

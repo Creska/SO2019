@@ -16,22 +16,16 @@ int main() {
      init_area(sysbrk_new_area, handle_sysbreak);
 
 
-
-
     init_scheduler();
 
 
-//    add_process(test1, 1, 0, 1, 1);
-//    add_process(test2, 2, 0, 1, 1);
-//    add_process(test3, 3, 0, 1, 1);
-//
+    add_process(test1, 1, 0, 1, 1, 0);
+    add_process(test2, 2, 0, 1, 1, 0);
+    add_process(test3, 3, 0, 1, 1, 0);
 
-    add_process(launcher, 1, 0, 1,1);
+
 
     launch();
-
-
-    // TODO do we need to enable the local timer on umps?
 
 
 }

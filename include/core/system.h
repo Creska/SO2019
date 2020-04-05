@@ -23,8 +23,6 @@
     #define SYSBK_OLDAREA       (RAM_BASE + (6 * STATE_T_SIZE))
     #define SYSBK_NEWAREA       (RAM_BASE + (7 * STATE_T_SIZE))
 
-    #define STATUS_INT_MASK_BIT 8
-
 
     //the following three lines are copied from p1.5test_bikaya_v0.c
     #define RAMBASE    *((unsigned int *)BUS_REG_RAM_BASE)      //BUS_REG_RAM_BASE and BUS_REG_RAM_SIZE are defined in arch.h
@@ -68,14 +66,19 @@ void set_kernel_mode(state_t* s, unsigned int on);
 // Sets the Virtual Memory bit in the status register of the given CPU state
 void set_virtual_mem(state_t* s, unsigned int on);
 
-void set_interrupts(state_t* s, unsigned int on);
+// Set interval timer interrupts
+void set_interval_timer_interrupts(state_t* s, unsigned int on);
+
+// Sets all interrupts other than the interval timer's
+void set_other_interrupts(state_t* s, unsigned int on);
 
 // Sets the stack pointer value for the given state
 void set_sp(state_t* s, unsigned int sp_val);
 
-
+// Sets the program counter value for the given state
 void set_pc(state_t* s, void (*ptr)());
 
+// Returns 1 if an interrupt is pending on the given line, 0 otherwise
 unsigned int is_interrupt_pending(unsigned int line);
 
 
@@ -89,18 +92,30 @@ void set_interval_timer(unsigned int val);
 
 // Gets a pointer to the system/break new area
 state_t* get_new_area_sys_break();
+
+// Gets a pointer to the syscall/break old area
+// (where the processor state is saved during a syscall/breakpoint exception)
 state_t* get_old_area_sys_break();
 
 // Gets a pointer to the program trap new area
 state_t* get_new_area_program_trap();
+
+// Gets a pointer to the program trap old area
+// (where the processor state is saved during a program trap exception)
 state_t* get_old_area_program_trap();
 
 // Gets a pointer to the TLB new area
 state_t* get_new_area_TLB();
+
+// Gets a pointer to the program trap old area
+// (where the processor state is saved during a TLB exception)
 state_t* get_old_area_TLB();
 
 // Gets a pointer to the system/break new area
 state_t* get_new_area_int();
+
+// Gets a pointer to the program trap old area
+// (where the processor state is saved during a interrupt exception)
 state_t* get_old_area_int();
 
 
@@ -114,10 +129,11 @@ void init_area(state_t* area, void (*handler)());
 unsigned int clock_ticks_per_period(unsigned int microseconds);
 
 
-#define EXCODE_BP           1
+#define EXCODE_BP           1           // Codes used to determine the cause of an exception
 #define EXCODE_SYS          2
-#define EXCODE_OTHER        3
+#define EXCODE_OTHER        3           // this system will easily support more codes when needed
 
+// Returns an unsigned integer code corresponding to the cause of an exeption as defined in EXCODE_... macros
 unsigned int get_exccode(state_t* state);
 
 
