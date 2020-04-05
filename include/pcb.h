@@ -87,4 +87,8 @@ pcb_t *nextSibling(pcb_t *target_sibling, pcb_t* first_sibling);
 // Returns the index that the given pcb occupies in the internal array, it can double as a process id
 unsigned int get_process_index(pcb_t* p);
 
+
+void print_process_queue_priorities(struct list_head* queue);
+
+
 #endif

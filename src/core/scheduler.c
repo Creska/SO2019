@@ -3,7 +3,7 @@
 
 unsigned int clock_ticks_per_time_slice = 0;
 struct list_head ready_queue;
-pcb_t* running_proc;
+pcb_t* running_proc = NULL;
 
 
 #define SCHED_PRIORITY_INC 1
@@ -51,7 +51,7 @@ void on_scheduler_callback() {
 
 pcb_t* add_process(void* method, unsigned int priority, unsigned int vm_on, unsigned int km_on, unsigned int int_on) {
 
-    // TODO priority swap right away if necessary
+DEBUG_LOG_INT("Starting addition of process with priority: ", priority);
 
     pcb_t* p = allocPcb();
     if (p!=NULL) {
@@ -77,6 +77,9 @@ pcb_t* add_process(void* method, unsigned int priority, unsigned int vm_on, unsi
             p->p_s.status = p->p_s.status | STATUS_VMp;
         }
 
+        //p->p_s.status = p->p_s.status | (1<<28);            // TODO is it necessary?
+
+
 #elif TARGET_UARM                                       // On architectures without these mini-stacks (arm) we can just set the values normally
         set_virtual_mem(&p->p_s, vm_on);
         set_kernel_mode(&p->p_s, km_on);
@@ -85,7 +88,43 @@ pcb_t* add_process(void* method, unsigned int priority, unsigned int vm_on, unsi
 
         set_sp(&p->p_s, RAM_TOP - FRAME_SIZE*(get_process_index(p)+1));         // Use the index of the process as index of the frame, this should avoid overlaps at any time
                                                                                         // TODO does this needs a +1?
-        insertProcQ(&ready_queue, p);                                                   // Insertion of the process in the ready_queue
+
+
+        if (running_proc && p->priority > running_proc->priority) {                 // Ensure swap if p has greater priority
+
+            DEBUG_LOG("Starting instant process swapping");
+
+            STST(&running_proc->p_s);                                               // (saving the state of the previously running process)
+
+            state_t* temp = &running_proc->p_s;
+
+            DEBUG_LOG("test");
+
+#ifdef TARGET_UARM
+
+running_proc->p_s.pc -= WORD_SIZE;
+
+#endif
+
+
+            //set_interrupts(&get_running_proc()->p_s, 0);
+
+            running_proc->priority = running_proc->original_priority;
+            insertProcQ(&ready_queue, running_proc);
+            running_proc = p;
+
+            print_process_queue_priorities(&ready_queue);
+            DEBUG_LOG("Resuming process after swap");
+
+            temp->pc_epc = getEPC();
+            LDST(&running_proc->p_s);
+
+        } else {
+            insertProcQ(&ready_queue, p);                                                   // Insertion of the process in the ready_queue
+        }
+
+
+
         return p;
 
     } else {
@@ -122,15 +161,16 @@ void recursive_remove_children(pcb_t* p) {
 }
 
 void syscall3() {
-
-    LOG("SYSCALL3");
-
     outProcQ(&ready_queue, running_proc);
     recursive_remove_children(running_proc);
 
-    // TODO resume first process in ready_queue (what to do if empty? maybe just HALT?)
-
-
+    if (!emptyProcQ(&ready_queue)) {
+        running_proc = removeProcQ(&ready_queue);
+        LDST(&running_proc->p_s);
+    } else {
+        LOG ("No processes left");
+        HALT();
+    }
 }
 
 

@@ -198,4 +198,13 @@ struct pcb_t* nextSibling(struct pcb_t* target_sibling, struct pcb_t* first_sibl
 
 unsigned int get_process_index(pcb_t *p) {
     return p-pcbFree_table;
+}
+
+void print_process_queue_priorities(struct list_head* queue) {
+    pcb_t *target_pcb;
+    DEBUG_LOG("QUEUE:");
+    list_for_each_entry(target_pcb, queue, p_next) {     // Scorriamo la lista di processi
+        DEBUG_LOG_INT("P: ", target_pcb->priority);
+    }
+    DEBUG_LOG("\n");
 };

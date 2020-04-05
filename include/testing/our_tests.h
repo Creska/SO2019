@@ -7,4 +7,7 @@ void loop_test2();
 
 void empty_loop();
 
+
+void launcher();
+
 #endif //BIKAYA_PHASE0_OUR_TESTS_H

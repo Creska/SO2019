@@ -69,7 +69,9 @@ char* num_to_str_buf(int i, const char digit[], int base, char* b);
 
 // Logs a message to terminal0
 #define LOG(message)    \
-addokbuf(message)
+addokbuf(message);      \
+addokbuf("\n")
+
 
 #ifdef DEBUG
 

@@ -78,6 +78,7 @@ void set_pc(state_t* s, void (*ptr)());
 
 unsigned int is_interrupt_pending(unsigned int line);
 
+
 // BUS Register -------------------------------------------------------------------------------------------------------
 
 // Sets the value of the interval timer
