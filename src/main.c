@@ -19,14 +19,17 @@ int main() {
     init_scheduler();
 
 
-    add_process(test1, 1, 0, 1, 1, 0);
-    add_process(test2, 2, 0, 1, 1, 0);
-    add_process(test3, 3, 0, 1, 1, 0);
+//    add_process(test1, 1, 0, 1, 1, 0);
+//    add_process(test2, 2, 0, 1, 1, 0);
+//    add_process(test3, 3, 0, 1, 1, 0);
+    add_process(launcher, 3, 0, 1, 1, 0);
 
 
 
     launch();
 
+
+    // TODO FRAME_SIZE or FRAMESIZE?
 
 }
 

@@ -6,14 +6,12 @@ struct list_head ready_queue;
 pcb_t* running_proc = NULL;
 
 
-
-
 void init_scheduler() {
-    clock_ticks_per_time_slice = clock_ticks_per_period(SCHEDULER_TIME_SLICE);                      // This value will be the same until reboot or reset
-
+    clock_ticks_per_time_slice = clock_ticks_per_period(SCHEDULER_TIME_SLICE);                      // This value will be the same until reboot or reset, we can just cache it
     initPcbs();
     mkEmptyProcQ(&ready_queue);
 }
+
 
 unsigned int get_ticks_per_slice() {
     return clock_ticks_per_time_slice;
@@ -23,8 +21,8 @@ unsigned int get_ticks_per_slice() {
 void on_scheduler_callback() {
 
     struct pcb_t* target_proc;
-    list_for_each_entry(target_proc, &ready_queue, p_next) {                    // Increments the priority of each process in the ready_queue
-        target_proc->priority += SCHED_PRIORITY_INC;
+    list_for_each_entry(target_proc, &ready_queue, p_next) {                    // Increments the priority of each process in the ready_queue (anti-starvation measure)
+        target_proc->priority += PRIORITY_INC_PER_TIME_SLICE;
     }
 
     state_t* interrupted_process_state = get_old_area_int();
@@ -51,46 +49,36 @@ pcb_t* add_process(void* method, unsigned int priority, unsigned int vm_on, unsi
     if (p!=NULL) {
 
         set_pc(&p->p_s, method);
-
+        set_sp(&p->p_s, RAM_TOP - FRAME_SIZE*(get_process_index(p)+1));         // Use the index of the process as index of the frame, this should avoid overlaps at any time
         p->priority = priority;
         p->original_priority = priority;
 
 
 #ifdef TARGET_UMPS  // On umps we need to set the previous values since on process loading the vm, kernel and global interrupts stacks are popped
 
-        if (km_on) {
-            p->p_s.status = p->p_s.status & ~STATUS_KUp;                        // Kernel mode is on when the corresponding bit is 0
-        }
+        if (km_on) { p->p_s.status = p->p_s.status & ~STATUS_KUp; }                                 // Kernel mode is on when the corresponding bit is 0
+        if (vm_on) { p->p_s.status = p->p_s.status | STATUS_VMp; }
+        if (int_timer_on || other_int_on) { p->p_s.status = p->p_s.status | STATUS_IEp; }           // Manually sets the previous global interrupt switch
 
-        if (int_timer_on) {
-            p->p_s.status = p->p_s.status | STATUS_IEp;
-            set_interval_timer_interrupts(&p->p_s, 1);
-        }
+#elif TARGET_UARM  // On architectures without these mini-stacks (arm in our case) we can just set the values normally (using system.h methods)
 
-        if (vm_on) {
-            p->p_s.status = p->p_s.status | STATUS_VMp;
-        }
-
-#elif TARGET_UARM                                       // On architectures without these mini-stacks (arm) we can just set the values normally
         set_virtual_mem(&p->p_s, vm_on);
         set_kernel_mode(&p->p_s, km_on);
-        set_interval_timer_interrupts(&p->p_s, int_timer_on);
-        set_other_interrupts(&p->p_s, other_int_on);
+
 #endif
 
-        set_sp(&p->p_s, RAM_TOP - FRAME_SIZE*(get_process_index(p)+1));         // Use the index of the process as index of the frame, this should avoid overlaps at any time
+        set_interval_timer_interrupts(&p->p_s, int_timer_on);
+        set_other_interrupts(&p->p_s, other_int_on);
+
 
         // FIXME the instant swap logic on higher priority is not working as expected
-        if (running_proc && p->priority > running_proc->priority) {                 // Ensure swap if p has greater priority
+        if (running_proc && p->priority > running_proc->priority) {                     // Ensure instant process swap if p has greater priority than the running process
 
             DEBUG_LOG("Starting instant process swapping");
 
-            STST(&running_proc->p_s);                                               // (saving the state of the previously running process)
+            STST(&running_proc->p_s);                                                   // (saving the state of the previously running process)
 
-            state_t* temp = &running_proc->p_s;
-
-            DEBUG_LOG("test");
-
+            //state_t* temp = &running_proc->p_s;
 
 
             //set_interrupts(&get_running_proc()->p_s, 0);
@@ -99,7 +87,7 @@ pcb_t* add_process(void* method, unsigned int priority, unsigned int vm_on, unsi
             insertProcQ(&ready_queue, running_proc);
             running_proc = p;
 
-            print_process_queue_priorities(&ready_queue);
+            //print_process_queue_priorities(&ready_queue);
             DEBUG_LOG("Resuming process after swap");
 
             // temp->pc_epc = getEPC();
@@ -109,12 +97,10 @@ pcb_t* add_process(void* method, unsigned int priority, unsigned int vm_on, unsi
             insertProcQ(&ready_queue, p);                                                   // Insertion of the process in the ready_queue
         }
 
-
-
         return p;
 
     } else {
-        adderrbuf("ERROR: No free pcbs while adding a new process!");
+        adderrbuf("ERROR: The maximum number of processes has been reached!");
         return NULL;
     }
 }

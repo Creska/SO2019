@@ -5,6 +5,7 @@
 
 void loop_test() {
     DEBUG_LOG("ciao");
+    SYSCALL(3,0,0,0);
 }
 
 void loop_test2() {
@@ -24,7 +25,7 @@ void empty_loop() {
 void launcher() {
     LOG("Starting launcher process");
 
-    //add_process(loop_test, 4, 0, 1, 1);
+    add_process(loop_test, 4, 0, 1, 1, 0);
 
     LOG("Ending launcher");
 }

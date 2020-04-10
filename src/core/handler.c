@@ -8,15 +8,16 @@ void handle_interrupt() {
 
 void handle_sysbreak() {
 
+    LOG("SYS");
+
     unsigned int cause_code = get_exccode(get_old_area_sys_break());
 
     state_t* s = get_old_area_sys_break();
 
     if (cause_code == EXCODE_SYS) {
 
-        unsigned int a0, a1, a2, a3;
-
-#ifdef TARGET_UMPS                                  // Handled with ifdef to avoid useless complexity
+        unsigned int a0, a1, a2, a3;                // Retrieving syscall type and arguments from processor registers
+#ifdef TARGET_UMPS                                  // (handled with ifdef for now to avoid useless complexity, in the next phase this kind of stuff could be handled with a pattern similar to system)
         s->pc_epc += WORD_SIZE;
 
         a0 = s->reg_a0;

@@ -184,7 +184,7 @@ pcb_t *outChild(pcb_t *p) {
     }
     adderrbuf("ERROR: outChild() couldn't find the received p, something must be broken with the tree structure");
     PANIC();
-    return NULL;                                // Serve solo ad evitare warning, PANIC dovrebbe causare un system halt
+    return NULL;                                // This lines just avoids IDE warnings, PANIC() should halt execution before this line is reached
 }
 
 

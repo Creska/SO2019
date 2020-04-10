@@ -5,8 +5,7 @@
 
 unsigned int set_bits(unsigned int original, unsigned int bit, unsigned int value);
 
-void copy_state(state_t* src, state_t* dst);
-
+// Our implementation of memcpy
 void* mem_cpy(void* source_s, void* target_s, unsigned int bytes);
 
 

@@ -4,8 +4,8 @@
 #include "core/system.h"
 #include "pcb.h"
 
-#define SCHEDULER_TIME_SLICE 3000   // in microseconds
-#define SCHED_PRIORITY_INC 1
+#define SCHEDULER_TIME_SLICE            30000           // in microseconds
+#define PRIORITY_INC_PER_TIME_SLICE     1               // The amount the priority of each process in the ready queue is increased every time slice
 
 
 // Initialization routine for the scheduler
@@ -19,10 +19,10 @@ void on_scheduler_callback();
 unsigned int get_ticks_per_slice();
 
 // Adds a process to the ready queue
-// If the added process has an higher priority than the running process the furst is executed right away and the second goes back to the ready queue
+// If the added process has an higher priority than the running process the first is executed right away and the second goes back to the ready queue
 pcb_t* add_process(void* method, unsigned int priority, unsigned int vm_on, unsigned int km_on, unsigned int int_timer_on, unsigned int other_int_on);
 
-// Launches the process with the higher priority in the ready queue
+// Launches the process with the higher priority in the ready queue, panics if the ready queue is empty.
 void launch();
 
 // Returns a pointer to the running PCB
