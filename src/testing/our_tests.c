@@ -28,4 +28,6 @@ void launcher() {
     add_process(loop_test, 4, 0, 1, 1, 0);
 
     LOG("Ending launcher");
+
+    SYSCALL(3, 0, 0, 0);
 }

@@ -70,27 +70,19 @@ pcb_t* add_process(void* method, unsigned int priority, unsigned int vm_on, unsi
         set_interval_timer_interrupts(&p->p_s, int_timer_on);
         set_other_interrupts(&p->p_s, other_int_on);
 
-
-        // FIXME the instant swap logic on higher priority is not working as expected
         if (running_proc && p->priority > running_proc->priority) {                     // Ensure instant process swap if p has greater priority than the running process
 
             DEBUG_LOG("Starting instant process swapping");
 
-            STST(&running_proc->p_s);                                                   // (saving the state of the previously running process)
+            STST(&running_proc->p_s);                                                  // (saving the state of the previously running process)
+            set_pc(&running_proc->p_s, __builtin_return_address(0));              // setting the pc of the saved process to the return address of this function, otherwise that process would resume here
 
-            //state_t* temp = &running_proc->p_s;
-
-
-            //set_interrupts(&get_running_proc()->p_s, 0);
-
-            running_proc->priority = running_proc->original_priority;
+            running_proc->priority = running_proc->original_priority;                  // resetting the priority to the original priority on ready queue insertion
             insertProcQ(&ready_queue, running_proc);
             running_proc = p;
 
-            //print_process_queue_priorities(&ready_queue);
             DEBUG_LOG("Resuming process after swap");
 
-            // temp->pc_epc = getEPC();
             LDST(&running_proc->p_s);
 
         } else {
@@ -148,6 +140,3 @@ void syscall3() {
         HALT();
     }
 }
-
-
-

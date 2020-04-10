@@ -30,8 +30,7 @@
     #define RAM_TOP     (RAMBASE + RAMSIZE)
 
     #define FRAMESIZE 1024
-
-#define  FRAME_SIZE 4096
+    #define FRAME_SIZE 4096
 
 #endif
 #ifdef TARGET_UARM

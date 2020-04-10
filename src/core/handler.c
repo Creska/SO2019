@@ -45,3 +45,11 @@ void handle_sysbreak() {
 
     LDST(s);
 }
+
+void handle_TLB() {
+    adderrbuf("ERROR: TLB exception handling not implemented yet");
+}
+
+void handle_trap() {
+    adderrbuf("ERROR: program trap handling not implemented yet");
+}

@@ -3,6 +3,8 @@ target_sources(kernel PRIVATE                   # Adds this files as sources to 
         testing/p1.5test_bikaya_v0.c
         testing/our_tests.c
 
+        bikaya.c
+
         core/scheduler.c
         core/interrupts.c
         core/handler.c
