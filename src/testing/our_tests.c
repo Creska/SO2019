@@ -1,7 +1,7 @@
-#include <devices/terminal.h>
 #include <core/scheduler.h>
 #include "testing/our_tests.h"
 #include "core/system.h"
+#include "utils/debug.h"
 
 void loop_test() {
     DEBUG_LOG("ciao");

@@ -1,5 +1,6 @@
-#include <utils/utils.h>
+#include "utils/utils.h"
 #include "core/scheduler.h"
+#include "utils/debug.h"
 
 unsigned int clock_ticks_per_time_slice = 0;
 struct list_head ready_queue;
@@ -43,7 +44,7 @@ void on_scheduler_callback() {
 }
 
 
-pcb_t* add_process(void* method, unsigned int priority, unsigned int vm_on, unsigned int km_on, unsigned int int_timer_on, unsigned int other_int_on) {
+pcb_t* add_process(void* method, int priority, unsigned int vm_on, unsigned int km_on, unsigned int int_timer_on, unsigned int other_int_on) {
 
     pcb_t* p = allocPcb();
     if (p!=NULL) {
@@ -51,8 +52,7 @@ pcb_t* add_process(void* method, unsigned int priority, unsigned int vm_on, unsi
         set_pc(&p->p_s, method);
         set_sp(&p->p_s, RAM_TOP - FRAME_SIZE*(get_process_index(p)+1));         // Use the index of the process as index of the frame, this should avoid overlaps at any time
         p->priority = priority;
-        p->original_priority = priority;
-
+        p->original_priority = priority;                        // TODO FRAME_SIZE or FRAMESIZE?
 
 #ifdef TARGET_UMPS  // On umps we need to set the previous values since on process loading the vm, kernel and global interrupts stacks are popped
 
@@ -88,7 +88,6 @@ pcb_t* add_process(void* method, unsigned int priority, unsigned int vm_on, unsi
         } else {
             insertProcQ(&ready_queue, p);                                                   // Insertion of the process in the ready_queue
         }
-
         return p;
 
     } else {

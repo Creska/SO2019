@@ -1,3 +1,4 @@
+#include <utils/debug.h>
 #include "bikaya.h"
 #include "core/scheduler.h"
 #include "core/handler.h"
@@ -5,6 +6,8 @@
 
 
 void bikaya_initialize() {
+
+    LOG("Initialization");
 
     // New areas initialization
     state_t* int_new_area = get_new_area_int();
@@ -29,4 +32,10 @@ void bikaya_quick_launch(void *method, unsigned int priority, unsigned int vm_on
     bikaya_initialize();
     add_process(method, priority, vm_on, km_on, int_timer_on, other_int_on);
     launch();
+}
+
+void bikaya_launch(struct process_init_data *starting_processes, unsigned int len) {
+    bikaya_initialize();
+    for (int i = 0; i < len; ++i) {
+    }
 }

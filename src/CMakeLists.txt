@@ -11,7 +11,9 @@ target_sources(kernel PRIVATE                   # Adds this files as sources to 
 
         asl.c
         pcb.c
-        utils.c
+
+        utils/utils.c
+        utils/debug.c
 
         devices/printer.c
         devices/terminal.c

@@ -3,6 +3,10 @@
 
 #include "core/system.h"
 
+// Sets some bits of a given unsigned int
+//
+// original:    is the original value
+//
 unsigned int set_bits(unsigned int original, unsigned int bit, unsigned int value);
 
 // Our implementation of memcpy

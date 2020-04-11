@@ -26,8 +26,6 @@ elseif(CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES RelMixSize)
     SET(CMAKE_BUILD_TYPE Custom)                                                        # with build type set to Release or similar cmake sets some flags that are incompatible with our cross compilers
 endif()                                                                                 # setting the build type to custom prevents that
 
-
-
 # PROJECT SETUP -------------------------------------------------------------------------------------------------------
 
 cmake_minimum_required(VERSION 3.13...3.17)                             # Defines a range of tested CMake versions, important since the language and paradigms have changed a lot between versions
