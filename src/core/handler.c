@@ -8,10 +8,15 @@
 
 void handle_interrupt() {
     DEBUG_LOG("HANDLING INTERRUPTS");
+    pcb_t* interrupted_running_proc = get_running_proc();
     consume_interrupts();
-    DEBUG_LOG("");
-    set_interval_timer(get_ticks_per_slice());          // reset the interval timer (acknowledging the interrupt)
-    LDST(&get_running_proc()->p_s);                                 // Resume the execution of the process
+    DEBUG_SPACING;
+    set_interval_timer(get_ticks_per_slice());                          // reset the interval timer (acknowledging the interrupt)
+    if (interrupted_running_proc!=get_running_proc()) {
+        LDST(&get_running_proc()->p_s);                                 // Resume the execution of the process
+    } else {
+        LDST(get_old_area_int());                                       // If
+    }
 }
 
 void load_syscall_registers(state_t* s, unsigned int* n, unsigned int* a1, unsigned int* a2, unsigned int* a3) {

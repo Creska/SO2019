@@ -5,7 +5,7 @@
 #include "core/processes/pcb.h"
 
 #ifdef DEBUG
-#define SCHEDULER_TIME_SLICE            3000            // in microseconds
+#define SCHEDULER_TIME_SLICE            30000            // in microseconds (increased in DEBUG mode to minimize risk of interval timer interruptions while logging during process execution)
 #else
 #define SCHEDULER_TIME_SLICE            3000            // in microseconds
 #endif

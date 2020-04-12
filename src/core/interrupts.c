@@ -3,13 +3,6 @@
 #include "core/system/system.h"
 #include "core/processes/scheduler.h"
 
-// Used to cache the interval timer value on timer interrupt freeze
-unsigned int cached_interval_timer_val;
-
-// Stores the depth of the "freeze stack", allowing for multiple freeze/restore calls
-unsigned int interval_timer_frozen_depth;
-
-unsigned int freeze_enabled = 1;
 
 void consume_interrupts() {
     // Check and handle interrupts pending line by line in order of priority

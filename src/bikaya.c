@@ -1,5 +1,5 @@
-#include <utils/debug.h>
 #include "bikaya.h"
+#include "utils/debug.h"
 #include "core/processes/scheduler.h"
 #include "core/exceptions/handler.h"
 
@@ -22,8 +22,9 @@ void bikaya_initialize() {
     state_t* trap_new_area = get_new_area_program_trap();
     init_new_area(trap_new_area, handle_trap);
 
-    DEBUG_LOG("Scheduler initialization\n");
+    DEBUG_LOG("Scheduler initialization");
     init_scheduler();
+    DEBUG_SPACING;
 }
 
 
