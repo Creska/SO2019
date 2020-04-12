@@ -1,4 +1,4 @@
-#include "pcb.h"
+#include "core/processes/pcb.h"
 
 
 pcb_t pcbFree_table[MAXPROC];           // L'array in cui effettivamente risiedono i nostri PCB

@@ -16,7 +16,6 @@ terminal* get_terminal(unsigned int device_index);
 char term_getchar(terminal* term);
 
 
-
 /* TERMINAL PRINT functionality (not strictly needed, used just for debug strings */
 
 /* Writes a string to the given terminal */
@@ -43,6 +42,9 @@ void adderrbuf(char *strp);
 // returns a pointer to the given buffer
 char* int_to_str(int i, char *b);
 
+char* uint_to_str(unsigned int i, char *b);
+
+
 // Prints a binary string representation of an int in a buffer
 // returns a pointer to the given buffer
 char* int_to_str_binary(int i, char *b);
@@ -63,5 +65,7 @@ char* ptr_to_str(void* p, char *b);
 // Remarks:
 //      - this method doesn't terminate the string
 char* num_to_str_buf(int i, const char digit[], int base, char* b);
+char* unum_to_str_buf(unsigned int i, const char digit[], int base, char* b);
+
 
 #endif

@@ -1,6 +1,7 @@
 #include "utils/utils.h"
-#include "core/scheduler.h"
+#include "core/processes/scheduler.h"
 #include "utils/debug.h"
+#include "core/exceptions/interrupts.h"
 
 unsigned int clock_ticks_per_time_slice = 0;
 struct list_head ready_queue;
@@ -19,7 +20,7 @@ unsigned int get_ticks_per_slice() {
 }
 
 
-void on_scheduler_callback() {
+void time_slice_callback() {
 
     struct pcb_t* target_proc;
     list_for_each_entry(target_proc, &ready_queue, p_next) {                    // Increments the priority of each process in the ready_queue (anti-starvation measure)
@@ -31,7 +32,7 @@ void on_scheduler_callback() {
 #ifdef TARGET_UARM
     interrupted_process_state->pc -= WORD_SIZE;                                       // On arm after an interrupt the pc needs to be decremented by one instruction (used ifdef to avoid useless complexity)
 #endif
-
+    // TODO memcpy only if needed (when the process is actually swapped)
     mem_cpy(interrupted_process_state, &running_proc->p_s, sizeof(state_t));          // Copies the state_t saved in the old area in the pcb's state (otherwise data modified during execution would be lost)
 
 
@@ -40,17 +41,22 @@ void on_scheduler_callback() {
         running_proc->priority = running_proc->original_priority;                                               // Reset the previously running process' priority to the original
         insertProcQ(&ready_queue, running_proc);                                                                // Insert the previously running process in the ready queue
         running_proc = removeProcQ(&ready_queue);                                                               // and set the first ready process as running (and remove it from the ready queue)
+        DEBUG_LOG_INT("Swapping to processes with original priority: ", running_proc->original_priority);
+    } else {
+        DEBUG_LOG("The current process still has the higher priority, resuming its execution");
     }
 }
 
 
 pcb_t* add_process(void* method, int priority, unsigned int vm_on, unsigned int km_on, unsigned int int_timer_on, unsigned int other_int_on) {
 
+    DEBUG_LOG_INT("ADDING NEW PROCESS WITH PRIORITY: ", priority);
+
     pcb_t* p = allocPcb();
     if (p!=NULL) {
 
         set_pc(&p->p_s, method);
-        set_sp(&p->p_s, RAM_TOP - FRAME_SIZE*(get_process_index(p)+1));         // Use the index of the process as index of the frame, this should avoid overlaps at any time
+        set_sp(&p->p_s, RAM_TOP - FRAME_SIZE*(get_process_index(p)+1));                     // Use the index of the process as index of the frame, this should avoid overlaps at any time
         p->priority = priority;
         p->original_priority = priority;                        // TODO FRAME_SIZE or FRAMESIZE?
 
@@ -71,8 +77,7 @@ pcb_t* add_process(void* method, int priority, unsigned int vm_on, unsigned int 
         set_other_interrupts(&p->p_s, other_int_on);
 
         if (running_proc && p->priority > running_proc->priority) {                     // Ensure instant process swap if p has greater priority than the running process
-
-            DEBUG_LOG("Starting instant process swapping");
+            DEBUG_LOG("The newly added process has higher priority than the running one, swapping them instantly");
 
             STST(&running_proc->p_s);                                                  // (saving the state of the previously running process)
             set_pc(&running_proc->p_s, __builtin_return_address(0));              // setting the pc of the saved process to the return address of this function, otherwise that process would resume here
@@ -81,13 +86,15 @@ pcb_t* add_process(void* method, int priority, unsigned int vm_on, unsigned int 
             insertProcQ(&ready_queue, running_proc);
             running_proc = p;
 
-            DEBUG_LOG("Resuming process after swap");
-
+            DEBUG_LOG("Starting new process after swap\n");
             LDST(&running_proc->p_s);
 
         } else {
+
+            DEBUG_LOG ("Resuming running process after new process addition to the ready queue\n");
             insertProcQ(&ready_queue, p);                                                   // Insertion of the process in the ready_queue
         }
+
         return p;
 
     } else {
@@ -100,6 +107,9 @@ void launch() {
     if (!emptyProcQ(&ready_queue)) {
         running_proc = removeProcQ(&ready_queue);
         set_interval_timer(get_ticks_per_slice());
+
+        DEBUG_LOG_INT("LAUNCHING PROCESS WITH PRIORITY: ", running_proc->priority);
+
         LDST(&running_proc->p_s);
     } else {
         adderrbuf("Impossible to launch the system, no processes in the ready queue");
@@ -127,15 +137,16 @@ void recursive_remove_children(pcb_t* p) {
     }
 }
 
-void syscall3() {
+
+state_t* syscall3() {
     outProcQ(&ready_queue, running_proc);
     recursive_remove_children(running_proc);
 
     if (!emptyProcQ(&ready_queue)) {
         running_proc = removeProcQ(&ready_queue);
-        LDST(&running_proc->p_s);
+        return &running_proc->p_s;
     } else {
-        LOG ("No processes left");
+        addokbuf("No processes left\n");
         HALT();
     }
 }

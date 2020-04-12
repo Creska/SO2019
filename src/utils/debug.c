@@ -1,10 +1,16 @@
 #include "utils/debug.h"
+#include "core/exceptions/interrupts.h"
+#include "core/system/system.h"
 
-void print_log_prefix() {
+
+void start_log() {
+    addokbuf("\t");
     addokbuf(DEBUG_MESSAGE_PREFIX);
+    addokbuf("");
 }
 
-void print_log_suffix() {
+void end_log() {
     addokbuf("\n");
 }
+
 

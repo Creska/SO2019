@@ -1,7 +1,7 @@
 #ifndef BIKAYA_PHASE0_UTILS_H
 #define BIKAYA_PHASE0_UTILS_H
 
-#include "core/system.h"
+#include "core/system/system.h"
 
 // Sets some bits of a given unsigned int
 //

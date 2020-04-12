@@ -1,10 +1,15 @@
 // System source file containing definitions for functions with the same logic for both architectures
 
-#include "core/system.h"
+#include <utils/debug.h>
+#include "core/system/system.h"
 
 
 void set_interval_timer(unsigned int val) {
     *(unsigned int*)BUS_REG_TIMER = val;
+}
+
+unsigned int get_interval_timer() {
+    return *(unsigned int*)BUS_REG_TIMER;
 }
 
 state_t *get_new_area_int() {
@@ -40,7 +45,7 @@ state_t* get_old_area_int() {
 }
 
 
-void init_area(state_t *area, void (*handler)()) {
+void init_new_area(state_t *area, void (*handler)()) {
     set_kernel_mode(area, 1);
     set_virtual_mem(area, 0);
     set_interval_timer_interrupts(area, 0);

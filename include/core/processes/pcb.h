@@ -1,7 +1,7 @@
 #ifndef PCB_H
 #define PCB_H
 
-#include "core/system.h"
+#include "core/system/system.h"
 #include "utils/listx.h"
 #include "core/const.h"
 #include "devices/terminal.h"

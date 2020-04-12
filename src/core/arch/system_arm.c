@@ -2,7 +2,7 @@
 
 #include <utils/utils.h>
 #include <devices/terminal.h>
-#include "core/system.h"
+#include "core/system/system.h"
 
 void reset_state(state_t *s)
 {

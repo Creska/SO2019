@@ -1,10 +1,16 @@
 #ifndef BIKAYA_PHASE0_SCHEDULER_H
 #define BIKAYA_PHASE0_SCHEDULER_H
 
-#include "core/system.h"
-#include "pcb.h"
+#include "core/system/system.h"
+#include "core/processes/pcb.h"
 
-#define SCHEDULER_TIME_SLICE            30000           // in microseconds
+#ifdef DEBUG
+#define SCHEDULER_TIME_SLICE            3000            // in microseconds
+#else
+#define SCHEDULER_TIME_SLICE            3000            // in microseconds
+#endif
+
+
 #define PRIORITY_INC_PER_TIME_SLICE     1               // The amount the priority of each process in the ready queue is increased every time slice
 
 
@@ -12,7 +18,7 @@
 void init_scheduler();
 
 // The method called right after an interval timer interrupt
-void on_scheduler_callback();
+void time_slice_callback();
 
 // Returns the number of clock ticks per time slice as calculated during initialization.
 // If called before scheduler initialization returns 0.
@@ -29,6 +35,7 @@ void launch();
 pcb_t* get_running_proc();
 
 // Terminates the running process and removes it and its offspring from the ready queue
-void syscall3();
+// returns the process state that needs to be resumed after the operation
+state_t* syscall3();
 
 #endif //BIKAYA_PHASE0_SCHEDULER_H

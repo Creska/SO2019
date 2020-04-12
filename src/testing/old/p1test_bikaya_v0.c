@@ -33,10 +33,10 @@
  */
 
 #include "core/const.h"
-#include "core/system.h"
+#include "core/system/system.h"
 #include "devices/terminal.h"
-#include "pcb.h"
-#include "asl.h"
+#include "core/processes/pcb.h"
+#include "core/processes/asl.h"
 
 #define MAXSEM MAXPROC
 

@@ -1,6 +1,6 @@
-#include <core/scheduler.h>
+#include <core/processes/scheduler.h>
 #include "testing/our_tests.h"
-#include "core/system.h"
+#include "core/system/system.h"
 #include "utils/debug.h"
 
 void loop_test() {
@@ -29,5 +29,14 @@ void launcher() {
 
     LOG("Ending launcher");
 
+    SYSCALL(3, 0, 0, 0);
+}
+
+void debug_log_tester() {
+    DEBUG_LOG("Test message 1");
+    DEBUG_LOG("Test message 2");
+    DEBUG_LOG("Test message 3");
+    DEBUG_LOG("Test message 4");
+    DEBUG_LOG("Test message 5");
     SYSCALL(3, 0, 0, 0);
 }
