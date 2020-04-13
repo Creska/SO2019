@@ -1,22 +1,27 @@
 #include <testing/our_tests.h>
-#include <utils/debug.h>
 #include "testing/p1.5test_bikaya_v0.h"
-#include "core/processes/scheduler.h"
 #include "bikaya.h"
 
 int main() {
 
-    bikaya_initialize();
+    // Array containing all the relevant data for process initialization
+    proc_init_data data[] =  {
 
-    add_process(test1, 1, 0, 1, 1, 0);
-    add_process(test2, 2, 0, 1, 1, 0);
-    add_process(test3, 3, 0, 1, 1, 0);
-//     add_process(debug_log_tester, 3, 0, 1, 1, 0);
+            {.method = test1,
+             .priority = 1,
+             .km_on = 1, .vm_on = 0,
+             .timer_int_on = 1, .other_ints_on = 0},
 
+            {.method = test2,
+             .priority = 2,
+             .km_on = 1, .vm_on = 0,
+             .timer_int_on = 1, .other_ints_on = 0},
 
-    launch();
+            {.method = test3,
+             .priority = 3,
+             .km_on = 1, .vm_on = 0,
+             .timer_int_on = 1, .other_ints_on = 0}};
 
-
-
+    bikaya_launch(data, 3);
 }
 

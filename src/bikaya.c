@@ -4,10 +4,8 @@
 #include "core/exceptions/handler.h"
 
 
-
+// Initialization routine for the relevant OS' structures
 void bikaya_initialize() {
-
-    DEBUG_LOG("BIKAYA INITIALIZATION");
 
     DEBUG_LOG("New areas initialization");
     state_t* int_new_area = get_new_area_int();
@@ -21,17 +19,19 @@ void bikaya_initialize() {
 
     state_t* trap_new_area = get_new_area_program_trap();
     init_new_area(trap_new_area, handle_trap);
-
-    DEBUG_LOG("Scheduler initialization");
-    init_scheduler();
-    DEBUG_SPACING;
 }
 
 
-void bikaya_quick_launch(void *method, unsigned int priority, unsigned int vm_on, unsigned int km_on,
-                         unsigned int int_timer_on, unsigned int other_int_on) {
+void bikaya_launch(proc_init_data starting_procs[], unsigned int procs_number) {
+    DEBUG_LOG("BIKAYA INITIALIZATION");
     bikaya_initialize();
-    add_process(method, priority, vm_on, km_on, int_timer_on, other_int_on);
+
+    DEBUG_LOG("Scheduler initialization");
+    init_scheduler(starting_procs, procs_number);
+
+    DEBUG_SPACING;
+
     launch();
+
 }
 

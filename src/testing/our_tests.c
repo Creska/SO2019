@@ -24,7 +24,6 @@ void empty_loop() {
 
 void launcher() {
 
-    add_process(loop_test, 4, 0, 1, 1, 0);
 
 
     SYSCALL(3, 0, 0, 0);

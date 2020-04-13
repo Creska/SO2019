@@ -15,8 +15,8 @@ endif()
 
 # For now defaults to debug build type if not set through the cmake cache or cmake commands flags
 if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Debug)
-    message("Debug mode set")
+    message("Since CMAKE_BUILD_TYPE is not defined, defaulting to Debug, you can change it through ccmake or cmake-gui")
+    set( CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
 endif()
 
 if (CMAKE_BUILD_TYPE MATCHES Debug OR CMAKE_BUILD_TYPE MATCHES DEBUG)
@@ -25,6 +25,8 @@ if (CMAKE_BUILD_TYPE MATCHES Debug OR CMAKE_BUILD_TYPE MATCHES DEBUG)
 elseif(CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES RelMixSize)
     SET(CMAKE_BUILD_TYPE Custom)                                                        # with build type set to Release or similar cmake sets some flags that are incompatible with our cross compilers
 endif()                                                                                 # setting the build type to custom prevents that
+
+
 
 # PROJECT SETUP -------------------------------------------------------------------------------------------------------
 

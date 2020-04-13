@@ -3,6 +3,7 @@
 
 #include "core/system/system.h"
 #include "core/processes/pcb.h"
+#include "core/processes/process_initializer.h"
 
 #ifdef DEBUG
 #define SCHEDULER_TIME_SLICE            30000            // in microseconds (increased in DEBUG mode to minimize risk of interval timer interruptions while logging during process execution)
@@ -15,7 +16,7 @@
 
 
 // Initialization routine for the scheduler
-void init_scheduler();
+void init_scheduler(proc_init_data starting_procs[], unsigned int procs_number);
 
 // The method called right after an interval timer interrupt
 void time_slice_callback();
@@ -26,7 +27,7 @@ unsigned int get_ticks_per_slice();
 
 // Adds a process to the ready queue
 // If the added process has an higher priority than the running process the first is executed right away and the second goes back to the ready queue
-pcb_t* add_process(void* method, int priority, unsigned int vm_on, unsigned int km_on, unsigned int int_timer_on, unsigned int other_int_on);
+pcb_t* add_process(proc_init_data* data);
 
 // Launches the process with the higher priority in the ready queue, panics if the ready queue is empty.
 void launch();

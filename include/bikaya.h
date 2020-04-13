@@ -1,10 +1,10 @@
 #ifndef BIKAYA_PHASE0_BIKAYA_H
 #define BIKAYA_PHASE0_BIKAYA_H
 
-// Initialization routine for the Bikaya OS
-// This method needs to be called one time before any other operation. After that processes can be added to the scheduler and the system can be launched.
-void bikaya_initialize();
+#include "core/processes/process_initializer.h"
 
-void bikaya_quick_launch(void* method, unsigned int priority, unsigned int vm_on, unsigned int km_on, unsigned int int_timer_on, unsigned int other_int_on);
+
+void bikaya_launch(proc_init_data starting_procs[], unsigned int procs_number);
+
 
 #endif //BIKAYA_PHASE0_BIKAYA_H
