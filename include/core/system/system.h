@@ -17,6 +17,8 @@ void set_kernel_mode(state_t* s, unsigned int on);
 // Sets the Virtual Memory bit in the status register of the given CPU state
 void set_virtual_mem(state_t* s, unsigned int on);
 
+unsigned int get_virtual_mem(state_t* s);
+
 // Set interval timer interrupts
 void set_interval_timer_interrupts(state_t* s, unsigned int on);
 

@@ -4,7 +4,7 @@ if (CMAKE_TOOLCHAIN_FILE MATCHES "")                                            
     if(ARCH MATCHES "uarm" OR ARCH MATCHES "arm")                                   # was set to supported emulators/architectures names
         message("UARM set")
         SET(CMAKE_TOOLCHAIN_FILE ./toolchain/uarm.cmake)                            # this needs to happen before the call to project(bikaya...) because at that point the toolchain file is executed
-    elseif(ARCH MATCHES "umps" OR ARCH MATCHES "umps2" OR ARCH MATCHES "mips")
+    elseif(ARCH MATCHES "umps" OR ARCH MATCHES "umps2" OR ARCH MATCHES "mips" OR ARCH MATCHES "mps")
         message("UMPS set")
         SET(CMAKE_TOOLCHAIN_FILE ./toolchain/umps2.cmake)
     endif()
@@ -22,7 +22,7 @@ endif()
 if (CMAKE_BUILD_TYPE MATCHES Debug OR CMAKE_BUILD_TYPE MATCHES DEBUG)
     add_compile_definitions(DEBUG)
     set(CMAKE_VERBOSE_MAKEFILE TRUE)                                                    # forces make to show the executed commands at build time
-elseif(CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES RelMixSize)
+elseif(CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES RelMinSize)
     SET(CMAKE_BUILD_TYPE Custom)                                                        # with build type set to Release or similar cmake sets some flags that are incompatible with our cross compilers
 endif()                                                                                 # setting the build type to custom prevents that
 

@@ -7,7 +7,7 @@ void loop_test();
 
 void loop_test2();
 
-void empty_loop();
+
 
 void launcher();
 

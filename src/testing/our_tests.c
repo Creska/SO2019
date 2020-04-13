@@ -1,10 +1,14 @@
-#include <core/processes/scheduler.h>
 #include "testing/our_tests.h"
 #include "core/system/system.h"
 #include "utils/debug.h"
+#include "bikaya.h"
+#include "core/processes/scheduler.h"
 
 void loop_test() {
-    DEBUG_LOG("ciao");
+    addokbuf("Sono il test interno\n");
+
+    DEBUG_LOG_INT("VM on:", get_virtual_mem(&get_running_proc()->p_s));
+
     SYSCALL(3,0,0,0);
 }
 
@@ -14,18 +18,25 @@ void loop_test2() {
     }
 }
 
-void empty_loop() {
-    SYSCALL(1,42,11,6);
-
-    DEBUG_LOG("asfdasfdafs");
-
-    SYSCALL(3,41,11,6);
-}
 
 void launcher() {
 
 
+    DEBUG_LOG_INT("VM on:", get_virtual_mem(&get_running_proc()->p_s));
 
+    addokbuf("dsafdsf\n");
+
+    proc_init_data test_proc = {
+            .method = loop_test,
+            .priority = 0,
+            .km_on = 1, .vm_on = 0,
+            .timer_int_on = 1, .other_ints_on = 0
+    };
+
+    bikaya_add_proc(&test_proc);
+
+
+    addokbuf("judsusjuu\n");
     SYSCALL(3, 0, 0, 0);
 }
 

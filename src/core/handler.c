@@ -4,14 +4,12 @@
 #include "core/system/system.h"
 #include "core/processes/scheduler.h"
 
-// TODO check increment/decrement on SO group
-
 void handle_interrupt() {
     DEBUG_LOG("HANDLING INTERRUPTS");
     pcb_t* interrupted_running_proc = get_running_proc();
     consume_interrupts();
     DEBUG_SPACING;
-    set_interval_timer(get_ticks_per_slice());                          // reset the interval timer (acknowledging the interrupt)
+    reset_interval_timer();                                             // reset the interval timer (acknowledging the interrupt)
     if (interrupted_running_proc!=get_running_proc()) {
         LDST(&get_running_proc()->p_s);                                 // Resume the execution of the process
     } else {
@@ -40,6 +38,9 @@ void handle_sysbreak() {
     unsigned int cause_code = get_exccode(get_old_area_sys_break());
     state_t* s = get_old_area_sys_break();
 
+
+    DEBUG_LOG_INT("Cause code", cause_code);
+
     if (cause_code == EXCODE_SYS) {
 
         unsigned int sys_n, arg1, arg2, arg3;                // Retrieving syscall number and arguments from processor registers
@@ -54,9 +55,10 @@ void handle_sysbreak() {
 
         switch (sys_n) {                               // Using a switch since this will handle a few different syscalls
             case 3: {
-                state_t* proc_to_resume = syscall3();
-                DEBUG_LOG("Resuming higher priority process after removal\n");
-                LDST(proc_to_resume);                       // TODO should a process be resumed with a full time-slice?
+                pcb_t* proc_to_resume = syscall3();
+                DEBUG_LOG_INT("Resuming process address ", (int)proc_to_resume);
+                reset_interval_timer();                     // since this is a "new" process might as well give it a full time-slice
+                LDST(&proc_to_resume->p_s);
                 break;
             }
             default:

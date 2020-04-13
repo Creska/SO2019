@@ -1,5 +1,6 @@
 // System source file with mps-specific definitions
 
+#include <utils/debug.h>
 #include "core/system/system.h"
 #include "utils/utils.h"
 
@@ -66,6 +67,8 @@ void set_interval_timer_interrupts(state_t *s, unsigned int on) {
 unsigned int get_exccode(state_t* state) {
     unsigned int val = CAUSE_GET_EXCCODE(state->cause);
 
+    DEBUG_LOG_INT("Internal cause code: ", val);
+
     switch (val) {
         case EXC_BP:
             return EXCODE_BP;
@@ -76,6 +79,10 @@ unsigned int get_exccode(state_t* state) {
         default:
             return EXCODE_OTHER;
     }
+}
+
+unsigned int get_virtual_mem(state_t *s) {
+    return (s->status & STATUS_VMc) >> STATUS_VMc_BIT;
 }
 
 
