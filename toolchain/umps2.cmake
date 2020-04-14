@@ -1,5 +1,3 @@
-message("Start of the toolchain execution")
-
 set(CMAKE_SYSTEM_NAME Generic)
 set(CMAKE_SYSTEM_PROCESSOR mips)
 
@@ -47,8 +45,6 @@ endif()
 
 set(CORE_LIBS ${CORE_OBJ_CRTSO} ${CORE_OBJ_UMPS})
 
-
-message("Pre macro declaration")
 
 # Macro for executable targets that might need a conversion in order to be run on their emulator
 macro (executable_post_build_conversion TAR)

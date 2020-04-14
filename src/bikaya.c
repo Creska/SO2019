@@ -6,7 +6,7 @@
 
 
 // Initialization routine for the relevant OS' structures
-void bikaya_initialize() {
+void initialize_new_areas() {
 
     DEBUG_LOG("New areas initialization");
     state_t* int_new_area = get_new_area_int();
@@ -23,12 +23,14 @@ void bikaya_initialize() {
 }
 
 
-void bikaya_launch(proc_init_data starting_procs[], unsigned int procs_number) {
+void bikaya_launch(bikaya_init_data* init_data) {
+    DEBUG_LOG("Debug logs are enabled, set CMAKE_BUILD_TYPE to any other value than Debug to disable them");
+    DEBUG_SPACING;
     DEBUG_LOG("BIKAYA INITIALIZATION");
-    bikaya_initialize();
+    initialize_new_areas();
 
     DEBUG_LOG("Scheduler initialization");
-    init_scheduler(starting_procs, procs_number);
+    init_scheduler(init_data->starting_procs_data, init_data->starting_procs_n);
 
     DEBUG_LOG("Initialization completed, launching the system");
 

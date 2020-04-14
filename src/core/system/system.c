@@ -9,9 +9,6 @@ void set_interval_timer(unsigned int val) {
     *(unsigned int*)BUS_REG_TIMER = val;
 }
 
-unsigned int get_interval_timer() {
-    return *(unsigned int*)BUS_REG_TIMER;
-}
 
 state_t *get_new_area_int() {
     return (state_t*)INT_NEWAREA;

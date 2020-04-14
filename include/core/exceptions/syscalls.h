@@ -16,7 +16,7 @@
 
 // Utility methods ----------------------------------------------------------------------------------------------------
 
-// Loads the relevant registers from the
+// Loads the relevant registers from the given state t into the given ints
 void load_syscall_registers(state_t* s, unsigned int* n, unsigned int* a1, unsigned int* a2, unsigned int* a3);
 
 

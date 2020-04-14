@@ -38,13 +38,12 @@ unsigned int is_interrupt_pending(unsigned int line);
 // Sets the value of the interval timer
 void set_interval_timer(unsigned int val);
 
-#define set_interval_timer_macro(val)       \
+#define set_interval_timer_macro(val) \
 *(unsigned int*)BUS_REG_TIMER = val;
 
 #define get_interval_timer_macro()  \
 *(unsigned int*)BUS_REG_TIMER
 
-unsigned int get_interval_timer();
 
 
 // New/Old areas ------------------------------------------------------------------------------------------------------

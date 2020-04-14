@@ -2,23 +2,24 @@
 #include "core/system/system.h"
 #include "utils/debug.h"
 #include "bikaya.h"
-#include "core/processes/scheduler.h"
 
 
 void launcher() {
 
-    addokbuf("dsafdsf\n");
+    addokbuf("After this line i will schedule 19 processes\n");
 
     for (int i = 0; i < 19; ++i) {
         proc_init_data test_proc = {
                 .method = dummy_process,
-                .priority = 1,
+                .priority = i,
                 .km_on = 1, .vm_on = 0,
                 .timer_int_on = 1, .other_ints_on = 0
         };
 
         bikaya_add_proc(&test_proc);
     }
+
+    addokbuf("I've terminate scheduling of the 19 processes");
 
     SYSCALL(3, 0, 0, 0);
 }

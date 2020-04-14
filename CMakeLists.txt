@@ -13,10 +13,9 @@ endif()
 
 # BUILD TYPE MANAGEMENT -----------------------------------------------------------------------------------------------
 
-# For now defaults to debug build type if not set through the cmake cache or cmake commands flags
 if(NOT CMAKE_BUILD_TYPE)
-    message("Since CMAKE_BUILD_TYPE is not defined, defaulting to Debug, you can change it through ccmake or cmake-gui")
-    set( CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
+    message("Since CMAKE_BUILD_TYPE is not defined, defaulting to Custom, you can change it through ccmake or cmake-gui. Setting it to Debug would enable DEBUG_LOGs")
+    set( CMAKE_BUILD_TYPE Custom CACHE STRING "Build type" FORCE)
 endif()
 
 if (CMAKE_BUILD_TYPE MATCHES Debug OR CMAKE_BUILD_TYPE MATCHES DEBUG)
@@ -33,7 +32,6 @@ endif()                                                                         
 cmake_minimum_required(VERSION 3.13...3.17)                             # Defines a range of tested CMake versions, important since the language and paradigms have changed a lot between versions
 set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")                     # This allows our cross compilers to pass CMake tests even without stdlib and standard flags
 
-message("Pre project setup")
 project(bikaya-phase0 LANGUAGES C)                                      # defines the project name and the enabled languages
 
 add_executable(kernel)                                                  # Creates an executable target
