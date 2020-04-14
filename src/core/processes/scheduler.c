@@ -8,9 +8,14 @@ pcb_t* running_proc = NULL;
 
 
 void reset_int_timer() {
+    DEBUG_LOG_INT("Resetting interval timer to ", clock_ticks_per_time_slice);
     set_interval_timer(clock_ticks_per_time_slice);
 }
 
+// Populates a pcb with the given data
+//
+// WARNING: the pcb is assumed to have all the fields initialized to 0/NULL (for example retrieved through get_free_pcb),
+// if not might cause undefined behaviour since for efficiency this methods overrides some of the values only when target values are non-zero/non-NULL
 void populate_pcb(pcb_t* p, proc_init_data* data) {
 
     set_pc(&p->p_s, data->method);
@@ -22,15 +27,17 @@ void populate_pcb(pcb_t* p, proc_init_data* data) {
 
 #ifdef TARGET_UMPS  // On umps we need to set the previous values since on process loading the vm, kernel and global interrupts stacks are popped
     set_virtual_mem(&p->p_s, 0);
-    if (!data->km_on) { p->p_s.status = p->p_s.status | STATUS_KUp; }                                 // Kernel mode is on when the corresponding bit is 0
+    if (!data->km_on) { p->p_s.status = p->p_s.status | STATUS_KUp; }                                   // Kernel mode is on when the corresponding bit is 0
     if (data->vm_on) { p->p_s.status = p->p_s.status | STATUS_VMp; }
-    if (data->timer_int_on || data->other_ints_on) { p->p_s.status = p->p_s.status | STATUS_IEp; }           // Manually sets the previous global interrupt switch
+    if (data->timer_int_on || data->other_ints_on) { p->p_s.status = p->p_s.status | STATUS_IEp; }      // Manually sets the previous global interrupt switch
 #elif TARGET_UARM  // On architectures without these mini-stacks (arm in our case) we can just set the values normally (using system.h methods)
     set_virtual_mem(&p->p_s, data->vm_on);
     set_kernel_mode(&p->p_s, data->km_on);
 #endif
 }
 
+
+// Retrieves a pcb from the freePCB list, panics if the freePCB list is empty, meaning that all the pcbs are already in use
 pcb_t* get_free_pcb() {
     pcb_t* p = allocPcb();
     if (p!=NULL) {
@@ -40,6 +47,7 @@ pcb_t* get_free_pcb() {
         return NULL;
     }
 }
+
 
 // This is meant to be called only one time during system initialization
 void init_scheduler(proc_init_data starting_procs[], unsigned int procs_number) {
@@ -85,7 +93,9 @@ void time_slice_callback() {
 
     if (!list_empty(&ready_queue) && running_proc->priority <= headProcQ(&ready_queue)->priority) {             // Swap execution if the first ready process has a greater priority than the one executing (obviously if the ready queue is empty we don't need to swap)
         DEBUG_LOG_INT("Swapping to processes with original priority: ", headProcQ(&ready_queue)->original_priority);
+
         memcpy(&running_proc->p_s, interrupted_process_state, sizeof(state_t));                                 // Copies the state_t saved in the old area in the pcb's state (otherwise data modified during execution would be lost)
+
         running_proc->priority = running_proc->original_priority;                                               // Reset the previously running process' priority to the original
         insertProcQ(&ready_queue, running_proc);                                                                // Insert the previously running process in the ready queue
         running_proc = removeProcQ(&ready_queue);                                                               // and set the first ready process as running (and remove it from the ready queue)
@@ -141,9 +151,9 @@ void recursive_remove_children(pcb_t* p) {              // TODO this might need 
 
 void terminate_running_proc() {
     recursive_remove_children(running_proc);
-
     if (!emptyProcQ(&ready_queue)) {
         running_proc = removeProcQ(&ready_queue);
+        reset_int_timer();
     } else {
         addokbuf("No processes left after the last process termination\n");
         HALT();

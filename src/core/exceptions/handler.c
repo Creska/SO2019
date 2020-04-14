@@ -10,8 +10,8 @@ void handle_interrupt() {
     DEBUG_LOG("HANDLING INTERRUPT EXCEPTIONS");
     pcb_t* interrupted_running_proc = get_running_proc();               // We cache the running process before consuming interrupts
     consume_interrupts();                                               // this way we can know if the interrupt consumption changed the process running (see below)
-    DEBUG_SPACING;
     reset_int_timer();                                                  // reset the interval timer acknowledging the interrupt and guaranteeing a full time-slice for the process that will be resumed
+    DEBUG_SPACING;
     if (interrupted_running_proc!=get_running_proc()) {
         LDST(&get_running_proc()->p_s);                                 // Resume the execution of the changed process
     } else {
@@ -26,6 +26,7 @@ void handle_sysbreak() {
 
     unsigned int cause_code = get_exccode(get_old_area_sys_break());
     state_t* s = get_old_area_sys_break();
+    pcb_t* pre_handling_running_proc = get_running_proc();          // Cache the running process before handling to avoid excessive use of memcpy (see handle_interrupts comments)
 
     if (cause_code == EXCODE_SYS) {
 
@@ -41,7 +42,6 @@ void handle_sysbreak() {
         switch (sys_n) {                                    // Using a switch since this will handle a few different syscalls in the next phases
             case SYSCALL_TERMINATE_PROC: {
                 terminate_running_proc();
-                reset_int_timer();                          // since we will resume a different process might as well give it a full time-slice
                 break;
             }
             case SYSCALL_ADD_PROC: {
@@ -59,9 +59,15 @@ void handle_sysbreak() {
         adderrbuf("ERROR: BreakPoint launched, handler still not implemented!");
     }
 
-    DEBUG_LOG_INT("Syscall/breakpoint handled, resuming process with original priority ", get_running_proc()->original_priority);
-    DEBUG_SPACING;
-    LDST(&get_running_proc()->p_s);
+    if (pre_handling_running_proc==get_running_proc()) {
+        DEBUG_LOG("Syscall/breakpoint handled, resuming the same process that was running before the exception");
+        DEBUG_SPACING;
+        LDST(s);
+    } else {
+        DEBUG_LOG_INT("Syscall/breakpoint handled, resuming a different process that the one interrupted, with original priority: ", get_running_proc()->original_priority);
+        DEBUG_SPACING;
+        LDST(&get_running_proc()->p_s);
+    }
 }
 
 

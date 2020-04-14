@@ -1,5 +1,5 @@
-#ifndef BIKAYA_PHASE0_PROCESS_INITIALIZATION_DATA_H
-#define BIKAYA_PHASE0_PROCESS_INITIALIZATION_DATA_H
+#ifndef BIKAYA_PROCESS_INITIALIZATION_DATA_H
+#define BIKAYA_PROCESS_INITIALIZATION_DATA_H
 
 // Structure holding all the relevant data for the initialization of a process
 struct process_initialization_data {
@@ -11,4 +11,4 @@ struct process_initialization_data {
 typedef struct process_initialization_data proc_init_data;
 
 
-#endif //BIKAYA_PHASE0_PROCESS_INITIALIZATION_DATA_H
+#endif //BIKAYA_PROCESS_INITIALIZATION_DATA_H

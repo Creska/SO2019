@@ -12,7 +12,7 @@ void launcher() {
     for (int i = 0; i < 19; ++i) {
         proc_init_data test_proc = {
                 .method = dummy_process,
-                .priority = i,
+                .priority = 1,
                 .km_on = 1, .vm_on = 0,
                 .timer_int_on = 1, .other_ints_on = 0
         };

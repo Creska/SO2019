@@ -1,5 +1,5 @@
-#ifndef BIKAYA_PHASE0_UTILS_H
-#define BIKAYA_PHASE0_UTILS_H
+#ifndef BIKAYA_UTILS_H
+#define BIKAYA_UTILS_H
 
 #include "core/system/system.h"
 
@@ -13,4 +13,4 @@ unsigned int set_bits(unsigned int original, unsigned int bit, unsigned int valu
 void* memcpy(void* target_s, const void* source_s, unsigned int bytes);
 
 
-#endif //BIKAYA_PHASE0_UTILS_H
+#endif //BIKAYA_UTILS_H

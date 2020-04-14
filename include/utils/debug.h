@@ -1,5 +1,5 @@
-#ifndef BIKAYA_PHASE0_DEBUG_H
-#define BIKAYA_PHASE0_DEBUG_H
+#ifndef BIKAYA_DEBUG_H
+#define BIKAYA_DEBUG_H
 
 #include "devices/terminal.h"
 
@@ -64,4 +64,4 @@ end_log()
 
 #endif
 
-#endif //BIKAYA_PHASE0_DEBUG_H
+#endif //BIKAYA_DEBUG_H

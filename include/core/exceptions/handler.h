@@ -1,5 +1,5 @@
-#ifndef BIKAYA_PHASE0_HANDLER_H
-#define BIKAYA_PHASE0_HANDLER_H
+#ifndef BIKAYA_HANDLER_H
+#define BIKAYA_HANDLER_H
 
 
 // Handler called when an interrupt (or multiple) is raised
@@ -14,4 +14,4 @@ void handle_TLB();
 // Handler called when a program trap exception is raised
 void handle_trap();
 
-#endif //BIKAYA_PHASE0_HANDLER_H
+#endif //BIKAYA_HANDLER_H

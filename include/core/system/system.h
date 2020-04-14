@@ -1,5 +1,5 @@
-#ifndef BIKAYA_PHASE0_SYSTEM_H
-#define BIKAYA_PHASE0_SYSTEM_H
+#ifndef BIKAYA_SYSTEM_H
+#define BIKAYA_SYSTEM_H
 
 #include "core/system/architecture.h"
 
