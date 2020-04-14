@@ -1,6 +1,8 @@
 #include "utils/utils.h"
 #include "core/processes/scheduler.h"
+#include "core/system/system.h"
 #include "utils/debug.h"
+
 
 unsigned int clock_ticks_per_time_slice = 0;
 struct list_head ready_queue;
@@ -50,8 +52,13 @@ pcb_t* get_free_pcb() {
 
 
 // This is meant to be called only one time during system initialization
-void init_scheduler(proc_init_data starting_procs[], unsigned int procs_number) {
-    clock_ticks_per_time_slice = clock_ticks_per_period(SCHEDULER_TIME_SLICE);                      // This value will be the same until reboot or reset, we can just cache it
+void init_scheduler(proc_init_data starting_procs[], unsigned int procs_number, unsigned int time_slice) {
+
+#ifdef DEBUG
+    time_slice = time_slice*10;
+#endif
+
+    clock_ticks_per_time_slice = clock_ticks_per_period(time_slice);                      // This value will be the same until reboot or reset, we can just cache it
 
     initPcbs();
     mkEmptyProcQ(&ready_queue);

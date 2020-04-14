@@ -30,7 +30,7 @@ void bikaya_launch(bikaya_init_data* init_data) {
     initialize_new_areas();
 
     DEBUG_LOG("Scheduler initialization");
-    init_scheduler(init_data->starting_procs_data, init_data->starting_procs_n);
+    init_scheduler(init_data->starting_procs_data, init_data->starting_procs_n, init_data->time_slice);
 
     DEBUG_LOG("Initialization completed, launching the system");
 
