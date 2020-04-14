@@ -1,0 +1,9 @@
+#ifndef BIKAYA_PHASE0_SYSCALLS_H
+#define BIKAYA_PHASE0_SYSCALLS_H
+
+// Syscall numbers
+
+#define SYSCALL_TERMINATE_PROC      3
+#define SYSCALL_ADD_PROC            20
+
+#endif //BIKAYA_PHASE0_SYSCALLS_H

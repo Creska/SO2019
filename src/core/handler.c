@@ -6,15 +6,15 @@
 
 void handle_interrupt() {
     DEBUG_LOG("HANDLING INTERRUPTS");
-    pcb_t* interrupted_running_proc = get_running_proc();
-    consume_interrupts();
+    pcb_t* interrupted_running_proc = get_running_proc();               // We cache the running process before consuming interrupts
+    consume_interrupts();                                               // this way we can know if the interrupt consumption changed the process running (see below)
     DEBUG_SPACING;
     reset_interval_timer();                                             // reset the interval timer (acknowledging the interrupt)
     if (interrupted_running_proc!=get_running_proc()) {
-        LDST(&get_running_proc()->p_s);                                 // Resume the execution of the process
+        LDST(&get_running_proc()->p_s);                                 // Resume the execution of the changed process
     } else {
-        LDST(get_old_area_int());                                       // If
-    }
+        LDST(get_old_area_int());                                       // Resume the execution of the same process that was interrupted, retrieving it from the old area
+    }                                                                   // this allows us to memcpy state_t information only when we swap processes
 }
 
 void load_syscall_registers(state_t* s, unsigned int* n, unsigned int* a1, unsigned int* a2, unsigned int* a3) {
@@ -38,12 +38,9 @@ void handle_sysbreak() {
     unsigned int cause_code = get_exccode(get_old_area_sys_break());
     state_t* s = get_old_area_sys_break();
 
-
-    DEBUG_LOG_INT("Cause code", cause_code);
-
     if (cause_code == EXCODE_SYS) {
 
-        unsigned int sys_n, arg1, arg2, arg3;                // Retrieving syscall number and arguments from processor registers
+        unsigned int sys_n, arg1, arg2, arg3;                       // Retrieving syscall number and arguments from processor registers
         load_syscall_registers(s, &sys_n, &arg1, &arg2, &arg3);
 
 #ifdef TARGET_UMPS                      // TODO is this just for syscalls or also for breakpoints?
@@ -51,18 +48,26 @@ void handle_sysbreak() {
 #endif
 
 
-        DEBUG_LOG_INT("Exception recognised as syscall ", sys_n);
+        DEBUG_LOG_INT("Exception recognised as syscall number ", sys_n);
 
-        switch (sys_n) {                               // Using a switch since this will handle a few different syscalls
+        pcb_t* proc_to_resume;
+        switch (sys_n) {                                    // Using a switch since this will handle a few different syscalls
             case 3: {
-                pcb_t* proc_to_resume = syscall3();
-                DEBUG_LOG_INT("Resuming process address ", (int)proc_to_resume);
+                terminate_running_proc();
+                proc_to_resume = get_running_proc();
+                DEBUG_LOG_INT("Resuming process with original priority", proc_to_resume->original_priority);
                 reset_interval_timer();                     // since this is a "new" process might as well give it a full time-slice
                 LDST(&proc_to_resume->p_s);
                 break;
             }
-            default:
+            case 20: {
+                add_process((proc_init_data*)arg1);
+                break;
+            }
+            default: {
                 adderrbuf("ERROR: Syscall not implemented");
+                break;
+            }
         }
 
     } else if (cause_code == EXCODE_BP) {

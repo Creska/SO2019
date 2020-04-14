@@ -3,11 +3,7 @@
 
 // A bunch of random tests used to verify different aspects of bikaya's functionality
 
-void loop_test();
-
-void loop_test2();
-
-
+void dummy_process();
 
 void launcher();
 

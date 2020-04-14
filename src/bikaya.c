@@ -32,10 +32,9 @@ void bikaya_launch(proc_init_data starting_procs[], unsigned int procs_number) {
     DEBUG_SPACING;
 
     launch();
-
 }
 
 void bikaya_add_proc(proc_init_data *new_proc) {
-    add_process(new_proc);
+    SYSCALL(20, (unsigned int)new_proc,0,0);
 }
 

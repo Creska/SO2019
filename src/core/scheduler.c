@@ -8,7 +8,7 @@ pcb_t* running_proc = NULL;
 
 
 void reset_interval_timer() {
-    set_interval_timer(get_ticks_per_slice());
+    set_interval_timer(clock_ticks_per_time_slice);
 }
 
 void populate_pcb(pcb_t* p, proc_init_data* data) {
@@ -45,8 +45,6 @@ pcb_t* get_free_pcb() {
 void init_scheduler(proc_init_data starting_procs[], unsigned int procs_number) {
     clock_ticks_per_time_slice = clock_ticks_per_period(SCHEDULER_TIME_SLICE);                      // This value will be the same until reboot or reset, we can just cache it
 
-    DEBUG_LOG_UINT("Cached ticks: ", clock_ticks_per_time_slice);
-
     initPcbs();
     mkEmptyProcQ(&ready_queue);
 
@@ -63,16 +61,12 @@ void launch() {
         reset_interval_timer();
 
         DEBUG_LOG_INT("LAUNCHING PROCESS WITH PRIORITY: ", running_proc->priority);
+        DEBUG_SPACING;
 
         LDST(&running_proc->p_s);
     } else {
         adderrbuf("Impossible to launch the system, no processes in the ready queue");
     }
-}
-
-
-unsigned int get_ticks_per_slice() {
-    return clock_ticks_per_time_slice;
 }
 
 
@@ -110,20 +104,17 @@ pcb_t* add_process(proc_init_data* data) {
 
 
     if (p->priority > running_proc->priority) {                     // Ensure instant process swap if p has greater priority than the running process
-        set_interval_timer(0xffffffff);          //TODO this might be forced to be "atomic", in order to avoid interruption in critical points
         DEBUG_LOG("The newly added process has higher priority than the running one, swapping them instantly");
 
-
-        STST(&running_proc->p_s);                                                  // (saving the state of the previously running process)
-
-        set_pc(&running_proc->p_s, __builtin_return_address(0));              // setting the pc of the saved process to the return address of this function, otherwise that process would resume here
+        // Copy the processor state saved in the old area to the soon-to-be-suspended process
+        memcpy(&running_proc->p_s, get_old_area_sys_break(), sizeof(state_t));
 
         running_proc->priority = running_proc->original_priority;                  // resetting the priority to the original priority on ready queue insertion
         insertProcQ(&ready_queue, running_proc);
-
         running_proc = p;
 
-        DEBUG_LOG("Starting new process after swap\n");
+        DEBUG_LOG("Starting new process after swap");
+        DEBUG_SPACING;
         reset_interval_timer();
         LDST(&running_proc->p_s);
 
@@ -158,13 +149,11 @@ void recursive_remove_children(pcb_t* p) {
 }
 
 
-pcb_t* syscall3() {
-    //outProcQ(&ready_queue, running_proc);
-    //recursive_remove_children(running_proc);
+void terminate_running_proc() {
+    recursive_remove_children(running_proc);
 
     if (!emptyProcQ(&ready_queue)) {
         running_proc = removeProcQ(&ready_queue);
-        return running_proc;
     } else {
         addokbuf("No processes left\n");
         HALT();
