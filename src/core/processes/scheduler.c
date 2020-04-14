@@ -7,7 +7,7 @@ struct list_head ready_queue;
 pcb_t* running_proc = NULL;
 
 
-void reset_interval_timer() {
+void reset_int_timer() {
     set_interval_timer(clock_ticks_per_time_slice);
 }
 
@@ -58,7 +58,7 @@ void init_scheduler(proc_init_data starting_procs[], unsigned int procs_number) 
 void launch() {
     if (!emptyProcQ(&ready_queue)) {
         running_proc = removeProcQ(&ready_queue);
-        reset_interval_timer();
+        reset_int_timer();
 
         DEBUG_LOG_INT("LAUNCHING PROCESS WITH PRIORITY: ", running_proc->priority);
         DEBUG_SPACING;
@@ -103,20 +103,15 @@ pcb_t* add_process(proc_init_data* data) {
     populate_pcb(p, data);
 
 
-    if (p->priority > running_proc->priority) {                     // Ensure instant process swap if p has greater priority than the running process
+    if (p->priority > running_proc->priority) {                                     // Ensure instant process swap if p has greater priority than the running process
         DEBUG_LOG("The newly added process has higher priority than the running one, swapping them instantly");
 
-        // Copy the processor state saved in the old area to the soon-to-be-suspended process
-        memcpy(&running_proc->p_s, get_old_area_sys_break(), sizeof(state_t));
+        memcpy(&running_proc->p_s, get_old_area_sys_break(), sizeof(state_t));      // Copy the processor state saved in the old area to the soon-to-be-suspended process
 
-        running_proc->priority = running_proc->original_priority;                  // resetting the priority to the original priority on ready queue insertion
+        running_proc->priority = running_proc->original_priority;                   // resetting the priority to the original priority on ready queue insertion
         insertProcQ(&ready_queue, running_proc);
         running_proc = p;
-
-        DEBUG_LOG("Starting new process after swap");
-        DEBUG_SPACING;
-        reset_interval_timer();
-        LDST(&running_proc->p_s);
+        reset_int_timer();                                                          // Since a different process will be resumed we give it a full time-slice
 
     } else {
         DEBUG_LOG ("Resuming running process after new process addition to the ready queue\n");
@@ -132,19 +127,14 @@ pcb_t *get_running_proc() {
 }
 
 
-void recursive_remove_children(pcb_t* p) {
+void recursive_remove_children(pcb_t* p) {              // TODO this might need some debugging, might as well do it when we implement parental relationship between processes
 
-    pcb_t* first_child = removeChild(p);
-    if (first_child != NULL) {
-        outProcQ(&ready_queue, first_child);
-
-        pcb_t* sib = nextSibling(first_child, first_child);
-        while (sib!=NULL) {
-            outProcQ(&ready_queue, sib);
-            recursive_remove_children(sib);
-            freePcb(sib);
-            sib = nextSibling(sib, first_child);
-        }
+    pcb_t* child = removeChild(p);
+    while (child != NULL) {                             // As long as there is a first child remove it from the tree structure, from the ready queue
+        recursive_remove_children(child);               // and free it with DFS recursion
+        outProcQ(&ready_queue, child);
+        freePcb(child);
+        child = removeChild(p);
     }
 }
 
@@ -155,7 +145,7 @@ void terminate_running_proc() {
     if (!emptyProcQ(&ready_queue)) {
         running_proc = removeProcQ(&ready_queue);
     } else {
-        addokbuf("No processes left\n");
+        addokbuf("No processes left after the last process termination\n");
         HALT();
     }
 }

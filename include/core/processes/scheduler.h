@@ -26,7 +26,9 @@ void time_slice_callback();
 pcb_t* add_process(proc_init_data* data);
 
 // Resets the interval timer value to the number of ticks corresponding to the correct time-slice.
-void reset_interval_timer();
+//
+// Remarks: this also acknowledges an interval timer interrupt if pending
+void reset_int_timer();
 
 // Launches the process with the higher priority in the ready queue, panics if the ready queue is empty.
 void launch();
@@ -37,5 +39,6 @@ pcb_t* get_running_proc();
 // Terminates the running process and removes its offspring from the ready queue
 // returns the process state that needs to be resumed after the operation
 void terminate_running_proc();
+
 
 #endif //BIKAYA_PHASE0_SCHEDULER_H

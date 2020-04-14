@@ -5,12 +5,13 @@ target_sources(kernel PRIVATE                   # Adds this files as sources to 
 
         bikaya.c
 
-        core/scheduler.c
-        core/interrupts.c
-        core/handler.c
+        core/processes/scheduler.c
+        core/exceptions/interrupts.c
+        core/exceptions/handler.c
+        core/exceptions/syscalls.c
 
-        asl.c
-        pcb.c
+        core/processes/asl.c
+        core/processes/pcb.c
 
         utils/utils.c
         utils/debug.c
@@ -20,5 +21,5 @@ target_sources(kernel PRIVATE                   # Adds this files as sources to 
 
         )
 
-add_subdirectory(core/arch)
+add_subdirectory(core/system)
 

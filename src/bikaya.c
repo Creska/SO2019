@@ -2,6 +2,7 @@
 #include "utils/debug.h"
 #include "core/processes/scheduler.h"
 #include "core/exceptions/handler.h"
+#include "core/exceptions/syscalls.h"
 
 
 // Initialization routine for the relevant OS' structures
@@ -29,12 +30,12 @@ void bikaya_launch(proc_init_data starting_procs[], unsigned int procs_number) {
     DEBUG_LOG("Scheduler initialization");
     init_scheduler(starting_procs, procs_number);
 
-    DEBUG_SPACING;
+    DEBUG_LOG("Initialization completed, launching the system");
 
     launch();
 }
 
 void bikaya_add_proc(proc_init_data *new_proc) {
-    SYSCALL(20, (unsigned int)new_proc,0,0);
+    SYSCALL(SYSCALL_ADD_PROC, (unsigned int)new_proc,0,0);
 }
 
