@@ -1,5 +1,8 @@
+// System source file with arm-specific definitions
+
 #include <utils/utils.h>
-#include "core/system.h"
+#include <devices/terminal.h>
+#include "core/system/system.h"
 
 void reset_state(state_t *s)
 {
@@ -52,5 +55,44 @@ void set_kernel_mode(state_t *s, unsigned int on)
         s->cpsr = set_bits(s->cpsr, ~STATUS_CLEAR_MODE, STATUS_SYS_MODE);
     } else {
         s->cpsr = set_bits(s->cpsr, ~STATUS_CLEAR_MODE, STATUS_USER_MODE);
+    }
+}
+
+
+unsigned int is_interrupt_pending(unsigned int line) {
+    return CAUSE_IP_GET(getCAUSE(), line);
+}
+
+void set_other_interrupts(state_t *s, unsigned int on) {
+    if (on) {
+        s->cpsr = STATUS_ENABLE_INT(s->cpsr);
+    } else {
+        s->cpsr = STATUS_DISABLE_INT(s->cpsr);
+    }
+}
+
+void set_interval_timer_interrupts(state_t* s, unsigned int on) {
+    if (on) {
+        s->cpsr = STATUS_ENABLE_TIMER(s->cpsr);
+    } else {
+        s->cpsr = STATUS_DISABLE_TIMER(s->cpsr);            // Turn off all bits
+    }
+}
+
+
+
+unsigned int get_exccode(state_t* state) {
+
+    unsigned int val = CAUSE_EXCCODE_GET(state->CP15_Cause);
+
+    switch (val) {
+        case EXC_BREAKPOINT:
+            return EXCODE_BP;
+
+        case EXC_SYSCALL:
+            return EXCODE_SYS;
+
+        default:
+            return EXCODE_OTHER;
     }
 }

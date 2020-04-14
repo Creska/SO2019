@@ -1,7 +1,7 @@
 #ifndef PCB_H
 #define PCB_H
 
-#include "core/system.h"
+#include "core/system/system.h"
 #include "utils/listx.h"
 #include "core/const.h"
 #include "devices/terminal.h"
@@ -82,7 +82,9 @@ pcb_t *removeChild(pcb_t *p);
 pcb_t *outChild(pcb_t *p);
 
 // Restituisce il prossimo fratello nella lista di fratelli, NULL se quello dato è l'ultimo della lista.
-pcb_t *nextSibling(pcb_t *p,  struct pcb_t* first_sibling);
+pcb_t *nextSibling(pcb_t *target_sibling, pcb_t* first_sibling);
 
+// Returns the index that the given pcb occupies in the internal array, it can double as a unique process id
+unsigned int get_process_index(pcb_t* p);
 
 #endif

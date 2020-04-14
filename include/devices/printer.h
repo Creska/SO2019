@@ -1,5 +1,5 @@
-#ifndef BIKAYA_PHASE0_PRINTER_H
-#define BIKAYA_PHASE0_PRINTER_H
+#ifndef BIKAYA_PRINTER_H
+#define BIKAYA_PRINTER_H
 
 
 typedef struct printer printer;

@@ -1,6 +1,6 @@
 #include "devices/printer.h"
-#include "core/system.h"
-
+#include "devices/devices.h"
+#include "core/system/system.h"
 
 struct printer {
     dtpreg_t *reg;

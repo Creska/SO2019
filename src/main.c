@@ -1,19 +1,34 @@
-#include "devices/terminal.h"
-#include "core/system.h"
-#include "core/handler.h"
+#include "testing/p1.5test_bikaya_v0.h"
+#include "bikaya.h"
 
 int main() {
 
-    // Testing get_areas and pointer printing functionality
+    // Array containing all the relevant data for process initialization
+    proc_init_data starting_processes[] =  {
 
-    DEBUG_LOG("Inizializzazione new areas");
+            {.method = test1,
+             .priority = 1,
+             .km_on = 1, .vm_on = 0,
+             .timer_int_on = 1, .other_ints_on = 0},
 
-    state_t* int_new_area = get_new_area_int();
-    init_area(int_new_area, 255, &handle_interrupt);
+            {.method = test2,
+             .priority = 2,
+             .km_on = 1, .vm_on = 0,
+             .timer_int_on = 1, .other_ints_on = 0},
 
-    DEBUG_LOG_PTR("Interrupt new area address: ", int_new_area);
+            {.method = test3,
+             .priority = 3,
+             .km_on = 1, .vm_on = 0,
+             .timer_int_on = 1, .other_ints_on = 0}
+    };
 
-    set_interval_timer(1000000);
+    bikaya_init_data init_data = {
+            .time_slice = 3000,
+            .starting_procs_data = starting_processes,
+            .starting_procs_n = 3
+    };
+
+    bikaya_launch(&init_data);
 
 }
 

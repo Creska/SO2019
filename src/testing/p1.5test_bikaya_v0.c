@@ -1,8 +1,6 @@
-#include "core/const.h"
-#include "utils/listx.h"
-#include "core/system.h"
+#include "testing/p1.5test_bikaya_v0.h"
+#include "core/system/architecture.h"
 
-#include "pcb.h"
 
 #define TOD_LO     *((unsigned int *)BUS_REG_TOD_LO)
 #define TIME_SCALE *((unsigned int *)BUS_REG_TIME_SCALE)

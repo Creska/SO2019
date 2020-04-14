@@ -1,4 +1,4 @@
-#include "pcb.h"
+#include "core/processes/pcb.h"
 
 
 pcb_t pcbFree_table[MAXPROC];           // L'array in cui effettivamente risiedono i nostri PCB
@@ -8,7 +8,7 @@ struct list_head pcbFree_h;             // L'elemento sentinella della lista di 
 void initPcbs(void) {
     INIT_LIST_HEAD(&pcbFree_h);
 
-    for (int i = 0; i < MAXPROC; ++i) {                             // Aggiunge tutti i pcb alla lista dei pcb liberi
+    for (int i = MAXPROC-1; i >= 0; --i) {                             // Aggiunge tutti i pcb alla lista dei pcb liberi
         freePcb(&pcbFree_table[i]);
     }
 }
@@ -184,14 +184,18 @@ pcb_t *outChild(pcb_t *p) {
     }
     adderrbuf("ERROR: outChild() couldn't find the received p, something must be broken with the tree structure");
     PANIC();
-    return NULL;                                // Serve solo ad evitare warning, PANIC dovrebbe causare un system halt
+    return NULL;                                // This lines just avoids IDE warnings, PANIC() should halt execution before this line is reached
 }
 
 
-struct pcb_t* nextSibling(struct pcb_t* p, struct pcb_t* first_sibling) {       // Semplice metodo per facilitare l'iterazione sulla lista di fratelli, siccome ha una struttura particolare
-    if (p->p_sib.next==&first_sibling->p_sib) {
+struct pcb_t* nextSibling(struct pcb_t* target_sibling, struct pcb_t* first_sibling) {       // Semplice metodo per facilitare l'iterazione sulla lista di fratelli, siccome ha una struttura particolare
+    if (target_sibling->p_sib.next == &first_sibling->p_sib) {
         return NULL;
     } else {
-        return container_of(p->p_sib.next, struct pcb_t, p_sib);
+        return container_of(target_sibling->p_sib.next, struct pcb_t, p_sib);
     }
-};
+}
+
+unsigned int get_process_index(pcb_t *p) {
+    return p-pcbFree_table;
+}

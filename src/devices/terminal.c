@@ -1,5 +1,6 @@
 #include "devices/terminal.h"
-#include "core/system.h"
+#include "devices/devices.h"
+#include "core/system/system.h"
 
 
 #define TERM_TX_ST_SPECIFIC             5
@@ -99,6 +100,13 @@ char* int_to_str(int i, char *b) {
     return b;
 }
 
+char* uint_to_str(unsigned int i, char *b) {
+    char* p = b;
+    p = unum_to_str_buf(i, "0123456789", 10, p);
+    *p = '\0';
+    return b;
+}
+
 char *int_to_str_binary(int i, char *b) {
     char* p = b;
     if(i<0){
@@ -137,7 +145,24 @@ char* ptr_to_str(void* p, char *b) {
 char* num_to_str_buf(int i, const char digit[], int base, char* b) {
     char* p = b;
 
-    unsigned int shifter = i;
+    unsigned int shifter = (unsigned int)i;
+    do{ //Move to where representation ends
+        ++p;
+        shifter = shifter/base;
+    }while(shifter);
+    b = p;
+    do{ //Move back, inserting digits as u go
+        *--p = digit[i%base];
+        i = i/base;
+    }while(i);
+    return b;
+}
+
+
+char* unum_to_str_buf(unsigned int i, const char digit[], int base, char* b) {
+    char* p = b;
+
+    unsigned int shifter = (unsigned int)i;
     do{ //Move to where representation ends
         ++p;
         shifter = shifter/base;
