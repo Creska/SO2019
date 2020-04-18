@@ -2,7 +2,9 @@
 .idea
 
 #Build folders
-build.*
-cmake-build-arm
-cmake-build-mps
+build*
+cmake-build-*
+
+# Support folders
+materials/
 

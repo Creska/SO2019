@@ -1,4 +1,4 @@
-#include "testing/p1.5test_bikaya_v0.h"
+#include "testing/old/p1.5test_bikaya_v0.h"
 #include "core/system/architecture.h"
 
 
