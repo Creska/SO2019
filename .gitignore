@@ -2,8 +2,7 @@
 .idea
 
 #Build folders
-build
-build-arm
-build-mps
+build.*
 cmake-build-arm
 cmake-build-mps
+
