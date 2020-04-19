@@ -26,6 +26,15 @@ typedef struct pcb_t {
 
     /* key of the semaphore on which the process is eventually blocked */
     int *p_semkey;
+
+    unsigned int kernel_timer;
+    unsigned int user_timer;
+
+    // Holds the value of the TOD at the last "mode switch"
+    unsigned int tod_cache;
+
+    // Holds the value of the TOD at the first execution of the process
+    unsigned int tod_at_start;
 } pcb_t;
 
 

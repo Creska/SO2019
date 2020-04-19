@@ -70,9 +70,26 @@ void init_scheduler(proc_init_data starting_procs[], unsigned int procs_number, 
     }
 }
 
+// Swaps the running process with a new one
+void stop_running_proc(state_t* updated_old_state) {
+    memcpy(&running_proc->p_s, updated_old_state, sizeof(state_t));                                 // Copies the state_t saved in the old area in the pcb's state (otherwise data modified during execution would be lost)
+
+    running_proc->priority = running_proc->original_priority;                                               // Reset the previously running process' priority to the original
+    insertProcQ(&ready_queue, running_proc);// Insert the previously running process in the ready queue
+
+}
+
+void set_running_proc(pcb_t* new_proc) {
+    running_proc = new_proc;
+}
+
 void launch() {
     if (!emptyProcQ(&ready_queue)) {
-        running_proc = removeProcQ(&ready_queue);
+        set_running_proc(removeProcQ(&ready_queue));
+
+        running_proc->tod_at_start = get_TOD();
+        running_proc->tod_cache = get_TOD();
+
         reset_int_timer();
 
         DEBUG_LOG_INT("LAUNCHING PROCESS WITH PRIORITY: ", running_proc->priority);
@@ -83,6 +100,8 @@ void launch() {
         adderrbuf("Impossible to launch the system, no processes in the ready queue");
     }
 }
+
+
 
 
 void time_slice_callback() {
@@ -101,18 +120,15 @@ void time_slice_callback() {
     if (!list_empty(&ready_queue) && running_proc->priority <= headProcQ(&ready_queue)->priority) {             // Swap execution if the first ready process has a greater priority than the one executing (obviously if the ready queue is empty we don't need to swap)
         DEBUG_LOG_INT("Swapping to processes with original priority: ", headProcQ(&ready_queue)->original_priority);
 
-        memcpy(&running_proc->p_s, interrupted_process_state, sizeof(state_t));                                 // Copies the state_t saved in the old area in the pcb's state (otherwise data modified during execution would be lost)
-
-        running_proc->priority = running_proc->original_priority;                                               // Reset the previously running process' priority to the original
-        insertProcQ(&ready_queue, running_proc);                                                                // Insert the previously running process in the ready queue
-        running_proc = removeProcQ(&ready_queue);                                                               // and set the first ready process as running (and remove it from the ready queue)
+        stop_running_proc(interrupted_process_state);// and set the first ready process as running (and remove it from the ready queue)
+        set_running_proc(removeProcQ(&ready_queue));
     } else {
         DEBUG_LOG("The current process still has the higher priority, resuming its execution");
     }
 }
 
 
-pcb_t* add_process(proc_init_data* data) {
+pcb_t* add_process(proc_init_data* data) {              // TODO set tod
 
     DEBUG_LOG_INT("ADDING NEW PROCESS WITH PRIORITY: ", data->priority);
 
@@ -123,11 +139,9 @@ pcb_t* add_process(proc_init_data* data) {
     if (p->priority > running_proc->priority) {                                     // Ensure instant process swap if p has greater priority than the running process
         DEBUG_LOG("The newly added process has higher priority than the running one, swapping them instantly");
 
-        memcpy(&running_proc->p_s, get_old_area_sys_break(), sizeof(state_t));      // Copy the processor state saved in the old area to the soon-to-be-suspended process
+        stop_running_proc(get_old_area_sys_break());
+        set_running_proc(p);
 
-        running_proc->priority = running_proc->original_priority;                   // resetting the priority to the original priority on ready queue insertion
-        insertProcQ(&ready_queue, running_proc);
-        running_proc = p;
         reset_int_timer();                                                          // Since a different process will be resumed we give it a full time-slice
 
     } else {
@@ -159,7 +173,7 @@ void recursive_remove_children(pcb_t* p) {              // TODO this might need 
 void terminate_running_proc() {
     recursive_remove_children(running_proc);
     if (!emptyProcQ(&ready_queue)) {
-        running_proc = removeProcQ(&ready_queue);
+        set_running_proc(removeProcQ(&ready_queue));
         reset_int_timer();
     } else {
         addokbuf("No processes left after the last process termination\n");

@@ -20,10 +20,9 @@
  *      Modified by Mattia Maldini, Renzo Davoli 2020
  */
 
+#include "core/system/architecture.h"
+
 #ifdef TARGET_UMPS
-#include "umps/libumps.h"
-#include "umps/arch.h"
-#include "umps/types.h"
 #define FRAME_SIZE 4096
 /* Elapsed clock ticks (CPU instructions executed) since system power on.
    Only the "low" part is actually used. */
@@ -46,9 +45,6 @@
 #endif
 
 #ifdef TARGET_UARM
-#include "uarm/libuarm.h"
-#include "uarm/arch.h"
-#include "uarm/uARMtypes.h"
 
 #define VMON  0x00000001
 #define VMOFF (~VMON)
@@ -60,8 +56,8 @@
 #define REG0(s)       s.a1
 #endif
 
-#include "const_bikaya.h"
-#include "types_bikaya.h"
+#include "core/const.h"
+#include "core/types-phase2.h"
 
 typedef unsigned int devregtr;
 typedef unsigned int cpu_t;

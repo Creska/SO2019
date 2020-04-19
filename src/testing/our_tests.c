@@ -37,3 +37,16 @@ void dummy_process() {
     addokbuf("I'm a dummy process, after writing this line i'll terminate myself\n");
     SYSCALL(3,0,0,0);
 }
+
+
+void timer_tester() {
+    while (1) {
+        addokbuf("YOYOYOYOYOYO");
+        unsigned int kernel, user, wallclock;
+        SYSCALL(1, (unsigned int)&user, (unsigned int)&kernel, (unsigned int)&wallclock);
+
+        DEBUG_LOG_UINT("User: ", user);
+        DEBUG_LOG_UINT("Kernel: ", kernel);
+        DEBUG_LOG_UINT("Wallclock: ", wallclock);
+    }
+}

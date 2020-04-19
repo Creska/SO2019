@@ -9,4 +9,6 @@ void launcher();
 
 void debug_log_tester();
 
+void timer_tester();
+
 #endif //BIKAYA_OUR_TESTS_H

@@ -6,15 +6,39 @@
 #include "core/processes/scheduler.h"
 
 
+void flush_user_time(pcb_t* proc) {
+    unsigned int cached_TOD = get_TOD();
+    proc->user_timer += cached_TOD - proc->tod_cache;
+    proc->tod_cache = cached_TOD;
+}
+
+void flush_kernel_time(pcb_t* proc) {
+    unsigned int cached_TOD = get_TOD();
+    proc->kernel_timer += cached_TOD - proc->tod_cache;
+    proc->tod_cache = cached_TOD;
+}
+
+void reset_cached_tod(pcb_t* proc) {
+    proc->tod_cache = get_TOD();
+}
+
+
 void handle_interrupt() {
     DEBUG_LOG("HANDLING INTERRUPT EXCEPTIONS");
+
     pcb_t* interrupted_running_proc = get_running_proc();               // We cache the running process before consuming interrupts
+    flush_user_time(interrupted_running_proc);
     consume_interrupts();                                               // this way we can know if the interrupt consumption changed the process running (see below)
     reset_int_timer();                                                  // reset the interval timer acknowledging the interrupt and guaranteeing a full time-slice for the process that will be resumed
     DEBUG_SPACING;
-    if (interrupted_running_proc!=get_running_proc()) {
-        LDST(&get_running_proc()->p_s);                                 // Resume the execution of the changed process
+    pcb_t* running_proc_after_consume = get_running_proc();
+
+    if (interrupted_running_proc!=running_proc_after_consume) {
+        reset_cached_tod(running_proc_after_consume);
+        LDST(&running_proc_after_consume->p_s);                                 // Resume the execution of the changed process
+
     } else {
+        flush_kernel_time(interrupted_running_proc);
         LDST(get_old_area_int());                                       // Resume the execution of the same process that was interrupted, retrieving it from the old area
     }                                                                   // this allows us to memcpy state_t information only when we swap processes
 }
@@ -23,10 +47,10 @@ void handle_interrupt() {
 void handle_sysbreak() {
 
     DEBUG_LOG("HANDLING SYSCALL/BREAKPOINT EXCEPTION");
-
+    pcb_t* pre_handling_running_proc = get_running_proc();          // Cache the running process before handling to avoid excessive use of memcpy (see handle_interrupts comments)
+    flush_user_time(pre_handling_running_proc);
     unsigned int cause_code = get_exccode(get_old_area_sys_break());
     state_t* s = get_old_area_sys_break();
-    pcb_t* pre_handling_running_proc = get_running_proc();          // Cache the running process before handling to avoid excessive use of memcpy (see handle_interrupts comments)
 
     if (cause_code == EXCODE_SYS) {
 
@@ -44,6 +68,19 @@ void handle_sysbreak() {
                 terminate_running_proc();
                 break;
             }
+            case GETCPUTIME: {
+                pcb_t* running_proc = get_running_proc();
+
+                unsigned int* user = (unsigned int*)arg1;
+                unsigned int* kernel = (unsigned int*)arg2;
+                unsigned int* wallclock = (unsigned int*)arg3;
+
+                *user = running_proc->user_timer;
+                *kernel = running_proc->kernel_timer + (get_TOD() - running_proc->tod_cache);
+                *wallclock = get_TOD() - running_proc->tod_at_start;
+
+                break;
+            }
             case SYSCALL_ADD_PROC: {
                 add_process((proc_init_data*)arg1);
                 break;
@@ -59,6 +96,7 @@ void handle_sysbreak() {
         adderrbuf("ERROR: BreakPoint launched, handler still not implemented!");
     }
 
+    flush_kernel_time(pre_handling_running_proc);
     if (pre_handling_running_proc==get_running_proc()) {
         DEBUG_LOG("Syscall/breakpoint handled, resuming the same process that was running before the exception");
         DEBUG_SPACING;

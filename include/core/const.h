@@ -58,8 +58,6 @@
 #define INT_PRINTER  6
 #define INT_TERMINAL 7
 
-#define FRAMESIZE 4096
-
 #define DEV_USED_INTS 5 /* Number of ints reserved for devices: 3,4,5,6,7 */
 #define DEV_PER_INT   8 /* Maximum number of devices per interrupt line */
 
@@ -81,8 +79,6 @@
 #define GETPID           8
 
 #define DEFAULT_PRIORITY 1
-#define TRUE             1
-#define FALSE            0
 
 
 

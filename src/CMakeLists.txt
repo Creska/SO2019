@@ -2,6 +2,7 @@ target_sources(kernel PRIVATE                   # Adds this files as sources to 
         main.c
 
         testing/p2test_bikaya_v0.1.c
+        testing/old/p1.5test_bikaya_v0.c
         testing/our_tests.c
 
         bikaya.c
