@@ -87,8 +87,8 @@ void launch() {
     if (!emptyProcQ(&ready_queue)) {
         set_running_proc(removeProcQ(&ready_queue));
 
-        running_proc->tod_at_start = get_TOD();
-        running_proc->tod_cache = get_TOD();
+        running_proc->tod_at_start = TOD;
+        running_proc->tod_cache = TOD;
 
         reset_int_timer();
 

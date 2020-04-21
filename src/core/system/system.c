@@ -56,8 +56,5 @@ unsigned int clock_ticks_per_period(unsigned int microseconds) {
     return *(unsigned int*)BUS_REG_TIME_SCALE * microseconds;
 }
 
-unsigned int get_TOD() {
-    return *(unsigned int*)BUS_REG_TOD_LO;
-}
 
 

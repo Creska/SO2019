@@ -7,19 +7,19 @@
 
 
 void flush_user_time(pcb_t* proc) {
-    unsigned int cached_TOD = get_TOD();
+    unsigned int cached_TOD = TOD;
     proc->user_timer += cached_TOD - proc->tod_cache;
     proc->tod_cache = cached_TOD;
 }
 
 void flush_kernel_time(pcb_t* proc) {
-    unsigned int cached_TOD = get_TOD();
+    unsigned int cached_TOD = TOD;
     proc->kernel_timer += cached_TOD - proc->tod_cache;
     proc->tod_cache = cached_TOD;
 }
 
 void reset_cached_tod(pcb_t* proc) {
-    proc->tod_cache = get_TOD();
+    proc->tod_cache = TOD;
 }
 
 
@@ -76,8 +76,8 @@ void handle_sysbreak() {
                 unsigned int* wallclock = (unsigned int*)arg3;
 
                 *user = running_proc->user_timer;
-                *kernel = running_proc->kernel_timer + (get_TOD() - running_proc->tod_cache);
-                *wallclock = get_TOD() - running_proc->tod_at_start;
+                *kernel = running_proc->kernel_timer + (TOD - running_proc->tod_cache);
+                *wallclock = TOD - running_proc->tod_at_start;
 
                 break;
             }

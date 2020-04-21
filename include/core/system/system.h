@@ -32,7 +32,7 @@ void set_pc(state_t* s, void (*ptr)());
 // Returns 1 if an interrupt is pending on the given line, 0 otherwise
 unsigned int is_interrupt_pending(unsigned int line);
 
-unsigned int get_TOD();
+#define TOD *(unsigned int*)BUS_REG_TOD_LO
 
 // BUS Register -------------------------------------------------------------------------------------------------------
 
