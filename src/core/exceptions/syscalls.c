@@ -15,3 +15,11 @@ void load_syscall_registers(state_t* s, unsigned int* n, unsigned int* a1, unsig
 #endif
 }
 
+void save_return_register(state_t *s, unsigned int return_val) {
+#ifdef TARGET_UMPS
+    s->reg_v0 = return_val;
+#elif TARGET_UARM
+    s->a1 = return_val;
+#endif
+}
+

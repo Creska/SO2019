@@ -11,4 +11,6 @@ void debug_log_tester();
 
 void timer_tester();
 
+void proc_termination_tester();
+
 #endif //BIKAYA_OUR_TESTS_H

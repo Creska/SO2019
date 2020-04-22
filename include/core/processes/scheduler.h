@@ -33,6 +33,10 @@ pcb_t* get_running_proc();
 // The method called while handling an interval timer interrupt
 void time_slice_callback();
 
+// Terminates the given process (the running one if p==NULL) and all its offspring
+// Returns 0 if the operation is successfull, -1 otherwise
+unsigned int terminate_proc(pcb_t* p);
+
 // Terminates the running process and removes its offspring from the ready queue
 // returns the process state that needs to be resumed after the operation
 void terminate_running_proc();

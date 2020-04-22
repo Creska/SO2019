@@ -73,8 +73,6 @@ pcb_t *removeProcQ(struct list_head *head);
 // Rimuove il PCB puntato da p dalla coda dei processi puntata da head. Se p non è presente nella coda, restituisce NULL
 pcb_t *outProcQ(struct list_head *head, pcb_t *p);
 
-
-
 // PCB TREE FUNCTIONS -------------------------------------------------------------------------------------------------
 
 // Restituisce TRUE se il PCB puntato da p non ha figli, restituisce FALSE altrimenti.

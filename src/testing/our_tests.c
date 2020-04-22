@@ -50,3 +50,8 @@ void timer_tester() {
         DEBUG_LOG_UINT("Wallclock: ", wallclock);
     }
 }
+
+void proc_termination_tester() {
+    DEBUG_LOG("I'm printing this message and then I'm going to terminate myself");
+    SYSCALL(3, (unsigned int)NULL, 0, 0);
+}

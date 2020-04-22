@@ -128,7 +128,7 @@ void time_slice_callback() {
 }
 
 
-pcb_t* add_process(proc_init_data* data) {              // TODO set tod
+pcb_t* add_process(proc_init_data* data) {              // TODO set tod and remember to set timers on pcb reset
 
     DEBUG_LOG_INT("ADDING NEW PROCESS WITH PRIORITY: ", data->priority);
 
@@ -158,25 +158,65 @@ pcb_t *get_running_proc() {
 }
 
 
-void recursive_remove_children(pcb_t* p) {              // TODO this might need some debugging, might as well do it when we implement parental relationship between processes
+//void recursive_remove_children(pcb_t* p) {              // TODO this might need some debugging, might as well do it when we implement parental relationship between processes
+//
+//    pcb_t* child = removeChild(p);
+//    while (child != NULL) {                             // As long as there is a first child remove it from the tree structure, from the ready queue
+//        recursive_remove_children(child);               // and free it with DFS recursion
+//        outProcQ(&ready_queue, child);
+//        freePcb(child);
+//        child = removeChild(p);
+//    }
+//}
+//
+//
+//void terminate_running_proc() {
+//    recursive_remove_children(running_proc);
+//    if (!emptyProcQ(&ready_queue)) {
+//        set_running_proc(removeProcQ(&ready_queue));
+//        reset_int_timer();
+//    } else {
+//        addokbuf("No processes left after the last process termination\n");
+//        HALT();
+//    }
+//}
 
-    pcb_t* child = removeChild(p);
-    while (child != NULL) {                             // As long as there is a first child remove it from the tree structure, from the ready queue
-        recursive_remove_children(child);               // and free it with DFS recursion
-        outProcQ(&ready_queue, child);
-        freePcb(child);
-        child = removeChild(p);
+// Removes the children of the given PCB.
+unsigned int recursive_remove_proc_children(pcb_t* p) {                 // TODO test this functionality with actual process trees
+
+    pcb_t* to_be_freed = outProcQ(&ready_queue, p);                     // Remove p from the process queue and free it
+    if (to_be_freed!=NULL) {
+        freePcb(to_be_freed);
+    } else {
+        return -1;                                                      // TODO return right away or try to continue?
     }
+
+    pcb_t* target_child = outChild(p);
+    while (target_child!=NULL) {
+        if (recursive_remove_proc_children(target_child)) {
+            return -1;
+        }
+        target_child = outChild(p);
+    }
+    return 0;
 }
 
+unsigned int terminate_proc(pcb_t *p) {
+    if (p==NULL) { p = running_proc; }
 
-void terminate_running_proc() {
-    recursive_remove_children(running_proc);
-    if (!emptyProcQ(&ready_queue)) {
-        set_running_proc(removeProcQ(&ready_queue));
-        reset_int_timer();
-    } else {
-        addokbuf("No processes left after the last process termination\n");
-        HALT();
+    insertProcQ(&ready_queue, running_proc);                                        // Insert temporarily the running proc in the ready queue to facilitate recursion and removal checks
+    unsigned int ret = recursive_remove_proc_children(p);
+
+    pcb_t* retrieved_running_proc = outProcQ(&ready_queue, running_proc);           // Take back the running process from the ready queue
+    if (retrieved_running_proc==NULL) {                                             // If the running process wasn't in the ready queue at this point it means that it was removed
+        pcb_t* new_proc = headProcQ(&ready_queue);
+        if (new_proc!=NULL) {
+            set_running_proc(headProcQ(&ready_queue));                              // so we run a new process if the redy queue isn't empty
+        } else {
+            addokbuf("No processes left after the last process termination\n");
+            HALT();
+        }
     }
+
+    return ret;
 }

@@ -8,7 +8,7 @@ int main() {
     // Array containing all the relevant data for process initialization
     proc_init_data starting_processes[] =  {
 
-            {.method = timer_tester,
+            {.method = proc_termination_tester,
              .priority = 1,
              .km_on = 1, .vm_on = 0,
              .timer_int_on = 1, .other_ints_on = 0}

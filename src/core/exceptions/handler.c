@@ -63,9 +63,9 @@ void handle_sysbreak() {
 
         DEBUG_LOG_INT("Exception recognised as syscall number ", sys_n);
 
-        switch (sys_n) {                                    // Using a switch since this will handle a few different syscalls in the next phases
+        switch (sys_n) {                                                        // Using a switch since this will handle a few different syscalls in the next phases
             case SYSCALL_TERMINATE_PROC: {
-                terminate_running_proc();
+                save_return_register(s, terminate_proc((pcb_t*)arg1));
                 break;
             }
             case GETCPUTIME: {
