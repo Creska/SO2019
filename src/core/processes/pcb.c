@@ -28,10 +28,14 @@ pcb_t *allocPcb(void) {
                                                                                 // recuperiamo il pcb e inizializziamo a 0/NULL tutti i valori
         struct pcb_t* first_free_pcb = container_of(first_list_head, struct pcb_t, p_next);
         first_free_pcb->priority = 0;
+        first_free_pcb->original_priority = 0;
         first_free_pcb->p_semkey = NULL;
         first_free_pcb->p_parent = NULL;
         first_free_pcb->p_child.next = NULL;
         first_free_pcb->p_child.prev = NULL;
+        first_free_pcb->kernel_timer = 0;
+        first_free_pcb->user_timer = 0;
+        first_free_pcb->tod_cache = 0;
         INIT_LIST_HEAD(&first_free_pcb->p_next);
         INIT_LIST_HEAD(&first_free_pcb->p_sib);
         reset_state(&first_free_pcb->p_s);

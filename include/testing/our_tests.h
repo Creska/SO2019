@@ -13,4 +13,6 @@ void timer_tester();
 
 void proc_termination_tester();
 
+void proc_creation_tester();
+
 #endif //BIKAYA_OUR_TESTS_H

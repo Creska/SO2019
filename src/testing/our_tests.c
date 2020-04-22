@@ -52,6 +52,10 @@ void timer_tester() {
 }
 
 void proc_termination_tester() {
-    DEBUG_LOG("I'm printing this message and then I'm going to terminate myself");
+    addokbuf("I'm printing this message and then I'm going to terminate myself\n");
     SYSCALL(3, (unsigned int)NULL, 0, 0);
+}
+
+void proc_creation_tester() {
+    // TODO test process creation
 }

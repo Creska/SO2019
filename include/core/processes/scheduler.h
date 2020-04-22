@@ -35,7 +35,7 @@ void time_slice_callback();
 
 // Terminates the given process (the running one if p==NULL) and all its offspring
 // Returns 0 if the operation is successfull, -1 otherwise
-unsigned int terminate_proc(pcb_t* p);
+int terminate_proc(pcb_t* p);
 
 // Terminates the running process and removes its offspring from the ready queue
 // returns the process state that needs to be resumed after the operation
@@ -47,5 +47,11 @@ void terminate_running_proc();
 // Remarks: this method is expected to be executed during syscall handling since in our implementation process addition happens through a syscall
 pcb_t* add_process(proc_init_data* data);
 
+// Creates a new process as child of the running one.
+//
+// s:           contains the initial state of the process
+// priority:    is the priority of the new process
+// cpid:        is the location of the (pcb_t*) variable where the new process id should be saved
+int create_process(state_t* s, int priority, pcb_t** cpid);
 
 #endif //BIKAYA_SCHEDULER_H

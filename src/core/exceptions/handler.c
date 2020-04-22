@@ -1,5 +1,6 @@
 #include "core/exceptions/handler.h"
 #include "utils/debug.h"
+#include "utils/utils.h"
 #include "core/system/system.h"
 #include "core/exceptions/syscalls.h"
 #include "core/exceptions/interrupts.h"
@@ -35,7 +36,8 @@ void handle_interrupt() {
 
     if (interrupted_running_proc!=running_proc_after_consume) {
         reset_cached_tod(running_proc_after_consume);
-        LDST(&running_proc_after_consume->p_s);                                 // Resume the execution of the changed process
+        memcpy(&interrupted_running_proc->p_s, get_old_area_int(), sizeof(state_t));
+        LDST(&running_proc_after_consume->p_s);                                             // Resume the execution of the changed process
 
     } else {
         flush_kernel_time(interrupted_running_proc);
@@ -47,25 +49,26 @@ void handle_interrupt() {
 void handle_sysbreak() {
 
     DEBUG_LOG("HANDLING SYSCALL/BREAKPOINT EXCEPTION");
-    pcb_t* pre_handling_running_proc = get_running_proc();          // Cache the running process before handling to avoid excessive use of memcpy (see handle_interrupts comments)
-    flush_user_time(pre_handling_running_proc);
+    pcb_t* interrupted_process = get_running_proc();          // Cache the running process before handling to avoid excessive use of memcpy (see handle_interrupts comments)
+    flush_user_time(interrupted_process);
     unsigned int cause_code = get_exccode(get_old_area_sys_break());
-    state_t* s = get_old_area_sys_break();
+    state_t* interrupted_state = get_old_area_sys_break();
 
     if (cause_code == EXCODE_SYS) {
 
         unsigned int sys_n, arg1, arg2, arg3;                       // Retrieving syscall number and arguments from processor registers
-        load_syscall_registers(s, &sys_n, &arg1, &arg2, &arg3);
+        load_syscall_registers(interrupted_state, &sys_n, &arg1, &arg2, &arg3);
 
 #ifdef TARGET_UMPS                      // TODO is this just for syscalls or also for breakpoints?
-        s->pc_epc += WORD_SIZE;
+        interrupted_state->pc_epc += WORD_SIZE;
 #endif
 
         DEBUG_LOG_INT("Exception recognised as syscall number ", sys_n);
 
         switch (sys_n) {                                                        // Using a switch since this will handle a few different syscalls in the next phases
             case SYSCALL_TERMINATE_PROC: {
-                save_return_register(s, terminate_proc((pcb_t*)arg1));
+                save_return_register(interrupted_state,
+                        terminate_proc((pcb_t*)arg1));
                 break;
             }
             case GETCPUTIME: {
@@ -81,8 +84,9 @@ void handle_sysbreak() {
 
                 break;
             }
-            case SYSCALL_ADD_PROC: {
-                add_process((proc_init_data*)arg1);
+            case CREATEPROCESS: {
+                save_return_register(interrupted_state,
+                        create_process((state_t*)arg1, (int)arg2, (pcb_t**)arg3));
                 break;
             }
             default: {
@@ -96,16 +100,18 @@ void handle_sysbreak() {
         adderrbuf("ERROR: BreakPoint launched, handler still not implemented!");
     }
 
-    flush_kernel_time(pre_handling_running_proc);
-    if (pre_handling_running_proc==get_running_proc()) {
+    flush_kernel_time(interrupted_process);
+
+    if (interrupted_process == get_running_proc()) {
         DEBUG_LOG("Syscall/breakpoint handled, resuming the same process that was running before the exception");
         DEBUG_SPACING;
-        LDST(s);
+        LDST(interrupted_state);
     } else {
         DEBUG_LOG_INT("Syscall/breakpoint handled, resuming a different process that the one interrupted, with original priority: ", get_running_proc()->original_priority);
         DEBUG_SPACING;
-        LDST(&get_running_proc()->p_s);
-    }
+        memcpy(&interrupted_process->p_s, interrupted_state, sizeof(state_t));          // Copies the old area state to the interrupted process state in order to guarantee that the information will be up to date when the process willl be resumed
+        LDST(&get_running_proc()->p_s);                                                 // TODO we need to ensure that the interrupted process still exists and represents the same process (otherwise we would copy the info to an inactive pcb or even worst a pcb now used for something else)
+    }                                                                                   // one possibility would be having a new field in pcb that is increased every time the pcb is allocated, this way we can check not only that the pid is the same, but also that this field is the same, meaning that the pcb still represents the same process
 }
 
 

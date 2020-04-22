@@ -40,7 +40,7 @@ void populate_pcb(pcb_t* p, proc_init_data* data) {
 
 
 // Retrieves a pcb from the freePCB list, panics if the freePCB list is empty, meaning that all the pcbs are already in use
-pcb_t* get_free_pcb() {
+pcb_t* get_free_pcb_else_panic() {
     pcb_t* p = allocPcb();
     if (p!=NULL) {
         return p;
@@ -64,16 +64,14 @@ void init_scheduler(proc_init_data starting_procs[], unsigned int procs_number, 
     mkEmptyProcQ(&ready_queue);
 
     for (int i = 0; i < procs_number; ++i) {
-        pcb_t* p = get_free_pcb();
+        pcb_t* p = get_free_pcb_else_panic();
         populate_pcb(p, &starting_procs[i]);
         insertProcQ(&ready_queue, p);
     }
 }
 
 // Swaps the running process with a new one
-void stop_running_proc(state_t* updated_old_state) {
-    memcpy(&running_proc->p_s, updated_old_state, sizeof(state_t));                                 // Copies the state_t saved in the old area in the pcb's state (otherwise data modified during execution would be lost)
-
+void stop_running_proc() {
     running_proc->priority = running_proc->original_priority;                                               // Reset the previously running process' priority to the original
     insertProcQ(&ready_queue, running_proc);// Insert the previously running process in the ready queue
 
@@ -127,28 +125,52 @@ void time_slice_callback() {
     }
 }
 
+//
+//pcb_t* add_process(proc_init_data* data) {              // TODO set tod and remember to set timers on pcb reset
+//
+//    DEBUG_LOG_INT("ADDING NEW PROCESS WITH PRIORITY: ", data->priority);
+//
+//    pcb_t* p = get_free_pcb();
+//    populate_pcb(p, data);
+//
+//
+//    if (p->priority > running_proc->priority) {                                     // Ensure instant process swap if p has greater priority than the running process
+//        DEBUG_LOG("The newly added process has higher priority than the running one, swapping them instantly");
+//
+//        stop_running_proc(get_old_area_sys_break());
+//        set_running_proc(p);
+//
+//        reset_int_timer();                                                          // Since a different process will be resumed we give it a full time-slice
+//
+//    } else {
+//        DEBUG_LOG ("Resuming running process after new process addition to the ready queue\n");
+//        insertProcQ(&ready_queue, p);
+//    }
+//    return p;
+//}
 
-pcb_t* add_process(proc_init_data* data) {              // TODO set tod and remember to set timers on pcb reset
+int create_process(state_t *s, int priority, pcb_t **cpid) {
+    pcb_t* p = allocPcb();
+    if (p!=NULL) {
+        memcpy(&p->p_s, s, sizeof(state_t));
+        p->priority = priority;
+        p->original_priority = priority;
+        *cpid = p;
 
-    DEBUG_LOG_INT("ADDING NEW PROCESS WITH PRIORITY: ", data->priority);
-
-    pcb_t* p = get_free_pcb();
-    populate_pcb(p, data);
-
-
-    if (p->priority > running_proc->priority) {                                     // Ensure instant process swap if p has greater priority than the running process
-        DEBUG_LOG("The newly added process has higher priority than the running one, swapping them instantly");
-
-        stop_running_proc(get_old_area_sys_break());
-        set_running_proc(p);
-
-        reset_int_timer();                                                          // Since a different process will be resumed we give it a full time-slice
-
+        if (priority > running_proc->priority) {
+            DEBUG_LOG("The newly created process has higher priority than the running one, swapping them instantly");
+            stop_running_proc();
+            set_running_proc(p);
+            reset_int_timer();
+        } else {
+            DEBUG_LOG ("The newly created process has lower priority than the running one, just inserting it in the ready queue");
+            insertProcQ(&ready_queue, p);
+        }
+        return 0;
     } else {
-        DEBUG_LOG ("Resuming running process after new process addition to the ready queue\n");
-        insertProcQ(&ready_queue, p);
+        DEBUG_LOG("Maximum number of processes was reached, failed to create a new one");
+        return -1;
     }
-    return p;
 }
 
 
@@ -182,7 +204,7 @@ pcb_t *get_running_proc() {
 //}
 
 // Removes the children of the given PCB.
-unsigned int recursive_remove_proc_children(pcb_t* p) {                 // TODO test this functionality with actual process trees
+int recursive_remove_proc_children(pcb_t* p) {                          // TODO test this functionality with actual process trees
 
     pcb_t* to_be_freed = outProcQ(&ready_queue, p);                     // Remove p from the process queue and free it
     if (to_be_freed!=NULL) {
@@ -201,22 +223,23 @@ unsigned int recursive_remove_proc_children(pcb_t* p) {                 // TODO 
     return 0;
 }
 
-unsigned int terminate_proc(pcb_t *p) {
+int terminate_proc(pcb_t *p) {
     if (p==NULL) { p = running_proc; }
 
     insertProcQ(&ready_queue, running_proc);                                        // Insert temporarily the running proc in the ready queue to facilitate recursion and removal checks
-    unsigned int ret = recursive_remove_proc_children(p);
+    int ret = recursive_remove_proc_children(p);
 
     pcb_t* retrieved_running_proc = outProcQ(&ready_queue, running_proc);           // Take back the running process from the ready queue
     if (retrieved_running_proc==NULL) {                                             // If the running process wasn't in the ready queue at this point it means that it was removed
         pcb_t* new_proc = headProcQ(&ready_queue);
         if (new_proc!=NULL) {
-            set_running_proc(headProcQ(&ready_queue));                              // so we run a new process if the redy queue isn't empty
+            set_running_proc(headProcQ(&ready_queue));                              // so we run a new process if the ready queue isn't empty
         } else {
             addokbuf("No processes left after the last process termination\n");
             HALT();
         }
     }
-
     return ret;
 }
+
+
