@@ -19,7 +19,7 @@ typedef struct semd_t {
 // ASL HANDLING FUNCTIONS----------------------------------------------------------------------------------------------
 
 // Restituisce il puntatore al SEMD nella ASL la cui chiave è pari a key.
-// Se non esiste tale elemento nell'ASL redtituisce NULL.
+// Se non esiste tale elemento nell'ASL restituisce NULL.
 semd_t* getSemd(int *key);
 
 // Inizializza le liste di SEMD, inserendo tutti i SEMD nella lista dei liberi

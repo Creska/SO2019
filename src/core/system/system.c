@@ -1,6 +1,5 @@
 // System source file containing definitions for functions with the same logic for both architectures
 
-#include <utils/debug.h>
 #include "core/system/system.h"
 
 

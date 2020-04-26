@@ -23,6 +23,8 @@ void reset_cached_tod(pcb_t* proc) {
     proc->tod_cache = TOD;
 }
 
+// TODO check useless int timer resets (now the handler resets the timer when at the end of the interrupt the process has changed, verify that the scheduler doesn't do this when the handler will do it either way)
+
 
 void handle_interrupt() {
     DEBUG_LOG("HANDLING INTERRUPT EXCEPTIONS");
@@ -37,6 +39,7 @@ void handle_interrupt() {
     if (interrupted_running_proc!=running_proc_after_consume) {
         reset_cached_tod(running_proc_after_consume);
         memcpy(&interrupted_running_proc->p_s, get_old_area_int(), sizeof(state_t));
+        reset_int_timer();
         LDST(&running_proc_after_consume->p_s);                                             // Resume the execution of the changed process
 
     } else {
@@ -59,41 +62,12 @@ void handle_sysbreak() {
         unsigned int sys_n, arg1, arg2, arg3;                       // Retrieving syscall number and arguments from processor registers
         load_syscall_registers(interrupted_state, &sys_n, &arg1, &arg2, &arg3);
 
-#ifdef TARGET_UMPS                      // TODO is this just for syscalls or also for breakpoints?
+#ifdef TARGET_UMPS                                                  // TODO is this just for syscalls or also for breakpoints?
         interrupted_state->pc_epc += WORD_SIZE;
 #endif
 
         DEBUG_LOG_INT("Exception recognised as syscall number ", sys_n);
-
-        switch (sys_n) {                                                        // Using a switch since this will handle a few different syscalls in the next phases
-            case SYSCALL_TERMINATE_PROC: {
-                save_return_register(interrupted_state,
-                        terminate_proc((pcb_t*)arg1));
-                break;
-            }
-            case GETCPUTIME: {
-                pcb_t* running_proc = get_running_proc();
-
-                unsigned int* user = (unsigned int*)arg1;
-                unsigned int* kernel = (unsigned int*)arg2;
-                unsigned int* wallclock = (unsigned int*)arg3;
-
-                *user = running_proc->user_timer;
-                *kernel = running_proc->kernel_timer + (TOD - running_proc->tod_cache);
-                *wallclock = TOD - running_proc->tod_at_start;
-
-                break;
-            }
-            case CREATEPROCESS: {
-                save_return_register(interrupted_state,
-                        create_process((state_t*)arg1, (int)arg2, (pcb_t**)arg3));
-                break;
-            }
-            default: {
-                adderrbuf("ERROR: Syscall not implemented");
-                break;
-            }
-        }
+        consume_syscall(sys_n, arg1, arg2, arg3, interrupted_state, interrupted_process);
 
     } else if (cause_code == EXCODE_BP) {
         DEBUG_LOG("Exception recognised as breakpoint");
@@ -109,6 +83,7 @@ void handle_sysbreak() {
     } else {
         DEBUG_LOG_INT("Syscall/breakpoint handled, resuming a different process that the one interrupted, with original priority: ", get_running_proc()->original_priority);
         DEBUG_SPACING;
+        reset_int_timer();
         memcpy(&interrupted_process->p_s, interrupted_state, sizeof(state_t));          // Copies the old area state to the interrupted process state in order to guarantee that the information will be up to date when the process willl be resumed
         LDST(&get_running_proc()->p_s);                                                 // TODO we need to ensure that the interrupted process still exists and represents the same process (otherwise we would copy the info to an inactive pcb or even worst a pcb now used for something else)
     }                                                                                   // one possibility would be having a new field in pcb that is increased every time the pcb is allocated, this way we can check not only that the pid is the same, but also that this field is the same, meaning that the pcb still represents the same process

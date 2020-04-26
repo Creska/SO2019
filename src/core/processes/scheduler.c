@@ -88,11 +88,12 @@ void launch() {
         running_proc->tod_at_start = TOD;
         running_proc->tod_cache = TOD;
 
-        reset_int_timer();
+
 
         DEBUG_LOG_INT("LAUNCHING PROCESS WITH PRIORITY: ", running_proc->priority);
         DEBUG_SPACING;
 
+        reset_int_timer();
         LDST(&running_proc->p_s);
     } else {
         adderrbuf("Impossible to launch the system, no processes in the ready queue");
@@ -155,6 +156,7 @@ int create_process(state_t *s, int priority, pcb_t **cpid) {
         memcpy(&p->p_s, s, sizeof(state_t));
         p->priority = priority;
         p->original_priority = priority;
+        insertChild(running_proc, p);               // Set the new process as child of the running one
         *cpid = p;
 
         if (priority > running_proc->priority) {
@@ -172,7 +174,6 @@ int create_process(state_t *s, int priority, pcb_t **cpid) {
         return -1;
     }
 }
-
 
 
 pcb_t *get_running_proc() {
@@ -203,6 +204,7 @@ pcb_t *get_running_proc() {
 //    }
 //}
 
+
 // Removes the children of the given PCB.
 int recursive_remove_proc_children(pcb_t* p) {                          // TODO test this functionality with actual process trees
 
@@ -210,7 +212,7 @@ int recursive_remove_proc_children(pcb_t* p) {                          // TODO 
     if (to_be_freed!=NULL) {
         freePcb(to_be_freed);
     } else {
-        return -1;                                                      // TODO return right away or try to continue?
+        return -1;                                                      // TODO return right away or try to continue? despite the error?
     }
 
     pcb_t* target_child = outChild(p);
@@ -222,6 +224,7 @@ int recursive_remove_proc_children(pcb_t* p) {                          // TODO 
     }
     return 0;
 }
+
 
 int terminate_proc(pcb_t *p) {
     if (p==NULL) { p = running_proc; }

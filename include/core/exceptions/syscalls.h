@@ -1,6 +1,7 @@
 #ifndef BIKAYA_SYSCALLS_H
 #define BIKAYA_SYSCALLS_H
 
+#include <core/processes/pcb.h>
 #include "core/system/architecture.h"
 
 // Syscall codes ------------------------------------------------------------------------------------------------------
@@ -12,6 +13,11 @@
 // arg1: a pointer to a proc_init_data struct that defines all the relevant information for process initialization
 #define SYSCALL_ADD_PROC            20
 
+
+
+void
+consume_syscall(unsigned int n, unsigned int arg1, unsigned int arg2, unsigned int arg3, state_t *interrupted_state,
+                pcb_t *interrupted_process);
 
 
 // Utility methods ----------------------------------------------------------------------------------------------------

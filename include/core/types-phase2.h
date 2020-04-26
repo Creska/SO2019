@@ -11,7 +11,7 @@
 #include "core/types-phase2.h"
 #include "utils/listx.h"
 
-typedef unsigned int memaddr;
+typedef unsigned int memaddr;               // TODO decide where to put this stuff
 
 
 
