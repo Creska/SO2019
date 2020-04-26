@@ -36,6 +36,7 @@ void handle_interrupt() {
     DEBUG_SPACING;
     pcb_t* running_proc_after_consume = get_running_proc();
 
+
     if (interrupted_running_proc!=running_proc_after_consume) {
         reset_cached_tod(running_proc_after_consume);
         memcpy(&interrupted_running_proc->p_s, get_old_area_int(), sizeof(state_t));
@@ -76,17 +77,22 @@ void handle_sysbreak() {
 
     flush_kernel_time(interrupted_process);
 
+    state_t* to_resume = NULL;
     if (interrupted_process == get_running_proc()) {
-        DEBUG_LOG("Syscall/breakpoint handled, resuming the same process that was running before the exception");
-        DEBUG_SPACING;
-        LDST(interrupted_state);
+        if (get_running_proc()->user_timer==0) {
+            // Caso limite
+            reset_int_timer();
+            to_resume = &get_running_proc()->p_s;
+        } else {
+            // Resume same process
+            to_resume = interrupted_state;
+        }
     } else {
-        DEBUG_LOG_INT("Syscall/breakpoint handled, resuming a different process that the one interrupted, with original priority: ", get_running_proc()->original_priority);
-        DEBUG_SPACING;
         reset_int_timer();
         memcpy(&interrupted_process->p_s, interrupted_state, sizeof(state_t));          // Copies the old area state to the interrupted process state in order to guarantee that the information will be up to date when the process willl be resumed
-        LDST(&get_running_proc()->p_s);                                                 // TODO we need to ensure that the interrupted process still exists and represents the same process (otherwise we would copy the info to an inactive pcb or even worst a pcb now used for something else)
-    }                                                                                   // one possibility would be having a new field in pcb that is increased every time the pcb is allocated, this way we can check not only that the pid is the same, but also that this field is the same, meaning that the pcb still represents the same process
+        to_resume= &get_running_proc()->p_s;
+    }
+    LDST(to_resume);
 }
 
 

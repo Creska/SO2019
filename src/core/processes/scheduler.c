@@ -153,7 +153,7 @@ void time_slice_callback() {
 int create_process(state_t *s, int priority, pcb_t **cpid) {
     pcb_t* p = allocPcb();
     if (p!=NULL) {
-        memcpy(&p->p_s, s, sizeof(state_t));
+        memcpy(&p->p_s, s, sizeof(state_t));            // todo check
         p->priority = priority;
         p->original_priority = priority;
         insertChild(running_proc, p);               // Set the new process as child of the running one
