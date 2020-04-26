@@ -52,12 +52,14 @@ void consume_syscall(unsigned int n, unsigned int arg1, unsigned int arg2, unsig
         }
 
         case VERHOGEN: {
-            adderrbuf("Syscall VERHOGEN not implemented (yet)");
+            int* semaddr = (int*)arg1;
+            v(semaddr);
             break;
         }
 
         case PASSEREN: {
-            adderrbuf("Syscall PASSEREN not implemented (yet)");
+            int* semaddr = (int*)arg1;
+            p(semaddr);
             break;
         }
 

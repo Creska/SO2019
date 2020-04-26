@@ -2,6 +2,7 @@
 #include "core/processes/scheduler.h"
 #include "core/system/system.h"
 #include "utils/debug.h"
+#include "core/processes/asl.h"
 
 
 unsigned int clock_ticks_per_time_slice = 0;
@@ -61,6 +62,7 @@ void init_scheduler(proc_init_data starting_procs[], unsigned int procs_number, 
     clock_ticks_per_time_slice = clock_ticks_per_period(time_slice);                      // This value will be the same until reboot or reset, we can just cache it
 
     initPcbs();
+    initASL();
     mkEmptyProcQ(&ready_queue);
 
     for (int i = 0; i < procs_number; ++i) {
@@ -208,10 +210,12 @@ pcb_t *get_running_proc() {
 // Removes the children of the given PCB.
 int recursive_remove_proc_children(pcb_t* p) {                          // TODO test this functionality with actual process trees
 
+    DEBUG_LOG("Recursive trermination entry point");
     pcb_t* to_be_freed = outProcQ(&ready_queue, p);                     // Remove p from the process queue and free it
     if (to_be_freed!=NULL) {
         freePcb(to_be_freed);
     } else {
+        DEBUG_LOG("Qualcosa è andato storto");
         return -1;                                                      // TODO return right away or try to continue? despite the error?
     }
 
@@ -220,13 +224,16 @@ int recursive_remove_proc_children(pcb_t* p) {                          // TODO 
         if (recursive_remove_proc_children(target_child)) {
             return -1;
         }
+
         target_child = outChild(p);
+
     }
     return 0;
 }
 
 
 int terminate_proc(pcb_t *p) {
+    DEBUG_LOG("Termination function entry point");
     if (p==NULL) { p = running_proc; }
 
     insertProcQ(&ready_queue, running_proc);                                        // Insert temporarily the running proc in the ready queue to facilitate recursion and removal checks
@@ -244,5 +251,33 @@ int terminate_proc(pcb_t *p) {
     }
     return ret;
 }
+
+void p(int* semaddr) {
+    semaddr--;                  // TODO check initial semaphore status
+
+
+    if (semaddr<0) {
+        if (insertBlocked(semaddr, running_proc)) {
+            adderrbuf("No free SEMDs");
+        }
+        pcb_t* new_proc = headProcQ(&ready_queue);
+        if (new_proc!=NULL) {
+            set_running_proc(new_proc);
+        } else {
+            adderrbuf("No process left");
+        }
+        semaddr++;
+    }
+
+
+
+}
+
+void v(int* semaddr) {
+
+}
+
+
+
 
 

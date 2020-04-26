@@ -54,4 +54,10 @@ pcb_t* add_process(proc_init_data* data);
 // cpid:        is the location of the (pcb_t*) variable where the new process id should be saved
 int create_process(state_t* s, int priority, pcb_t** cpid);
 
+
+void p(int* semaddr);
+
+
+void v(int* semaddr);
+
 #endif //BIKAYA_SCHEDULER_H
