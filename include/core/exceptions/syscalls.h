@@ -15,9 +15,7 @@
 
 
 
-void
-consume_syscall(unsigned int n, unsigned int arg1, unsigned int arg2, unsigned int arg3, state_t *interrupted_state,
-                pcb_t *interrupted_process);
+void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process);
 
 
 // Utility methods ----------------------------------------------------------------------------------------------------

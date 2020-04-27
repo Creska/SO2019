@@ -60,38 +60,39 @@ void handle_sysbreak() {
 
     if (cause_code == EXCODE_SYS) {
 
-        unsigned int sys_n, arg1, arg2, arg3;                       // Retrieving syscall number and arguments from processor registers
-        load_syscall_registers(interrupted_state, &sys_n, &arg1, &arg2, &arg3);
-
 #ifdef TARGET_UMPS                                                  // TODO is this just for syscalls or also for breakpoints?
         interrupted_state->pc_epc += WORD_SIZE;
 #endif
 
         DEBUG_LOG_INT("Exception recognised as syscall number ", sys_n);
-        consume_syscall(sys_n, arg1, arg2, arg3, interrupted_state, interrupted_process);
+        consume_syscall(interrupted_state, interrupted_process);
+        DEBUG_LOG("Syscall handled");
 
     } else if (cause_code == EXCODE_BP) {
         DEBUG_LOG("Exception recognised as breakpoint");
         adderrbuf("ERROR: BreakPoint launched, handler still not implemented!");
     }
 
-    flush_kernel_time(interrupted_process);
+
 
     state_t* to_resume = NULL;
     if (interrupted_process == get_running_proc()) {
         if (get_running_proc()->user_timer==0) {
-            // Caso limite
-            reset_int_timer();
+            DEBUG_LOG("The interrupted process was terminated and it's PCB was recycled for a new process that "
+                      "now needs to be resumed. This shouldn't happen with the currently available syscalls");
             to_resume = &get_running_proc()->p_s;
+            reset_int_timer();
         } else {
-            // Resume same process
+            DEBUG_LOG("Resuming the interrupted process");
             to_resume = interrupted_state;
         }
     } else {
-        reset_int_timer();
-        memcpy(&interrupted_process->p_s, interrupted_state, sizeof(state_t));          // Copies the old area state to the interrupted process state in order to guarantee that the information will be up to date when the process willl be resumed
+        DEBUG_LOG("Resuming a different process than the one that was interrupted");
+        memcpy(&interrupted_process->p_s, interrupted_state, sizeof(state_t));                      // Copies the old area state to the interrupted process state in order to guarantee that the information will be up to date when the process willl be resumed
         to_resume= &get_running_proc()->p_s;
+        reset_int_timer();
     }
+    flush_kernel_time(interrupted_process);
     LDST(to_resume);
 }
 

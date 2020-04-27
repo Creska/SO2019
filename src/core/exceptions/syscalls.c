@@ -24,9 +24,12 @@ void save_return_register(state_t *s, unsigned int return_val) {
 #endif
 }
 
-void consume_syscall(unsigned int n, unsigned int arg1, unsigned int arg2, unsigned int arg3, state_t *interrupted_state,
-                pcb_t *interrupted_process) {
-    switch (n) {                                                        // Using a switch since this will handle a few different syscalls in the next phases
+void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
+
+    unsigned int sys_n, arg1, arg2, arg3;                       // Retrieving syscall number and arguments from processor registers
+    load_syscall_registers(interrupted_state, &sys_n, &arg1, &arg2, &arg3);
+
+    switch (sys_n) {                                                        // Using a switch since this will handle a few different syscalls in the next phases
 
         case GETCPUTIME: {
 

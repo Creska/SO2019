@@ -208,10 +208,12 @@ pcb_t *get_running_proc() {
 
 
 // Removes the children of the given PCB.
-int recursive_remove_proc_children(pcb_t* p) {                          // TODO test this functionality with actual process trees
+int recursive_remove_proc(pcb_t* p) {                          // TODO test this functionality with actual process trees
 
     DEBUG_LOG("Recursive trermination entry point");
     pcb_t* to_be_freed = outProcQ(&ready_queue, p);                     // Remove p from the process queue and free it
+    DEBUG_LOG_INT("Freeing process with original priority: ", to_be_freed->original_priority);
+
     if (to_be_freed!=NULL) {
         freePcb(to_be_freed);
     } else {
@@ -221,29 +223,26 @@ int recursive_remove_proc_children(pcb_t* p) {                          // TODO 
 
     pcb_t* target_child = outChild(p);
     while (target_child!=NULL) {
-        if (recursive_remove_proc_children(target_child)) {
+        if (recursive_remove_proc(target_child)) {
             return -1;
         }
-
         target_child = outChild(p);
-
     }
     return 0;
 }
 
 
 int terminate_proc(pcb_t *p) {
-    DEBUG_LOG("Termination function entry point");
     if (p==NULL) { p = running_proc; }
 
     insertProcQ(&ready_queue, running_proc);                                        // Insert temporarily the running proc in the ready queue to facilitate recursion and removal checks
-    int ret = recursive_remove_proc_children(p);
+    int ret = recursive_remove_proc(p);
 
     pcb_t* retrieved_running_proc = outProcQ(&ready_queue, running_proc);           // Take back the running process from the ready queue
     if (retrieved_running_proc==NULL) {                                             // If the running process wasn't in the ready queue at this point it means that it was removed
-        pcb_t* new_proc = headProcQ(&ready_queue);
+        pcb_t* new_proc = removeProcQ(&ready_queue);
         if (new_proc!=NULL) {
-            set_running_proc(headProcQ(&ready_queue));                              // so we run a new process if the ready queue isn't empty
+            set_running_proc(new_proc);                                             // so we run a new process if the ready queue isn't empty
         } else {
             addokbuf("No processes left after the last process termination\n");
             HALT();
