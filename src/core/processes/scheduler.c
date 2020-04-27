@@ -253,28 +253,31 @@ int terminate_proc(pcb_t *p) {
 }
 
 void p(int* semaddr) {
-    semaddr--;                  // TODO check initial semaphore status
+    (*semaddr)--;
 
-
-    if (semaddr<0) {
-        if (insertBlocked(semaddr, running_proc)) {
+    if (*semaddr<0) {                                                       // If there are no available resources
+        if (insertBlocked(semaddr, running_proc)) {                         // blocks the process on the semaphore
             adderrbuf("No free SEMDs");
         }
-        pcb_t* new_proc = headProcQ(&ready_queue);
+        pcb_t* new_proc = headProcQ(&ready_queue);                          // Resume another process from the ready_queue
         if (new_proc!=NULL) {
             set_running_proc(new_proc);
         } else {
-            adderrbuf("No process left");
+            adderrbuf("No process left after a PASSEREN call. Something must be wrong, "
+                      "every process is waiting on a semaphore, there's no ready process that can call a VERHOGEN.");
         }
-        semaddr++;
+        (*semaddr)++;
     }
-
-
-
 }
 
 void v(int* semaddr) {
+    (*semaddr)++;
 
+    pcb_t* dequeued_proc = removeBlocked(semaddr);
+    if (dequeued_proc != NULL) {
+        insertProcQ(&ready_queue, dequeued_proc);           // TODO here maybe we could run immediately the dequeued process if it has an high enough priority
+        (*semaddr)--;               // or p(semaddr)?
+    }
 }
 
 
