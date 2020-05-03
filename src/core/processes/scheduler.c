@@ -152,6 +152,19 @@ void time_slice_callback() {
 //    return p;
 //}
 
+// Schedules a new process for execution. If it has an higher priority than the running process
+// it is executed immediately, otherwise it goes in the ready queue.
+void schedule_proc(pcb_t* p) {
+    if (p->priority > running_proc->priority) {
+        DEBUG_LOG("The newly created process has higher priority than the running one, swapping them instantly");
+        stop_running_proc();
+        set_running_proc(p);
+    } else {
+        DEBUG_LOG ("The newly created process has lower priority than the running one, just inserting it in the ready queue");
+        insertProcQ(&ready_queue, p);
+    }
+}
+
 int create_process(state_t *s, int priority, pcb_t **cpid) {
     pcb_t* p = allocPcb();
     if (p!=NULL) {
@@ -161,21 +174,16 @@ int create_process(state_t *s, int priority, pcb_t **cpid) {
         insertChild(running_proc, p);               // Set the new process as child of the running one
         *cpid = p;
 
-        if (priority > running_proc->priority) {
-            DEBUG_LOG("The newly created process has higher priority than the running one, swapping them instantly");
-            stop_running_proc();
-            set_running_proc(p);
-            reset_int_timer();
-        } else {
-            DEBUG_LOG ("The newly created process has lower priority than the running one, just inserting it in the ready queue");
-            insertProcQ(&ready_queue, p);
-        }
+        schedule_proc(p);
         return 0;
     } else {
         DEBUG_LOG("Maximum number of processes was reached, failed to create a new one");
         return -1;
     }
 }
+
+
+
 
 
 pcb_t *get_running_proc() {
@@ -267,17 +275,35 @@ void p(int* semaddr) {
         }
         (*semaddr)++;
     }
+
+
 }
 
 void v(int* semaddr) {
     (*semaddr)++;
-
+    DEBUG_LOG("V entry");
     pcb_t* dequeued_proc = removeBlocked(semaddr);
-    if (dequeued_proc != NULL) {
-        insertProcQ(&ready_queue, dequeued_proc);           // TODO here maybe we could run immediately the dequeued process if it has an high enough priority
+    if (dequeued_proc != NULL) {                                        // Increase the priority of all the processes
+        dequeued_proc->priority = dequeued_proc->original_priority;         // Restore the dequeued process' priority to the original
+        semd_t* s = getSemd(semaddr);                                   // left on the semd queue in order to avoid starvation
+        if (s!=NULL) {
+            pcb_t* target;
+            list_for_each_entry(target, &s->s_procQ, p_next) {
+                target->priority += PRIORITY_INC_PER_TIME_SLICE;
+            }
+        }
+        DEBUG_LOG("Pre sched");
+        schedule_proc(dequeued_proc);
+        DEBUG_LOG("Post sched");
+
         (*semaddr)--;               // or p(semaddr)?
     }
+    DEBUG_LOG("V exit");
 }
+
+// Roba semafori
+// TODO controllare che non venga contato il tempo in coda a un semaforo per CPU time
+// TODO rimozione di un processo dalla coda di un semaforo con terminate process
 
 
 

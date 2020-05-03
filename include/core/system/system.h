@@ -32,6 +32,9 @@ void set_pc(state_t* s, void (*ptr)());
 // Returns 1 if an interrupt is pending on the given line, 0 otherwise
 unsigned int is_interrupt_pending(unsigned int line);
 
+#define GET_DEV_LINE(reg) (((reg - DEV_REG_START)/DEV_REG_SIZE_W)/N_DEV_PER_IL) + (N_INTERRUPT_LINES-N_EXT_IL)
+#define GET_DEV_N(reg) (reg - DEV_REG_START)/DEV_REG_SIZE%N_DEV_PER_IL
+
 #define TOD *(unsigned int*)BUS_REG_TOD_LO
 
 // BUS Register -------------------------------------------------------------------------------------------------------

@@ -64,7 +64,6 @@ void handle_sysbreak() {
         interrupted_state->pc_epc += WORD_SIZE;
 #endif
 
-        DEBUG_LOG_INT("Exception recognised as syscall number ", sys_n);
         consume_syscall(interrupted_state, interrupted_process);
         DEBUG_LOG("Syscall handled");
 

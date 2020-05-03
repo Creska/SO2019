@@ -25,12 +25,10 @@ void launcher() {
 }
 
 void debug_log_tester() {
-    DEBUG_LOG("Test message 1");
-    DEBUG_LOG("Test message 2");
-    DEBUG_LOG("Test message 3");
-    DEBUG_LOG("Test message 4");
-    DEBUG_LOG("Test message 5");
-    SYSCALL(3, 0, 0, 0);
+
+    unsigned int yo = DEV_REG_ADDR(5,4);
+    unsigned int line = GET_DEV_LINE(yo);
+    DEBUG_LOG_UINT("Line", line);
 }
 
 void dummy_process() {

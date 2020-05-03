@@ -1,5 +1,6 @@
 #include "core/exceptions/syscalls.h"
 #include "core/processes/scheduler.h"
+#include "utils/debug.h"
 
 
 void load_syscall_registers(state_t* s, unsigned int* n, unsigned int* a1, unsigned int* a2, unsigned int* a3) {
@@ -29,6 +30,7 @@ void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
     unsigned int sys_n, arg1, arg2, arg3;                       // Retrieving syscall number and arguments from processor registers
     load_syscall_registers(interrupted_state, &sys_n, &arg1, &arg2, &arg3);
 
+    DEBUG_LOG_INT("Exception recognised as syscall number ", sys_n);
     switch (sys_n) {                                                        // Using a switch since this will handle a few different syscalls in the next phases
 
         case GETCPUTIME: {
@@ -68,6 +70,11 @@ void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
 
         case WAITIO: {
             adderrbuf("Syscall WAIT_IO not implemented (yet)");
+            unsigned int command = arg1;
+            unsigned int* reg= (unsigned int *) arg2;
+            int subdev = (int) arg3;
+
+            *reg = command;
             break;
         }
 
