@@ -69,10 +69,26 @@ void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
         }
 
         case WAITIO: {
-            adderrbuf("Syscall WAIT_IO not implemented (yet)");
+
             unsigned int command = arg1;
-            unsigned int* reg= (unsigned int *) arg2;
+            unsigned int* reg = (unsigned int *) arg2;
             int subdev = (int) arg3;
+
+            devreg_t * dev = ((devreg_t *) reg);
+            unsigned int dev_line = GET_DEV_LINE((int) reg);
+            DEBUG_LOG_UINT("dev line after SYS6: ", dev_line);
+            unsigned int dev_num = GET_DEV_INSTANCE((int) reg);
+            DEBUG_LOG_UINT("dev num after SYS6: ", dev_num);
+
+            if  (dev_line != IL_TERMINAL)
+            {
+                dev->dtp.command = command;
+            }
+            else
+            {
+                if (subdev == 0) dev->term.transm_command = command;
+                else dev->term.recv_command = command;
+            }
 
             *reg = command;
             break;
@@ -92,6 +108,8 @@ void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
             adderrbuf("ERROR: Syscall not implemented");
             break;
         }
+
+        //save dev.statuts
     }
 }
 

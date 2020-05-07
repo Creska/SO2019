@@ -24,15 +24,9 @@ void launcher() {
     SYSCALL(3, 0, 0, 0);
 }
 
-void debug_log_tester() {
-    //line -> categoria di device
-    //dev -> num. istanza del device
-    unsigned int yo = DEV_REG_ADDR(3, 7);
-    unsigned int dev_num = GET_DEV_INSTANCE(yo);
-    unsigned int dev_line = GET_DEV_LINE(yo);
-    //DEBUG_LOG_UINT("Device's number: ", dev_num);
-    DEBUG_LOG_UINT("Device's instance: ", dev_num);
-    DEBUG_LOG_UINT("Device's line: ", dev_line);
+void debug_log_tester()
+{
+    SYSCALL(6, 0, DEV_REG_ADDR(3, 4), 0);
 }
 
 void dummy_process() {
