@@ -42,5 +42,6 @@
 
 #endif
 
+#define GET_DEV_START (N_INTERRUPT_LINES - N_EXT_IL)
 
 #endif //BIKAYA_ARCHITECTURE_H
