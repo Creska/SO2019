@@ -108,11 +108,10 @@ void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
             state_t * interrupted_process_area = NULL;
             pcb_t * tmp_running_proc = get_running_proc();
             struct state_t * new_running_proc = &arg3;  //quì sbaglio, giusto?
-            DEBUG_LOG_INT("Recognized the program trap handler with code: ", arg1);
+            DEBUG_LOG("Switching between the correct handler...");
 
             switch (arg1)
             {
-                DEBUG_LOG("Switching between the correct handler...");
 
                 case 0:
                 {
