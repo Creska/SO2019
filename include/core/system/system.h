@@ -32,8 +32,6 @@ void set_pc(state_t* s, void (*ptr)());
 // Returns 1 if an interrupt is pending on the given line, 0 otherwise
 unsigned int is_interrupt_pending(unsigned int line);
 
-// Returns the
-
 // Returns the device's instance
 #define GET_DEV_INSTANCE(reg) ((reg - DEV_REG_START)/(DEV_REG_SIZE)) % N_DEV_PER_IL
 

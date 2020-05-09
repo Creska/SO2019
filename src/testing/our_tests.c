@@ -26,7 +26,9 @@ void launcher() {
 
 void debug_log_tester()
 {
-    SYSCALL(6, 0, DEV_REG_ADDR(3, 4), 0);
+    state_t * new;
+    state_t * old;
+    SYSCALL(7, 0, &old, &new);
 }
 
 void dummy_process() {

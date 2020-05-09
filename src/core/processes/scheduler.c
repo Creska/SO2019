@@ -91,7 +91,6 @@ void launch() {
         running_proc->tod_cache = TOD;
 
 
-
         DEBUG_LOG_INT("LAUNCHING PROCESS WITH PRIORITY: ", running_proc->priority);
         DEBUG_SPACING;
 

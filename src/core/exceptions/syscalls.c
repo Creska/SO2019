@@ -1,5 +1,7 @@
 #include "core/exceptions/syscalls.h"
 #include "core/processes/scheduler.h"
+#include "core/exceptions/handler.h"
+#include "utils/utils.h"
 #include "utils/debug.h"
 
 
@@ -86,16 +88,63 @@ void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
             }
             else
             {
-                if (subdev == 0) dev->term.transm_command = command;
-                else dev->term.recv_command = command;
+                if (subdev == 0)
+                {
+                    dev->term.transm_command = command;
+                }
+                else
+                {
+                    dev->term.recv_command = command;
+                }
             }
 
             *reg = command;
             break;
         }
 
-        case SPECPASSUP: {
-            adderrbuf("Syscall SPECPASSUP not implemented (yet)");
+        case SPECPASSUP:
+        {
+            DEBUG_LOG_INT("SYS recognized: ", SPECPASSUP);
+            state_t * interrupted_process_area = NULL;
+            pcb_t * tmp_running_proc = get_running_proc();
+            struct state_t * new_running_proc = &arg3;  //quì sbaglio, giusto?
+            DEBUG_LOG_INT("Recognized the program trap handler with code: ", arg1);
+
+            switch (arg1)
+            {
+                DEBUG_LOG("Switching between the correct handler...");
+
+                case 0:
+                {
+                    DEBUG_LOG_INT("Recognized the sysbreak handler with code: ", arg1);
+                    interrupted_process_area = get_old_area_sys_break();
+                    DEBUG_LOG("get_old_area_sys_break : OK");
+                    memcpy(&tmp_running_proc->p_s, interrupted_process_area, sizeof(state_t));
+                    DEBUG_LOG("memcpy : OK");
+                    set_kernel_mode(&new_running_proc, 1);
+                    LDST(&new_running_proc);
+                    DEBUG_LOG("LDST : OK");
+                    handle_sysbreak();
+                    break;
+                }
+                case 1:
+                {
+                    DEBUG_LOG_INT("Recognized the TLB handler with code: ", arg1);
+                    interrupted_process_area = get_old_area_TLB();
+                    memcpy(&tmp_running_proc->p_s, interrupted_process_area, sizeof(state_t));
+                    LDST(&new_running_proc);
+                    handle_TLB();
+                    break;
+                }
+                case 2:
+                {
+                    interrupted_process_area = get_old_area_program_trap();
+                    memcpy(&tmp_running_proc->p_s, interrupted_process_area, sizeof(state_t));
+                    LDST(&new_running_proc);
+                    handle_trap();
+                    break;
+                }
+            }
             break;
         }
 
