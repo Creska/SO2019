@@ -35,6 +35,19 @@ typedef struct pcb_t {
 
     // Holds the value of the TOD at the first execution of the process
     unsigned int tod_at_start;
+
+    //old & new sysbreak's area
+    unsigned int * old_area_sysbreak;
+    unsigned int * new_area_sysbreak;
+
+    //old & new TLB's area
+    unsigned int * old_area_TLB;
+    unsigned int * new_area_TLB;
+
+    //old & new programtrap's area
+    unsigned int * old_area_progtrap;
+    unsigned int * new_area_progtrap;
+
 } pcb_t;
 
 

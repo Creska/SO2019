@@ -29,6 +29,8 @@ void debug_log_tester()
     state_t * new;
     state_t * old;
     SYSCALL(7, 0, &old, &new);
+    //dovrebbe killare il processo ed i suoi figli
+    SYSCALL(7, 0, &old, &new);
 }
 
 void dummy_process() {
