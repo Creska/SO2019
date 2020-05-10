@@ -40,6 +40,7 @@ void consume_interrupts() {
     }
 
     if (is_interrupt_pending(4)) {
+
         DEBUG_LOG("Tape device interrupt pending");
     }
 
@@ -52,6 +53,7 @@ void consume_interrupts() {
     }
 
     if (is_interrupt_pending(7)) {
+
         DEBUG_LOG_BININT("Bitmap:", CDEV_BITMAP_ADDR(7));
         DEBUG_LOG("Terminal device interrupt pending");
     }

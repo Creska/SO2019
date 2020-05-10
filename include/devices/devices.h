@@ -8,4 +8,7 @@
     #define DEVICE_CMD_ACK              1
     #define DEVICE_CMD_FUNC_SPECIFIC    2
 
+//
+int* get_dev_sem(unsigned int line, unsigned int instance);
+
 #endif //BIKAYA_DEVICES_H

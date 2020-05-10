@@ -36,7 +36,9 @@ unsigned int is_interrupt_pending(unsigned int line);
 #define GET_DEV_INSTANCE(reg) ((reg - DEV_REG_START)/(DEV_REG_SIZE)) % N_DEV_PER_IL
 
 // Returns the device line's number
-#define GET_DEV_LINE(reg) ((reg - DEV_REG_START)/DEV_REG_SIZE)/N_DEV_PER_IL + GET_DEV_START
+#define GET_DEV_LINE_SYSTEM(reg) ((reg - DEV_REG_START)/DEV_REG_SIZE)/N_DEV_PER_IL + GET_DEV_START
+
+#define GET_DEV_LINE(reg) ((reg - DEV_REG_START)/DEV_REG_SIZE)/N_DEV_PER_IL
 
 #define TOD *(unsigned int*)BUS_REG_TOD_LO
 

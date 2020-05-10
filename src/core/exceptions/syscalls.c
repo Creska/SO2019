@@ -3,6 +3,8 @@
 #include "core/exceptions/handler.h"
 #include "utils/utils.h"
 #include "utils/debug.h"
+#include "devices/devices.h"
+#include "core/processes/asl.h"
 
 
 void load_syscall_registers(state_t* s, unsigned int* n, unsigned int* a1, unsigned int* a2, unsigned int* a3) {
@@ -26,6 +28,13 @@ void save_return_register(state_t *s, unsigned int return_val) {
     s->a1 = return_val;
 #endif
 }
+
+
+
+
+
+
+
 
 void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
 
@@ -78,18 +87,26 @@ void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
 
             devreg_t * dev = ((devreg_t *) reg);
             unsigned int dev_line = GET_DEV_LINE((int) reg);
-            DEBUG_LOG_UINT("dev line after SYS6's call: ", dev_line);
             unsigned int dev_num = GET_DEV_INSTANCE((int) reg);
+
+            DEBUG_LOG_UINT("dev line after SYS6's call: ", dev_line);
             DEBUG_LOG_UINT("dev num after SYS6's call: ", dev_num);
 
-            if  (dev_line != IL_TERMINAL){
-                dev->dtp.command = command;
+            int* target_semaphore = get_dev_sem(dev_line, dev_num);
+            if (*target_semaphore) {
+                if  (dev_line != IL_TERMINAL){
+                    dev->dtp.command = command;
+                } else {
+                    if (subdev == 0) { dev->term.transm_command = command; }
+                    else { dev->term.recv_command = command; }
+                }
+                insertBlocked(target_semaphore, get_running_proc());
             } else {
-                if (subdev == 0) { dev->term.transm_command = command; }
-                else { dev->term.recv_command = command; }
+                insertBlocked(target_semaphore, get_running_proc());
             }
 
-            *reg = command;
+
+
             break;
         }
 
@@ -138,7 +155,7 @@ void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
             }*/
 
             pcb_t * current_proc = get_running_proc();
-            state_t** target_old_area = &current_proc->spec_areas[arg1*2];
+            state_t** target_old_area = &(current_proc->spec_areas[arg1*2]);
             state_t** target_new_area = &current_proc->spec_areas[arg1*2+1];
 
             if (*target_new_area==NULL && *target_old_area== NULL) {
