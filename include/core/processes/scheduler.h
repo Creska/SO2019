@@ -37,10 +37,6 @@ void time_slice_callback();
 // Returns 0 if the operation is successfull, -1 otherwise
 int terminate_proc(pcb_t* p);
 
-// Terminates the running process and removes its offspring from the ready queue
-// returns the process state that needs to be resumed after the operation
-void terminate_running_proc();
-
 // Adds a process to the ready queue
 // If the added process has an higher priority than the running process the first is executed right away and the second goes back to the ready queue.
 //

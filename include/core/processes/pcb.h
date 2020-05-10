@@ -36,17 +36,21 @@ typedef struct pcb_t {
     // Holds the value of the TOD at the first execution of the process
     unsigned int tod_at_start;
 
-    //old & new sysbreak's area
-    unsigned int * old_area_sysbreak;
-    unsigned int * new_area_sysbreak;
+//    //old & new sysbreak's area
+//    unsigned int * old_area_sysbreak;
+//    unsigned int * new_area_sysbreak;
+//
+//    //old & new TLB's area
+//    unsigned int * old_area_TLB;
+//    unsigned int * new_area_TLB;
+//
+//    //old & new programtrap's area
+//    unsigned int * old_area_progtrap;
+//    unsigned int * new_area_progtrap;
 
-    //old & new TLB's area
-    unsigned int * old_area_TLB;
-    unsigned int * new_area_TLB;
-
-    //old & new programtrap's area
-    unsigned int * old_area_progtrap;
-    unsigned int * new_area_progtrap;
+    // Array of pointers to the old/new areas defined through the SPECPASSUP syscall
+    // Order: sys_old | sys_new | TLB_old | TLB_new | trap_old | trap_new
+    state_t* spec_areas[6];
 
 } pcb_t;
 

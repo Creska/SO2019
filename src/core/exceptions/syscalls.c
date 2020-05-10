@@ -82,20 +82,11 @@ void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
             unsigned int dev_num = GET_DEV_INSTANCE((int) reg);
             DEBUG_LOG_UINT("dev num after SYS6's call: ", dev_num);
 
-            if  (dev_line != IL_TERMINAL)
-            {
+            if  (dev_line != IL_TERMINAL){
                 dev->dtp.command = command;
-            }
-            else
-            {
-                if (subdev == 0)
-                {
-                    dev->term.transm_command = command;
-                }
-                else
-                {
-                    dev->term.recv_command = command;
-                }
+            } else {
+                if (subdev == 0) { dev->term.transm_command = command; }
+                else { dev->term.recv_command = command; }
             }
 
             *reg = command;
@@ -147,73 +138,92 @@ void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
             }*/
 
             pcb_t * current_proc = get_running_proc();
+            state_t** target_old_area = &current_proc->spec_areas[arg1*2];
+            state_t** target_new_area = &current_proc->spec_areas[arg1*2+1];
 
-            switch (arg1)
-            {
-                /* TODO: check if the else statement is correct for the sys7's implementation
-                 * Info_0: The functions called in each else statement can be "called" just once if we write a waterfall-if instead of a switch
-                 * Info_1: How to get the buddy's element of the pcb_t list for the function outProcQ? headProcQ is not correct
-                 * Info_2: It's necessary to call both of the recursive_remove_proc and outProcQ functions?
-                 * Info_3: Remember always YO, YO && YO
-                 */
+            if (*target_new_area==NULL && *target_old_area== NULL) {
+                DEBUG_LOG("The targeted spec areas weren't already set");
+                *target_old_area = (state_t*)arg2;
+                *target_new_area = (state_t*)arg3;
 
-                case 0:
-                {
-                    DEBUG_LOG_INT("Recognized the sysbreak handler with code: ", arg1);
+                // TEMP not sure about value assignment to those pointers, remember to check if values are not null in these logs
+                DEBUG_LOG_PTR("The targeted old area is now set to ", current_proc->spec_areas[arg1*2]);
+                DEBUG_LOG_PTR("The targeted new area is now set to ", current_proc->spec_areas[arg1*2]);
 
-                    if (current_proc->old_area_sysbreak == NULL && current_proc->new_area_sysbreak == NULL)
-                    {
-                        DEBUG_LOG("Setting the old & new sysbreak's area given to the syscall inside the current process' pcb");
-                        current_proc->old_area_sysbreak = &arg2;
-                        current_proc->new_area_sysbreak = &arg3;
-                    }
-                    else
-                    {
-                        DEBUG_LOG("The process has already set the old & new sysbreak's area");
-                        DEBUG_LOG("I proced deleting the process and his childs...");
-                        recursive_remove_proc(current_proc);
-                        outProcQ(&(headProcQ(&current_proc)->p_next), current_proc);
-                    }
-                    break;
-                }
-                case 1:
-                {
-                    DEBUG_LOG_INT("Recognized the TLB handler with code: ", arg1);
+                // TODO need to implement "the other side of this", when those 3 handlers are called they need to check
+                // if the corresponding spec pointers are set and load...
 
-                    if (current_proc->old_area_TLB == NULL && current_proc->new_area_TLB == NULL)
-                    {
-                        DEBUG_LOG("Setting the old & new TLB's area given to the syscall inside the current process' pcb");
-                        current_proc->new_area_TLB = &arg3;
-                    }
-                    else
-                    {
-                        DEBUG_LOG("The process has already set the old & new sysbreak's area");
-                        DEBUG_LOG("I proced deleting the process and his childs...");
-                        recursive_remove_proc(current_proc);
-                        outProcQ(&(headProcQ(&current_proc)->p_next), current_proc);
-                    }
-                    break;
-                }
-                case 2:
-                {
-                    DEBUG_LOG_INT("Recognized the program trap handler with code: ", arg1);
-
-                    if (current_proc->old_area_progtrap == NULL && current_proc->new_area_progtrap == NULL)
-                    {
-                        DEBUG_LOG("Setting the old & new program trap's area given to the syscall inside the current process' pcb");
-                        current_proc->old_area_progtrap = &arg2;
-                        current_proc->new_area_progtrap = &arg3;
-                    }
-                    else
-                    {
-                        DEBUG_LOG("The process has already set the old & new sysbreak's area");
-                        DEBUG_LOG("I proced deleting the process and his childs...");
-                        recursive_remove_proc(current_proc);
-                        outProcQ(&(headProcQ(&current_proc)->p_next), current_proc);
-                    }
-                    break;
-                }
+            } else {
+                DEBUG_LOG("The targeted spec areas were already set, killing the callee");
+                terminate_proc(current_proc);
             }
+
+//            switch (arg1)
+//            {
+//                /* TODO: check if the else statement is correct for the sys7's implementation
+//                 * Info_0: The functions called in each else statement can be "called" just once if we write a waterfall-if instead of a switch
+//                 * Info_1: How to get the buddy's element of the pcb_t list for the function outProcQ? headProcQ is not correct
+//                 * Info_2: It's necessary to call both of the recursive_remove_proc and outProcQ functions?
+//                 * Info_3: Remember always YO, YO && YO
+//                 */
+//
+//                case 0:
+//                {
+//                    DEBUG_LOG_INT("Recognized the sysbreak handler with code: ", arg1);
+//
+//                    if (current_proc->old_area_sysbreak == NULL && current_proc->new_area_sysbreak == NULL)
+//                    {
+//                        DEBUG_LOG("Setting the old & new sysbreak's area given to the syscall inside the current process' pcb");
+//                        current_proc->old_area_sysbreak = &arg2;
+//                        current_proc->new_area_sysbreak = &arg3;
+//                    }
+//                    else
+//                    {
+//                        DEBUG_LOG("The process has already set the old & new sysbreak's area");
+//                        DEBUG_LOG("I proced deleting the process and his childs...");
+//                        recursive_remove_proc(current_proc);
+//                        outProcQ(&(headProcQ(&current_proc)->p_next), current_proc);
+//                    }
+//                    break;
+//                }
+//                case 1:
+//                {
+//                    DEBUG_LOG_INT("Recognized the TLB handler with code: ", arg1);
+//
+//                    if (current_proc->old_area_TLB == NULL && current_proc->new_area_TLB == NULL)
+//                    {
+//                        DEBUG_LOG("Setting the old & new TLB's area given to the syscall inside the current process' pcb");
+//                        current_proc->new_area_TLB = &arg3;
+//                    }
+//                    else
+//                    {
+//                        DEBUG_LOG("The process has already set the old & new sysbreak's area");
+//                        DEBUG_LOG("I proced deleting the process and his childs...");
+//                        recursive_remove_proc(current_proc);
+//                        outProcQ(&(headProcQ(&current_proc)->p_next), current_proc);
+//                    }
+//                    break;
+//                }
+//                case 2:
+//                {
+//                    DEBUG_LOG_INT("Recognized the program trap handler with code: ", arg1);
+//
+//                    if (current_proc->old_area_progtrap == NULL && current_proc->new_area_progtrap == NULL)
+//                    {
+//                        DEBUG_LOG("Setting the old & new program trap's area given to the syscall inside the current process' pcb");
+//                        current_proc->old_area_progtrap = &arg2;
+//                        current_proc->new_area_progtrap = &arg3;
+//                    }
+//                    else
+//                    {
+//                        DEBUG_LOG("The process has already set the old & new sysbreak's area");
+//                        DEBUG_LOG("I proced deleting the process and his childs...");
+//                        recursive_remove_proc(current_proc);
+//                        outProcQ(&(headProcQ(&current_proc)->p_next), current_proc);
+//                    }
+//                    break;
+//                }
+//            }
             break;
         }
 
