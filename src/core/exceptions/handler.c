@@ -50,11 +50,38 @@ void handle_interrupt() {
 }
 
 
+void check_passup(unsigned int type, pcb_t* p) {
+
+    state_t** old_area = p->spec_areas[type*2];
+    state_t** new_area = p->spec_areas[type*2+1];
+
+    if ((*old_area)!=NULL && (*new_area)!=NULL) {
+
+        memcpy(*old_area, get_old_area_sys_break(), sizeof(state_t));
+
+        LDST(*new_area);
+    }
+
+
+
+}
+
+void conclude_handler() {
+
+}
+
 void handle_sysbreak() {
+
+
+
 
     DEBUG_LOG("HANDLING SYSCALL/BREAKPOINT EXCEPTION");
     pcb_t* interrupted_process = get_running_proc();          // Cache the running process before handling to avoid excessive use of memcpy (see handle_interrupts comments)
+
+    check_passup(0, interrupted_process);
+
     flush_user_time(interrupted_process);
+
     unsigned int cause_code = get_exccode(get_old_area_sys_break());
     state_t* interrupted_state = get_old_area_sys_break();
 
@@ -64,8 +91,16 @@ void handle_sysbreak() {
         interrupted_state->pc_epc += WORD_SIZE;
 #endif
 
+
+
+
         consume_syscall(interrupted_state, interrupted_process);
         DEBUG_LOG("Syscall handled");
+
+
+
+
+
 
     } else if (cause_code == EXCODE_BP) {
         DEBUG_LOG("Exception recognised as breakpoint");

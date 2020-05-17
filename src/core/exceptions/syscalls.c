@@ -6,29 +6,7 @@
 #include "devices/devices.h"
 #include "core/processes/asl.h"
 #include "core/exceptions/interrupts.h"
-
-
-void load_syscall_registers(state_t* s, unsigned int* n, unsigned int* a1, unsigned int* a2, unsigned int* a3) {
-#ifdef TARGET_UMPS                                  // (handled with ifdef for now to avoid useless complexity, in the next phase this kind of stuff could be handled with a pattern similar to system.h)
-    *n = s->reg_a0;
-    *a1 = s->reg_a1;
-    *a2 = s->reg_a2;
-    *a3 = s->reg_a3;
-#elif TARGET_UARM
-    *n = s->a1;
-    *a1 = s->a2;
-    *a2 = s->a3;
-    *a3 = s->a4;
-#endif
-}
-
-void save_syscall_return_register(state_t *s, unsigned int return_val) {
-#ifdef TARGET_UMPS
-    s->reg_v0 = return_val;
-#elif TARGET_UARM
-    s->a1 = return_val;
-#endif
-}
+#include "core/system/system.h"
 
 
 
@@ -83,7 +61,6 @@ void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
 
         case WAITIO: {
             wait_io(arg1, (devreg_t*) arg2, (int) arg3);
-
             break;
         }
 
@@ -135,7 +112,7 @@ void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
             state_t** target_old_area = &(current_proc->spec_areas[arg1*2]);
             state_t** target_new_area = &current_proc->spec_areas[arg1*2+1];
 
-            if (*target_new_area==NULL && *target_old_area== NULL) {
+            if ((*target_new_area)==NULL && (*target_old_area) == NULL) {
                 DEBUG_LOG("The targeted spec areas weren't already set");
                 *target_old_area = (state_t*)arg2;
                 *target_new_area = (state_t*)arg3;

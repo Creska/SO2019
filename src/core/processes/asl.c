@@ -25,21 +25,38 @@ void initASL() {
     }
 }
 
+semd_t* retrieve_free_semd(int* key, pcb_t* p) {
+    if (list_empty(&semdFree_h)) {
+        return NULL;
+    } else {                                                                           // La lista dei semd liberi non è vuota, ne spostiamo uno nella ASL e settiamo i suoi campi
+        struct list_head* first_free_semd_head = list_next(&semdFree_h);
+        list_del(first_free_semd_head);
+        list_add(first_free_semd_head, &semd_h);                                       // Spostiamo un semd dalla lista free all'ASL
+
+        semd_t* target_semd = container_of(first_free_semd_head, struct semd_t, s_next);
+        target_semd->s_key = key;
+        p->p_semkey = key;
+        INIT_LIST_HEAD(&target_semd->s_procQ);
+        return target_semd;
+    }
+}
+
+int insertBlockedFifo(int* key, pcb_t* p) {
+    struct semd_t* target_semd = getSemd(key);
+    if (target_semd == NULL) {                                                              // Il semaforo corrispondente non è presente nella ASL
+        target_semd = retrieve_free_semd(key, p);
+        if (target_semd==NULL) return TRUE;
+    }
+
+    list_add_tail(&p->p_next, &target_semd->s_procQ);
+    return FALSE;
+}
+
 int insertBlocked(int *key,pcb_t* p) {
     struct semd_t* target_semd = getSemd(key);
     if (target_semd == NULL) {                                                              // Il semaforo corrispondente non è presente nella ASL
-         if (list_empty(&semdFree_h)) {
-             return TRUE;
-         } else {                                                                           // La lista dei semd liberi non è vuota, ne spostiamo uno nella ASL e settiamo i suoi campi
-             struct list_head* first_free_semd_head = list_next(&semdFree_h);
-             list_del(first_free_semd_head);
-             list_add(first_free_semd_head, &semd_h);                                       // Spostiamo un semd dalla lista free all'ASL
-
-             target_semd = container_of(first_free_semd_head, struct semd_t, s_next);
-             target_semd->s_key = key;
-             p->p_semkey = key;
-             INIT_LIST_HEAD(&target_semd->s_procQ);
-         }
+         target_semd = retrieve_free_semd(key, p);
+         if (target_semd==NULL) return TRUE;
     }
 
     insertProcQ(&target_semd->s_procQ, p);                                  // Ora che abbiamo il semd appropriato aggiungiamo il pcb alla sua lista dei processi

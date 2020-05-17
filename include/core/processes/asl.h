@@ -31,6 +31,8 @@ void initASL();
 // Se non è possibile allocare un nuovo SEMD perché la lista di quelli liberi è vuota, restituisce TRUE. In tutti gli altri casi, restituisce FALSE.
 int insertBlocked(int *key,pcb_t* p);
 
+int insertBlockedFifo(int* key, pcb_t* p);
+
 // Ritorna il primo PCB dalla coda dei processi bloccati associata al SEMD della ASL con chiave key.
 // Se tale descrittore non esiste nella ASL, restituisce NULL. Altrimenti, restituisce l’elemento rimosso.
 // Se la coda dei processi bloccati per il semaforo diventa vuota, rimuove il descrittore corrispondente dalla ASL e lo inserisce nella coda dei descrittori liberi.

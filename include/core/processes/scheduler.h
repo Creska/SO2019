@@ -54,8 +54,9 @@ int create_process(state_t* s, int priority, pcb_t** cpid);
 int recursive_remove_proc(pcb_t * p);
 
 void p(int* semaddr);
-
+void p_fifo(int* semaddr);
 
 void v(int* semaddr);
+void v_fifo(int* semaddr);
 
 #endif //BIKAYA_SCHEDULER_H

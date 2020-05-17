@@ -258,6 +258,26 @@ int terminate_proc(pcb_t *p) {
     return ret;
 }
 
+void p_fifo(int* semaddr) {
+    (*semaddr)--;
+
+    if ((*semaddr)<0) {                                                       // If there are no available resources
+        if (insertBlockedFifo(semaddr, running_proc)) {                         // blocks the process on the semaphore
+            adderrbuf("No free SEMDs");
+        }
+        pcb_t* new_proc = headProcQ(&ready_queue);                          // Resume another process from the ready_queue
+        if (new_proc!=NULL) {
+            set_running_proc(new_proc);
+        } else {
+            // TODO idle dummy proc
+            adderrbuf("No process left after a PASSEREN call. Something must be wrong, "
+                      "every process is waiting on a semaphore, there's no ready process that can call a VERHOGEN.");
+        }
+        (*semaddr)++;
+    }
+}
+
+
 void p(int* semaddr) {
     (*semaddr)--;
 
@@ -269,11 +289,24 @@ void p(int* semaddr) {
         if (new_proc!=NULL) {
             set_running_proc(new_proc);
         } else {
+            // TODO idle dummy proc
             adderrbuf("No process left after a PASSEREN call. Something must be wrong, "
                       "every process is waiting on a semaphore, there's no ready process that can call a VERHOGEN.");
         }
         (*semaddr)++;
     }
+}
+
+void v_fifo(int* semaddr) {
+    (*semaddr)++;
+    pcb_t* dequeued_proc = removeBlocked(semaddr);
+    if (dequeued_proc != NULL) {
+        dequeued_proc->priority = dequeued_proc->original_priority;         // Restore the dequeued process' priority to the original
+        schedule_proc(dequeued_proc);
+
+        (*semaddr)--;               // or p(semaddr)?
+    }
+    DEBUG_LOG("V exit");
 }
 
 void v(int* semaddr) {

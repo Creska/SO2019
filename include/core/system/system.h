@@ -103,6 +103,9 @@ unsigned int clock_ticks_per_period(unsigned int microseconds);
 // Returns an unsigned integer code corresponding to the cause of an exeption as defined in EXCODE_... macros
 unsigned int get_exccode(state_t* state);
 
+void load_syscall_registers(state_t* s, unsigned int* n, unsigned int* a1, unsigned int* a2, unsigned int* a3);
+
+void save_syscall_return_register(state_t *s, unsigned int return_val);
 
 #endif
 
