@@ -261,7 +261,7 @@ int terminate_proc(pcb_t *p) {
 void p(int* semaddr) {
     (*semaddr)--;
 
-    if (*semaddr<0) {                                                       // If there are no available resources
+    if ((*semaddr)<0) {                                                       // If there are no available resources
         if (insertBlocked(semaddr, running_proc)) {                         // blocks the process on the semaphore
             adderrbuf("No free SEMDs");
         }
@@ -274,26 +274,21 @@ void p(int* semaddr) {
         }
         (*semaddr)++;
     }
-
-
 }
 
 void v(int* semaddr) {
     (*semaddr)++;
-    DEBUG_LOG("V entry");
     pcb_t* dequeued_proc = removeBlocked(semaddr);
-    if (dequeued_proc != NULL) {                                        // Increase the priority of all the processes
+    if (dequeued_proc != NULL) {
         dequeued_proc->priority = dequeued_proc->original_priority;         // Restore the dequeued process' priority to the original
-        semd_t* s = getSemd(semaddr);                                   // left on the semd queue in order to avoid starvation
-        if (s!=NULL) {
+        semd_t* s = getSemd(semaddr);
+        if (s!=NULL) {                                                          // If the semd still has processes in the queue...
             pcb_t* target;
-            list_for_each_entry(target, &s->s_procQ, p_next) {
-                target->priority += PRIORITY_INC_PER_TIME_SLICE;
+            list_for_each_entry(target, &s->s_procQ, p_next) {            // ...increase the priority of all the processes
+                target->priority += PRIORITY_INC_PER_TIME_SLICE;                // left on the semd queue in order to avoid starvation
             }
         }
-        DEBUG_LOG("Pre sched");
         schedule_proc(dequeued_proc);
-        DEBUG_LOG("Post sched");
 
         (*semaddr)--;               // or p(semaddr)?
     }

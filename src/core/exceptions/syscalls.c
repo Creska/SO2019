@@ -5,6 +5,7 @@
 #include "utils/debug.h"
 #include "devices/devices.h"
 #include "core/processes/asl.h"
+#include "core/exceptions/interrupts.h"
 
 
 void load_syscall_registers(state_t* s, unsigned int* n, unsigned int* a1, unsigned int* a2, unsigned int* a3) {
@@ -21,7 +22,7 @@ void load_syscall_registers(state_t* s, unsigned int* n, unsigned int* a1, unsig
 #endif
 }
 
-void save_return_register(state_t *s, unsigned int return_val) {
+void save_syscall_return_register(state_t *s, unsigned int return_val) {
 #ifdef TARGET_UMPS
     s->reg_v0 = return_val;
 #elif TARGET_UARM
@@ -58,12 +59,13 @@ void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
         }
 
         case TERMINATEPROCESS: {
-            save_return_register(interrupted_state, terminate_proc((pcb_t*)arg1));
+            save_syscall_return_register(interrupted_state, terminate_proc((pcb_t *) arg1));
             break;
         }
 
         case CREATEPROCESS: {
-            save_return_register(interrupted_state, create_process((state_t*)arg1, (int)arg2, (pcb_t**)arg3));
+            save_syscall_return_register(interrupted_state,
+                                         create_process((state_t *) arg1, (int) arg2, (pcb_t **) arg3));
             break;
         }
 
@@ -80,32 +82,7 @@ void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
         }
 
         case WAITIO: {
-
-            unsigned int command = arg1;
-            unsigned int* reg = (unsigned int *) arg2;
-            int subdev = (int) arg3;
-
-            devreg_t * dev = ((devreg_t *) reg);
-            unsigned int dev_line = GET_DEV_LINE((int) reg);
-            unsigned int dev_num = GET_DEV_INSTANCE((int) reg);
-
-            DEBUG_LOG_UINT("dev line after SYS6's call: ", dev_line);
-            DEBUG_LOG_UINT("dev num after SYS6's call: ", dev_num);
-
-            int* target_semaphore = get_dev_sem(dev_line, dev_num);
-            if (*target_semaphore) {
-                if  (dev_line != IL_TERMINAL){
-                    dev->dtp.command = command;
-                } else {
-                    if (subdev == 0) { dev->term.transm_command = command; }
-                    else { dev->term.recv_command = command; }
-                }
-                insertBlocked(target_semaphore, get_running_proc());
-            } else {
-                insertBlocked(target_semaphore, get_running_proc());
-            }
-
-
+            wait_io(arg1, (devreg_t*) arg2, (int) arg3);
 
             break;
         }
@@ -245,12 +222,25 @@ void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
         }
 
         case GETPID: {
-            adderrbuf("Syscall GETPID not implemented (yet)");
+            // TODO check if this makes sense (test)
+            pcb_t** pid = (pcb_t**) arg1;
+            pcb_t** ppid = (pcb_t**) arg2;
+
+
+            pcb_t* current_proc = get_running_proc();
+            if (pid != NULL) {
+                *pid = current_proc;
+            }
+
+            if (ppid != NULL) {
+                *ppid = current_proc->p_parent;
+
+            }
             break;
         }
 
         default: {
-            adderrbuf("ERROR: Syscall not implemented");
+            adderrbuf("ERROR: Syscall not recognised");
             break;
         }
 

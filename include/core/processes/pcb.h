@@ -53,7 +53,7 @@ typedef struct pcb_t {
     state_t* spec_areas[6];
 
     // Holds a device command waiting for exacution
-    int dev_command;
+    unsigned int dev_command;
 
 } pcb_t;
 

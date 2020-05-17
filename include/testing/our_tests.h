@@ -1,6 +1,9 @@
 #ifndef BIKAYA_OUR_TESTS_H
 #define BIKAYA_OUR_TESTS_H
 
+#include "utils/debug.h"
+
+
 // A bunch of random tests used to verify different aspects of bikaya's functionality
 
 void dummy_process();

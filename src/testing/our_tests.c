@@ -1,6 +1,5 @@
 #include "testing/our_tests.h"
 #include "core/system/system.h"
-#include "utils/debug.h"
 #include "bikaya.h"
 #include "arch.h"
 
@@ -28,9 +27,9 @@ void debug_log_tester()
 {
     state_t * new;
     state_t * old;
-    SYSCALL(7, 0, &old, &new);
+    SYSCALL(7, 0, (unsigned int)&old, (unsigned int)&new);
     //dovrebbe killare il processo ed i suoi figli
-    SYSCALL(7, 0, &old, &new);
+    SYSCALL(7, 0, (unsigned int)&old, (unsigned int)&new);
 }
 
 void dummy_process() {
