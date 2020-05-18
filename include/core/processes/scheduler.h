@@ -4,7 +4,9 @@
 #include "core/processes/pcb.h"
 #include "core/processes/process_initialization_data.h"
 
+pcb_t* get_idle_proc();         //TEMP
 
+void idle();
 
 #define PRIORITY_INC_PER_TIME_SLICE     1               // The amount the priority of each process in the ready queue is increased every time slice
 
@@ -26,6 +28,11 @@ void reset_int_timer();
 
 // Returns a pointer to the running PCB
 pcb_t* get_running_proc();
+
+// Sets as running the first proc in the ready queue and returns the process that was running previously
+pcb_t* swap_running();
+
+void schedule_proc(pcb_t* p);
 
 
 // Exception handling methods -----------------------------------------------------------------------------------------

@@ -9,6 +9,16 @@ unsigned int clock_ticks_per_time_slice = 0;
 struct list_head ready_queue;
 pcb_t* running_proc = NULL;
 
+pcb_t idle_proc;
+
+pcb_t* get_idle_proc() {
+    return &idle_proc;
+}
+
+void idle() {
+    HALT();
+}
+
 
 void reset_int_timer() {
     DEBUG_LOG_INT("Resetting interval timer to ", clock_ticks_per_time_slice);
@@ -70,18 +80,36 @@ void init_scheduler(proc_init_data starting_procs[], unsigned int procs_number, 
         populate_pcb(p, &starting_procs[i]);
         insertProcQ(&ready_queue, p);
     }
+
+    // TEMP
+    reset_state(&idle_proc.p_s);
+    proc_init_data idle_proc_data = {.km_on=1, .method=idle, .timer_int_on=1, .other_ints_on=1, .vm_on=0, .priority = 0};
+    populate_pcb(&idle_proc, &idle_proc_data);
 }
+
+
 
 // Swaps the running process with a new one
 void stop_running_proc() {
-    running_proc->priority = running_proc->original_priority;                                               // Reset the previously running process' priority to the original
-    insertProcQ(&ready_queue, running_proc);// Insert the previously running process in the ready queue
-
+    if (running_proc!=&idle_proc) {
+        running_proc->priority = running_proc->original_priority;                                               // Reset the previously running process' priority to the original
+        insertProcQ(&ready_queue, running_proc);// Insert the previously running process in the ready queue
+    } else {
+        DEBUG_LOG("The running process was the IDLE PROC, stopping it without putting it in the ready queue");
+    }
 }
 
 void set_running_proc(pcb_t* new_proc) {
-    running_proc = new_proc;
+    if (new_proc!=NULL) {
+        running_proc = new_proc;
+    } else {
+        // TEMP
+        DEBUG_LOG("Setting IDLE PROC as running process");
+        running_proc = &idle_proc;
+    }
 }
+
+
 
 void launch() {
     if (!emptyProcQ(&ready_queue)) {
@@ -108,6 +136,7 @@ void time_slice_callback() {
 
     struct pcb_t* target_proc;
     list_for_each_entry(target_proc, &ready_queue, p_next) {                    // Increments the priority of each process in the ready_queue (anti-starvation measure)
+
         target_proc->priority += PRIORITY_INC_PER_TIME_SLICE;
     }
 
@@ -259,6 +288,8 @@ int terminate_proc(pcb_t *p) {
 }
 
 void p_fifo(int* semaddr) {
+    DEBUG_LOG("P fifo enter");
+
     (*semaddr)--;
 
     if ((*semaddr)<0) {                                                       // If there are no available resources
@@ -275,10 +306,13 @@ void p_fifo(int* semaddr) {
         }
         (*semaddr)++;
     }
+    DEBUG_LOG("P fifo exit");
 }
 
 
 void p(int* semaddr) {
+    DEBUG_LOG("P enter");
+
     (*semaddr)--;
 
     if ((*semaddr)<0) {                                                       // If there are no available resources
@@ -295,9 +329,12 @@ void p(int* semaddr) {
         }
         (*semaddr)++;
     }
+    DEBUG_LOG("P exit");
+
 }
 
 void v_fifo(int* semaddr) {
+    DEBUG_LOG("V fifo enter");
     (*semaddr)++;
     pcb_t* dequeued_proc = removeBlocked(semaddr);
     if (dequeued_proc != NULL) {
@@ -306,7 +343,7 @@ void v_fifo(int* semaddr) {
 
         (*semaddr)--;               // or p(semaddr)?
     }
-    DEBUG_LOG("V exit");
+    DEBUG_LOG("V fifo exit");
 }
 
 void v(int* semaddr) {
@@ -327,6 +364,14 @@ void v(int* semaddr) {
     }
     DEBUG_LOG("V exit");
 }
+
+pcb_t *swap_running() {
+    pcb_t* prev_running = running_proc;
+    set_running_proc(removeProcQ(&ready_queue));
+    return prev_running;
+}
+
+
 
 // Roba semafori
 // TODO controllare che non venga contato il tempo in coda a un semaforo per CPU time

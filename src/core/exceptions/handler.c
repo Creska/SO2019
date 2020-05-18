@@ -50,40 +50,61 @@ void handle_interrupt() {
 }
 
 
+void conclude_TLB_handler() {
+    LDST(get_old_area_TLB());
+}
+
+void conclude_sys_handler() {
+    LDST(get_old_area_sys_break());
+}
+
+void conclude_trap_handler() {
+    LDST(get_old_area_program_trap());
+}
+
 void check_passup(unsigned int type, pcb_t* p) {
 
-    state_t** old_area = p->spec_areas[type*2];
-    state_t** new_area = p->spec_areas[type*2+1];
+    state_t** old_area = &p->spec_areas[type*2];
+    state_t** new_area = &p->spec_areas[type*2+1];
 
     if ((*old_area)!=NULL && (*new_area)!=NULL) {
 
-        memcpy(*old_area, get_old_area_sys_break(), sizeof(state_t));
-
+        STST(*old_area);
+        switch (type) {
+            case 0: {
+                set_pc(*old_area, conclude_sys_handler);
+                break;
+            }
+            case 1: {
+                set_pc(*old_area, conclude_TLB_handler);
+                break;
+            }
+            case 2: {
+                set_pc(*old_area, conclude_trap_handler);
+                break;
+            }
+            default:
+                adderrbuf("Cose orribili sono successe durante check passup.\nRICORDA DI CAMBIARE QUESTA COSA"); // TEMP bruttissimo
+                break;
+        }
         LDST(*new_area);
     }
-
-
-
 }
 
-void conclude_handler() {
 
-}
 
 void handle_sysbreak() {
 
-
-
-
-    DEBUG_LOG("HANDLING SYSCALL/BREAKPOINT EXCEPTION");
     pcb_t* interrupted_process = get_running_proc();          // Cache the running process before handling to avoid excessive use of memcpy (see handle_interrupts comments)
-
     check_passup(0, interrupted_process);
-
+    DEBUG_LOG("HANDLING SYSCALL/BREAKPOINT EXCEPTION");
     flush_user_time(interrupted_process);
+    state_t* interrupted_state = get_old_area_sys_break();
+
+
+
 
     unsigned int cause_code = get_exccode(get_old_area_sys_break());
-    state_t* interrupted_state = get_old_area_sys_break();
 
     if (cause_code == EXCODE_SYS) {
 
@@ -107,8 +128,6 @@ void handle_sysbreak() {
         adderrbuf("ERROR: BreakPoint launched, handler still not implemented!");
     }
 
-
-
     state_t* to_resume = NULL;
     if (interrupted_process == get_running_proc()) {
         if (get_running_proc()->user_timer==0) {
@@ -126,8 +145,19 @@ void handle_sysbreak() {
         to_resume= &get_running_proc()->p_s;
         reset_int_timer();
     }
+
+    DEBUG_LOG("sadasd");
+    if (&get_idle_proc()->p_s==to_resume) {                    //TEMP
+        DEBUG_LOG("Resuming idle process");
+    }
+
+
     flush_kernel_time(interrupted_process);
-    LDST(to_resume);
+
+    DEBUG_LOG("Pre LDST");
+//    set_kernel_mode(to_resume, 0);
+    //DEBUG_LOG_BININT("Status: ", to_resume->status);
+    LDST(to_resume);                // TODO forse è il mini stack di umps? in ogni caso c'è qualcosa che non va nel lancio dell'idle process
 }
 
 

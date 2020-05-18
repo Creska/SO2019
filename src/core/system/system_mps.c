@@ -2,6 +2,7 @@
 
 #include "core/system/system.h"
 #include "utils/utils.h"
+#include "utils/debug.h"
 
 
 void reset_state(state_t* s) {
@@ -31,10 +32,11 @@ void set_sp(state_t *s, unsigned int sp_val) {
 
 void set_kernel_mode(state_t *s, unsigned int on) {
     if (on) {
-        s->status = s->status & (~STATUS_KUc);                                            // the kernel mode is on when the bit is 0
+        s->status = s->status & (~STATUS_KUc);                                  // the kernel mode is on when the bit is 0
     } else {
         s->status = s->status | (~STATUS_KUc);
     }
+
 }
 
 void set_virtual_mem(state_t *s, unsigned int on)

@@ -66,48 +66,6 @@ void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
 
         case SPECPASSUP:
         {
-            /* LOOK AT ME -> È INUTILE MA LO LASCIO, NON SI SA MAI CHE POSSA TORNARE UTILE PER GLI HANDLER
-            DEBUG_LOG_INT("SYS recognized: ", SPECPASSUP);
-            state_t * interrupted_process_area = NULL;
-            pcb_t * tmp_running_proc = get_running_proc();
-            struct state_t * new_running_proc = &arg3;  //quì sbaglio, giusto?
-            DEBUG_LOG("Switching between the correct handler...");
-
-            switch (arg1)
-            {
-
-                case 0:
-                {
-                    DEBUG_LOG_INT("Recognized the sysbreak handler with code: ", arg1);
-                    interrupted_process_area = get_old_area_sys_break();
-                    DEBUG_LOG("get_old_area_sys_break : OK");
-                    memcpy(&tmp_running_proc->p_s, interrupted_process_area, sizeof(state_t));
-                    DEBUG_LOG("memcpy : OK");
-                    handle_sysbreak();
-                    set_kernel_mode(&new_running_proc, 1);
-                    LDST(&new_running_proc);
-                    DEBUG_LOG("LDST : OK");
-                    break;
-                }
-                case 1:
-                {
-                    DEBUG_LOG_INT("Recognized the TLB handler with code: ", arg1);
-                    interrupted_process_area = get_old_area_TLB();
-                    memcpy(&tmp_running_proc->p_s, interrupted_process_area, sizeof(state_t));
-                    LDST(&new_running_proc);
-                    handle_TLB();
-                    break;
-                }
-                case 2:
-                {
-                    interrupted_process_area = get_old_area_program_trap();
-                    memcpy(&tmp_running_proc->p_s, interrupted_process_area, sizeof(state_t));
-                    LDST(&new_running_proc);
-                    handle_trap();
-                    break;
-                }
-            }*/
-
             pcb_t * current_proc = get_running_proc();
             state_t** target_old_area = &(current_proc->spec_areas[arg1*2]);
             state_t** target_new_area = &current_proc->spec_areas[arg1*2+1];
@@ -128,73 +86,6 @@ void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
                 DEBUG_LOG("The targeted spec areas were already set, killing the callee");
                 terminate_proc(current_proc);
             }
-
-//            switch (arg1)
-//            {
-//                /* TODO: check if the else statement is correct for the sys7's implementation
-//                 * Info_0: The functions called in each else statement can be "called" just once if we write a waterfall-if instead of a switch
-//                 * Info_1: How to get the buddy's element of the pcb_t list for the function outProcQ? headProcQ is not correct
-//                 * Info_2: It's necessary to call both of the recursive_remove_proc and outProcQ functions?
-//                 * Info_3: Remember always YO, YO && YO
-//                 */
-//
-//                case 0:
-//                {
-//                    DEBUG_LOG_INT("Recognized the sysbreak handler with code: ", arg1);
-//
-//                    if (current_proc->old_area_sysbreak == NULL && current_proc->new_area_sysbreak == NULL)
-//                    {
-//                        DEBUG_LOG("Setting the old & new sysbreak's area given to the syscall inside the current process' pcb");
-//                        current_proc->old_area_sysbreak = &arg2;
-//                        current_proc->new_area_sysbreak = &arg3;
-//                    }
-//                    else
-//                    {
-//                        DEBUG_LOG("The process has already set the old & new sysbreak's area");
-//                        DEBUG_LOG("I proced deleting the process and his childs...");
-//                        recursive_remove_proc(current_proc);
-//                        outProcQ(&(headProcQ(&current_proc)->p_next), current_proc);
-//                    }
-//                    break;
-//                }
-//                case 1:
-//                {
-//                    DEBUG_LOG_INT("Recognized the TLB handler with code: ", arg1);
-//
-//                    if (current_proc->old_area_TLB == NULL && current_proc->new_area_TLB == NULL)
-//                    {
-//                        DEBUG_LOG("Setting the old & new TLB's area given to the syscall inside the current process' pcb");
-//                        current_proc->new_area_TLB = &arg3;
-//                    }
-//                    else
-//                    {
-//                        DEBUG_LOG("The process has already set the old & new sysbreak's area");
-//                        DEBUG_LOG("I proced deleting the process and his childs...");
-//                        recursive_remove_proc(current_proc);
-//                        outProcQ(&(headProcQ(&current_proc)->p_next), current_proc);
-//                    }
-//                    break;
-//                }
-//                case 2:
-//                {
-//                    DEBUG_LOG_INT("Recognized the program trap handler with code: ", arg1);
-//
-//                    if (current_proc->old_area_progtrap == NULL && current_proc->new_area_progtrap == NULL)
-//                    {
-//                        DEBUG_LOG("Setting the old & new program trap's area given to the syscall inside the current process' pcb");
-//                        current_proc->old_area_progtrap = &arg2;
-//                        current_proc->new_area_progtrap = &arg3;
-//                    }
-//                    else
-//                    {
-//                        DEBUG_LOG("The process has already set the old & new sysbreak's area");
-//                        DEBUG_LOG("I proced deleting the process and his childs...");
-//                        recursive_remove_proc(current_proc);
-//                        outProcQ(&(headProcQ(&current_proc)->p_next), current_proc);
-//                    }
-//                    break;
-//                }
-//            }
             break;
         }
 
@@ -211,7 +102,6 @@ void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
 
             if (ppid != NULL) {
                 *ppid = current_proc->p_parent;
-
             }
             break;
         }
@@ -220,8 +110,6 @@ void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
             adderrbuf("ERROR: Syscall not recognised");
             break;
         }
-
-        //save dev.statuts
     }
 }
 
