@@ -12,6 +12,8 @@
 #define POINTERS_BITS                   32
 #define POINTERS_DIGITS                 32/4
 
+#define SYS_TERM    1
+
 struct terminal {
     termreg_t *reg;
 };
@@ -75,7 +77,7 @@ void term_putstr(terminal* term_reg, const char *str) {
 /* This function places the specified character string in okbuf and
  *	causes the string to be written out to terminal0 */
 void addokbuf(char *strp) {
-    term_putstr(get_terminal(0), strp);
+    term_putstr(get_terminal(SYS_TERM), strp);
 }
 
 
@@ -84,7 +86,7 @@ void addokbuf(char *strp) {
  *	the system shuts down with a panic message */
 void adderrbuf(char *strp) {
 
-    term_putstr(get_terminal(0), strp);
+    term_putstr(get_terminal(SYS_TERM), strp);
 
     PANIC();
 }

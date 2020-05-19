@@ -16,7 +16,7 @@ pcb_t* get_idle_proc() {
 }
 
 void idle() {
-    HALT();
+    while (1) {}
 }
 
 
@@ -85,6 +85,9 @@ void init_scheduler(proc_init_data starting_procs[], unsigned int procs_number, 
     reset_state(&idle_proc.p_s);
     proc_init_data idle_proc_data = {.km_on=1, .method=idle, .timer_int_on=1, .other_ints_on=1, .vm_on=0, .priority = 0};
     populate_pcb(&idle_proc, &idle_proc_data);
+
+    set_sp(&idle_proc.p_s, RAM_TOP - FRAME_SIZE*(20+1));                     // Use the index of the process as index of the frame, this should avoid overlaps at any time
+
 }
 
 
@@ -136,7 +139,7 @@ void time_slice_callback() {
 
     struct pcb_t* target_proc;
     list_for_each_entry(target_proc, &ready_queue, p_next) {                    // Increments the priority of each process in the ready_queue (anti-starvation measure)
-
+        DEBUG_LOG("Increasing priority");
         target_proc->priority += PRIORITY_INC_PER_TIME_SLICE;
     }
 
@@ -152,7 +155,14 @@ void time_slice_callback() {
         stop_running_proc(interrupted_process_state);// and set the first ready process as running (and remove it from the ready queue)
         set_running_proc(removeProcQ(&ready_queue));
     } else {
-        DEBUG_LOG("The current process still has the higher priority, resuming its execution");
+        if (list_empty(&ready_queue)) {
+            DEBUG_LOG("The ready queue is empty, resuming current proc execution");
+        } else {
+            DEBUG_LOG_INT("This priority: ", running_proc->priority);
+            DEBUG_LOG_INT("Head priority: ", headProcQ(&ready_queue)->priority);
+
+            DEBUG_LOG("The current process still has the higher priority, resuming its execution");
+        }
     }
 }
 
@@ -183,7 +193,7 @@ void time_slice_callback() {
 // Schedules a new process for execution. If it has an higher priority than the running process
 // it is executed immediately, otherwise it goes in the ready queue.
 void schedule_proc(pcb_t* p) {
-    if (p->priority > running_proc->priority) {
+    if (p->priority > running_proc->priority || running_proc==&idle_proc) {
         DEBUG_LOG("The newly created process has higher priority than the running one, swapping them instantly");
         stop_running_proc();
         set_running_proc(p);
