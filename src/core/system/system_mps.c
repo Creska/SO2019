@@ -79,3 +79,7 @@ unsigned int get_exccode(state_t* state) {
             return EXCODE_OTHER;
     }
 }
+
+unsigned int* sys_n(state_t *s) {
+    return &s->reg_a0;
+}

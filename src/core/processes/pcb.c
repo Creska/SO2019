@@ -1,4 +1,5 @@
 #include "core/processes/pcb.h"
+#include "utils/debug.h"
 
 
 pcb_t pcbFree_table[MAXPROC];           // L'array in cui effettivamente risiedono i nostri PCB
@@ -36,16 +37,12 @@ pcb_t *allocPcb(void) {
         first_free_pcb->kernel_timer = 0;
         first_free_pcb->user_timer = 0;
         first_free_pcb->tod_cache = 0;
-//        first_free_pcb->new_area_sysbreak = NULL;
-//        first_free_pcb->old_area_sysbreak = NULL;
-//        first_free_pcb->new_area_TLB = NULL;
-//        first_free_pcb->old_area_TLB = NULL;
-//        first_free_pcb->new_area_progtrap = NULL;
-//        first_free_pcb->old_area_progtrap = NULL;
-        // TODO reset of spec pointers
         INIT_LIST_HEAD(&first_free_pcb->p_next);
         INIT_LIST_HEAD(&first_free_pcb->p_sib);
         reset_state(&first_free_pcb->p_s);
+        for (int i = 0; i < 6; ++i) {
+            first_free_pcb->spec_areas[i] = NULL;
+        }
 
         return first_free_pcb;
     }
@@ -63,6 +60,7 @@ int emptyProcQ(struct list_head *head) {
 
 
 void insertProcQ(struct list_head* head, pcb_t* p) {
+    DEBUG_LOG_INT("Inserting process ", get_process_index(p));
     struct pcb_t *target_pcb;
     list_for_each_entry(target_pcb, head, p_next) {
         if (p->priority > target_pcb->priority) {                                   // Abbiamo incontrato il primo elemento con priorità minore, inseriamo p tra lui e quello precedente

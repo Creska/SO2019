@@ -5,20 +5,7 @@
 #include "devices/devices.h"
 #include "utils/listx.h"
 
-// TODO initialize the list_head, otherwise it seems like the list is full but it's not
-typedef struct dev_waiting_list {
-    pcb_t* w_for_res;
-    struct list_head w_for_cmd;
-} dev_w_list;
 
-// Semaphores for device waiting. One for each distinct device
-dev_w_list s_io[N_EXT_IL+1][N_DEV_PER_IL];
-
-dev_w_list* get_dev_sem(unsigned int line, unsigned int instance, unsigned int subdev) {
-    unsigned int index = line;
-    if (line == IL_TERMINAL && subdev) {index += 1;}
-    return &s_io[index][instance];
-}
 
 void send_command(unsigned int line, unsigned int subdev, unsigned int command, devreg_t* dev_reg) {
     DEBUG_LOG_UINT("Sending command: ", command);
@@ -53,8 +40,9 @@ void wait_io(unsigned int command, devreg_t* dev_reg, int subdev) {
     dev_w_list* target_dev_list = get_dev_sem(dev_line+3, dev_num, subdev);
 
     pcb_t* target_proc = swap_running();        // Set as running the first proc of the ready queue (and retrieve the previously running proc)
+    DEBUG_LOG_PTR("Target process: ", target_proc);
     if (target_dev_list->w_for_res==NULL) {
-        DEBUG_LOG("Nobody is waiting for a response sending command");
+        DEBUG_LOG("Nobody is waiting for a response, sending command");
         send_command(dev_line + 3, subdev, command, dev_reg);       //TEMP sdasd
         target_dev_list->w_for_res = target_proc;
     } else {
@@ -94,15 +82,20 @@ void done_io(unsigned int line, unsigned int dev_n, unsigned int subdev) {
 
     devreg_t* dev_reg = (devreg_t*)DEV_REG_ADDR(line, dev_n);
     if (!list_empty(&target_dev_list->w_for_cmd)) {
-        DEBUG_LOG("sadasd");
+        DEBUG_LOG("The cmd waiting list isn't empty");
         struct list_head* first_head = list_next(&target_dev_list->w_for_cmd);
+        DEBUG_LOG_PTR("1: ", &target_dev_list->w_for_cmd);
+
         pcb_t *target_proc = container_of(first_head, struct pcb_t, p_next);
+
         list_del(first_head);
+
 
 
         send_command(line, subdev, target_proc->dev_command, dev_reg);
         target_dev_list->w_for_res = target_proc;
     } else {
+        target_dev_list->w_for_res = NULL;
         send_command(line, subdev, DEVICE_CMD_ACK, dev_reg);
     }
 
@@ -150,7 +143,7 @@ void consume_interrupts() {
         DEBUG_LOG_BININT("Bitmap:", bitmap);
 
         for (int dev_num = 0; dev_num < N_DEV_PER_IL; ++dev_num) {
-            DEBUG_LOG_INT("Device number ", dev_num);
+            //DEBUG_LOG_INT("Device number ", dev_num);
 
             if ((bitmap >> dev_num) & 1) {
                 DEBUG_LOG_INT("Interrupt pending for terminal ", dev_num);

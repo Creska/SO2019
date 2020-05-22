@@ -16,7 +16,20 @@ pcb_t* get_idle_proc() {
 }
 
 void idle() {
-    while (1) {}
+    while (1) {
+        DEBUG_LOG("Idling");
+    }
+}
+
+
+
+// Semaphores for device waiting. One for each distinct device
+dev_w_list s_io[N_EXT_IL+1][N_DEV_PER_IL];
+
+dev_w_list* get_dev_sem(unsigned int line, unsigned int instance, unsigned int subdev) {
+    unsigned int index = line-3;
+    if (line == IL_TERMINAL && subdev) {index += 1;}
+    return &s_io[index][instance];
 }
 
 
@@ -86,8 +99,16 @@ void init_scheduler(proc_init_data starting_procs[], unsigned int procs_number, 
     proc_init_data idle_proc_data = {.km_on=1, .method=idle, .timer_int_on=1, .other_ints_on=1, .vm_on=0, .priority = 0};
     populate_pcb(&idle_proc, &idle_proc_data);
 
-    set_sp(&idle_proc.p_s, RAM_TOP - FRAME_SIZE*(20+1));                     // Use the index of the process as index of the frame, this should avoid overlaps at any time
+    set_sp(&idle_proc.p_s, RAM_TOP - FRAME_SIZE*(21));                     // Use the index of the process as index of the frame, this should avoid overlaps at any time
 
+
+
+    // Initialize the waiting lists for sending commands to devices
+    for (int l = 0; l < (N_EXT_IL + 2); ++l) {
+        for (int d = 0; d < N_DEV_PER_IL; ++d) {
+            INIT_LIST_HEAD(&s_io[l][d].w_for_cmd);
+        }
+    }
 }
 
 
@@ -107,7 +128,7 @@ void set_running_proc(pcb_t* new_proc) {
         running_proc = new_proc;
     } else {
         // TEMP
-        DEBUG_LOG("Setting IDLE PROC as running process");
+        DEBUG_LOG_UINT("Setting IDLE PROC as running process: ", get_process_index(&idle_proc));
         running_proc = &idle_proc;
     }
 }
@@ -139,60 +160,32 @@ void time_slice_callback() {
 
     struct pcb_t* target_proc;
     list_for_each_entry(target_proc, &ready_queue, p_next) {                    // Increments the priority of each process in the ready_queue (anti-starvation measure)
-        DEBUG_LOG("Increasing priority");
+        DEBUG_LOG_INT("Increasing priority of process ", get_process_index(target_proc));
         target_proc->priority += PRIORITY_INC_PER_TIME_SLICE;
     }
-
-    state_t* interrupted_process_state = get_old_area_int();
-
 #ifdef TARGET_UARM
-    interrupted_process_state->pc -= WORD_SIZE;                                       // On arm after an interrupt the pc needs to be decremented by one instruction (used ifdef to avoid useless complexity)
+    get_old_area_int()->pc -= WORD_SIZE;                                       // On arm after an interrupt the pc needs to be decremented by one instruction (used ifdef to avoid useless complexity)
 #endif
 
     if (!list_empty(&ready_queue) && running_proc->priority <= headProcQ(&ready_queue)->priority) {             // Swap execution if the first ready process has a greater priority than the one executing (obviously if the ready queue is empty we don't need to swap)
-        DEBUG_LOG_INT("Swapping to processes with original priority: ", headProcQ(&ready_queue)->original_priority);
+        pcb_t* to_start = removeProcQ(&ready_queue);
+        DEBUG_LOG_UINT("Swapping to process: ", get_process_index(to_start));
 
-        stop_running_proc(interrupted_process_state);// and set the first ready process as running (and remove it from the ready queue)
-        set_running_proc(removeProcQ(&ready_queue));
+        stop_running_proc();// and set the first ready process as running (and remove it from the ready queue)
+        set_running_proc(to_start);
     } else {
         if (list_empty(&ready_queue)) {
             DEBUG_LOG("The ready queue is empty, resuming current proc execution");
         } else {
-            DEBUG_LOG_INT("This priority: ", running_proc->priority);
-            DEBUG_LOG_INT("Head priority: ", headProcQ(&ready_queue)->priority);
-
             DEBUG_LOG("The current process still has the higher priority, resuming its execution");
         }
     }
 }
 
-//
-//pcb_t* add_process(proc_init_data* data) {              // TODO set tod and remember to set timers on pcb reset
-//
-//    DEBUG_LOG_INT("ADDING NEW PROCESS WITH PRIORITY: ", data->priority);
-//
-//    pcb_t* p = get_free_pcb();
-//    populate_pcb(p, data);
-//
-//
-//    if (p->priority > running_proc->priority) {                                     // Ensure instant process swap if p has greater priority than the running process
-//        DEBUG_LOG("The newly added process has higher priority than the running one, swapping them instantly");
-//
-//        stop_running_proc(get_old_area_sys_break());
-//        set_running_proc(p);
-//
-//        reset_int_timer();                                                          // Since a different process will be resumed we give it a full time-slice
-//
-//    } else {
-//        DEBUG_LOG ("Resuming running process after new process addition to the ready queue\n");
-//        insertProcQ(&ready_queue, p);
-//    }
-//    return p;
-//}
-
 // Schedules a new process for execution. If it has an higher priority than the running process
 // it is executed immediately, otherwise it goes in the ready queue.
 void schedule_proc(pcb_t* p) {
+    DEBUG_LOG_INT("Scheduling process: ", get_process_index(p));
     if (p->priority > running_proc->priority || running_proc==&idle_proc) {
         DEBUG_LOG("The newly created process has higher priority than the running one, swapping them instantly");
         stop_running_proc();
@@ -206,11 +199,13 @@ void schedule_proc(pcb_t* p) {
 int create_process(state_t *s, int priority, pcb_t **cpid) {
     pcb_t* p = allocPcb();
     if (p!=NULL) {
+        DEBUG_LOG_INT("Creating new process: ", get_process_index(p));
         memcpy(&p->p_s, s, sizeof(state_t));            // todo check
         p->priority = priority;
         p->original_priority = priority;
         insertChild(running_proc, p);               // Set the new process as child of the running one
-        *cpid = p;
+        if (cpid!=NULL) {(*cpid) = p;}
+        DEBUG_LOG("Ending creation");
 
         schedule_proc(p);
         return 0;
@@ -229,57 +224,45 @@ pcb_t *get_running_proc() {
 }
 
 
-//void recursive_remove_children(pcb_t* p) {              // TODO this might need some debugging, might as well do it when we implement parental relationship between processes
-//
-//    pcb_t* child = removeChild(p);
-//    while (child != NULL) {                             // As long as there is a first child remove it from the tree structure, from the ready queue
-//        recursive_remove_children(child);               // and free it with DFS recursion
-//        outProcQ(&ready_queue, child);
-//        freePcb(child);
-//        child = removeChild(p);
-//    }
-//}
-//
-//
-//void terminate_running_proc() {
-//    recursive_remove_children(running_proc);
-//    if (!emptyProcQ(&ready_queue)) {
-//        set_running_proc(removeProcQ(&ready_queue));
-//        reset_int_timer();
-//    } else {
-//        addokbuf("No processes left after the last process termination\n");
-//        HALT();
-//    }
-//}
-
-
 // Removes the children of the given PCB.
 int recursive_remove_proc(pcb_t* p) {                          // TODO test this functionality with actual process trees
 
-    DEBUG_LOG("Recursive trermination entry point");
+    DEBUG_LOG_INT("Recursive trermination entry point fro proc ", get_process_index(p));
     pcb_t* to_be_freed = outProcQ(&ready_queue, p);                     // Remove p from the process queue and free it
-    DEBUG_LOG_INT("Freeing process with original priority: ", to_be_freed->original_priority);
+
+    if (p->p_semkey!=NULL) {
+        DEBUG_LOG("Semkey != NULL");
+        to_be_freed = outBlocked(p);
+    }
+
+    DEBUG_LOG_INT("Freeing process: ", get_process_index(to_be_freed));
 
     if (to_be_freed!=NULL) {
         freePcb(to_be_freed);
     } else {
-        DEBUG_LOG("Qualcosa è andato storto");
-        return -1;                                                      // TODO return right away or try to continue? despite the error?
+        adderrbuf("Qualcosa è andato storto");
+        return -1;
     }
 
-    pcb_t* target_child = outChild(p);
+    pcb_t* target_child = removeChild(p);
     while (target_child!=NULL) {
+        DEBUG_LOG_INT("Calling termination on child: ", get_process_index(target_child));
         if (recursive_remove_proc(target_child)) {
-            return -1;
+            return -1;                                                      // TODO return right away or try to continue? despite the error?
         }
-        target_child = outChild(p);
+        target_child = removeChild(p);
     }
     return 0;
 }
 
 
 int terminate_proc(pcb_t *p) {
+    DEBUG_LOG_INT("Termination entry point for proc ", get_process_index(p));
     if (p==NULL) { p = running_proc; }
+
+    if (p->p_parent!=NULL) {
+        outChild(p);
+    }
 
     insertProcQ(&ready_queue, running_proc);                                        // Insert temporarily the running proc in the ready queue to facilitate recursion and removal checks
     int ret = recursive_remove_proc(p);
@@ -297,31 +280,18 @@ int terminate_proc(pcb_t *p) {
     return ret;
 }
 
-void p_fifo(int* semaddr) {
-    DEBUG_LOG("P fifo enter");
-
-    (*semaddr)--;
-
-    if ((*semaddr)<0) {                                                       // If there are no available resources
-        if (insertBlockedFifo(semaddr, running_proc)) {                         // blocks the process on the semaphore
-            adderrbuf("No free SEMDs");
-        }
-        pcb_t* new_proc = headProcQ(&ready_queue);                          // Resume another process from the ready_queue
-        if (new_proc!=NULL) {
-            set_running_proc(new_proc);
-        } else {
-            // TODO idle dummy proc
-            adderrbuf("No process left after a PASSEREN call. Something must be wrong, "
-                      "every process is waiting on a semaphore, there's no ready process that can call a VERHOGEN.");
-        }
-        (*semaddr)++;
+void debug_ready_queue() {
+    struct pcb_t* target_proc;
+    DEBUG_LOG("Ready queue:");
+    list_for_each_entry(target_proc, &ready_queue, p_next) {                    // Increments the priority of each process in the ready_queue (anti-starvation measure)
+        DEBUG_LOG_INT("\tproc ", get_process_index(target_proc));
     }
-    DEBUG_LOG("P fifo exit");
 }
 
 
 void p(int* semaddr) {
-    DEBUG_LOG("P enter");
+    DEBUG_LOG_INT("P enter, semaphore has value ", *semaddr);
+    DEBUG_LOG_UINT("Semaphore: ", semaddr);
 
     (*semaddr)--;
 
@@ -329,31 +299,20 @@ void p(int* semaddr) {
         if (insertBlocked(semaddr, running_proc)) {                         // blocks the process on the semaphore
             adderrbuf("No free SEMDs");
         }
-        pcb_t* new_proc = headProcQ(&ready_queue);                          // Resume another process from the ready_queue
+        pcb_t* new_proc = removeProcQ(&ready_queue);                          // Resume another process from the ready_queue
         if (new_proc!=NULL) {
             set_running_proc(new_proc);
+
         } else {
             // TODO idle dummy proc
-            adderrbuf("No process left after a PASSEREN call. Something must be wrong, "
-                      "every process is waiting on a semaphore, there's no ready process that can call a VERHOGEN.");
+            set_running_proc(&idle_proc);
+//            adderrbuf("No process left after a PASSEREN call. Something must be wrong, "
+//                      "every process is waiting on a semaphore, there's no ready process that can call a VERHOGEN.");
         }
         (*semaddr)++;
     }
-    DEBUG_LOG("P exit");
+    DEBUG_LOG_INT("P exit, semaphore has value ", *semaddr);
 
-}
-
-void v_fifo(int* semaddr) {
-    DEBUG_LOG("V fifo enter");
-    (*semaddr)++;
-    pcb_t* dequeued_proc = removeBlocked(semaddr);
-    if (dequeued_proc != NULL) {
-        dequeued_proc->priority = dequeued_proc->original_priority;         // Restore the dequeued process' priority to the original
-        schedule_proc(dequeued_proc);
-
-        (*semaddr)--;               // or p(semaddr)?
-    }
-    DEBUG_LOG("V fifo exit");
 }
 
 void v(int* semaddr) {
@@ -378,6 +337,9 @@ void v(int* semaddr) {
 pcb_t *swap_running() {
     pcb_t* prev_running = running_proc;
     set_running_proc(removeProcQ(&ready_queue));
+
+    DEBUG_LOG_UINT("Swapped proc: ", get_process_index(prev_running));
+    DEBUG_LOG_UINT("...with proc: ", get_process_index(running_proc));
     return prev_running;
 }
 

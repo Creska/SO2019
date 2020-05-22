@@ -66,6 +66,7 @@ void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
 
         case SPECPASSUP:
         {
+            DEBUG_LOG_INT("SPECPASSUP for type ", arg1);
             pcb_t * current_proc = get_running_proc();
             state_t** target_old_area = &(current_proc->spec_areas[arg1*2]);
             state_t** target_new_area = &current_proc->spec_areas[arg1*2+1];
@@ -76,11 +77,8 @@ void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
                 *target_new_area = (state_t*)arg3;
 
                 // TEMP not sure about value assignment to those pointers, remember to check if values are not null in these logs
-                DEBUG_LOG_PTR("The targeted old area is now set to ", current_proc->spec_areas[arg1*2]);
-                DEBUG_LOG_PTR("The targeted new area is now set to ", current_proc->spec_areas[arg1*2]);
-
-                // TODO need to implement "the other side of this", when those 3 handlers are called they need to check
-                // if the corresponding spec pointers are set and load...
+                DEBUG_LOG_UINT("The targeted old area is now set to ", current_proc->spec_areas[arg1*2]);
+                DEBUG_LOG_UINT("The targeted new area is now set to ", current_proc->spec_areas[arg1*2+1]);
 
             } else {
                 DEBUG_LOG("The targeted spec areas were already set, killing the callee");

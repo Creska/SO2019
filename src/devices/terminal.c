@@ -138,7 +138,7 @@ char* ptr_to_str(void* p, char *b) {
         digits--;
     }
 
-    char* first_free_char = num_to_str_buf((int)p, "0123456789ABCD", 16, buf_p);
+    char* first_free_char = num_to_str_buf(p, "0123456789ABCD", 16, buf_p);
     *first_free_char = '\0';
     return b;
 }

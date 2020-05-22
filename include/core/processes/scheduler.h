@@ -19,6 +19,16 @@ void init_scheduler(proc_init_data starting_procs[], unsigned int procs_number, 
 void launch();
 
 
+
+typedef struct dev_waiting_list {
+    pcb_t* w_for_res;
+    struct list_head w_for_cmd;
+} dev_w_list;
+
+dev_w_list* get_dev_sem(unsigned int line, unsigned int instance, unsigned int subdev);
+
+
+
 // --------------------------------------------------------------------------------------------------------------------
 
 // Resets the interval timer value to the number of ticks corresponding to the correct time-slice.
@@ -34,6 +44,7 @@ pcb_t* swap_running();
 
 void schedule_proc(pcb_t* p);
 
+void debug_ready_queue();
 
 // Exception handling methods -----------------------------------------------------------------------------------------
 
@@ -43,12 +54,6 @@ void time_slice_callback();
 // Terminates the given process (the running one if p==NULL) and all its offspring
 // Returns 0 if the operation is successfull, -1 otherwise
 int terminate_proc(pcb_t* p);
-
-// Adds a process to the ready queue
-// If the added process has an higher priority than the running process the first is executed right away and the second goes back to the ready queue.
-//
-// Remarks: this method is expected to be executed during syscall handling since in our implementation process addition happens through a syscall
-pcb_t* add_process(proc_init_data* data);
 
 // Creates a new process as child of the running one.
 //
@@ -61,9 +66,7 @@ int create_process(state_t* s, int priority, pcb_t** cpid);
 int recursive_remove_proc(pcb_t * p);
 
 void p(int* semaddr);
-void p_fifo(int* semaddr);
 
 void v(int* semaddr);
-void v_fifo(int* semaddr);
 
 #endif //BIKAYA_SCHEDULER_H

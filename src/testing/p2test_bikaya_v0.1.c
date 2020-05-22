@@ -20,9 +20,12 @@
  *      Modified by Mattia Maldini, Renzo Davoli 2020
  */
 
-#include "core/system/architecture.h"
+#include "core/system/system.h"
+#include "core/const.h"
+#include "core/types-phase2.h"
 
 #ifdef TARGET_UMPS
+
 #define FRAME_SIZE 4096
 /* Elapsed clock ticks (CPU instructions executed) since system power on.
    Only the "low" part is actually used. */
@@ -56,9 +59,6 @@
 #define REG0(s)       s.a1
 #endif
 
-#include "core/const.h"
-#include "core/types-phase2.h"
-
 typedef unsigned int devregtr;
 typedef unsigned int cpu_t;
 typedef unsigned int pid_t;
@@ -77,7 +77,7 @@ typedef unsigned int pid_t;
 #define TERMCHARMASK 0xFF00
 
 #define MINLOOPTIME 1000
-#define LOOPNUM     1000
+#define LOOPNUM     10000
 
 #define BADADDR 0xFFFFFFFF /* could be 0x00000000 as well */
 
@@ -90,19 +90,19 @@ typedef unsigned int pid_t;
 
 
 int term_mut = 1,   /* for mutual exclusion on terminal */
-    s[MAXSEM + 1],  /* semaphore array */
-    testsem    = 0, /* for a simple test */
-    startp2    = 0, /* used to start p2 */
-    endp2      = 0, /* used to signal p2's demise */
-    blkp3      = 1, /* used to block second incaration of p3 */
-    synp3      = 0, /* used to allow p3 incarnations to synhronize */
-    endp3      = 0, /* to signal demise of p3 */
-    endp4      = 0, /* to signal demise of p4 */
-    endp7      = 0, /* to signal demise of p7 */
-    endcreate  = 0, /* for a p7 leaf to signal its creation */
-    blkleaves  = 0, /* for a p7 leaf to signal its creation */
-    blkp7      = 0, /* to block p7 */
-    blkp7child = 0; /* to block p7's children */
+s[MAXSEM + 1],  /* semaphore array */
+testsem    = 0, /* for a simple test */
+startp2    = 0, /* used to start p2 */
+endp2      = 0, /* used to signal p2's demise */
+blkp3      = 1, /* used to block second incaration of p3 */
+synp3      = 0, /* used to allow p3 incarnations to synhronize */
+endp3      = 0, /* to signal demise of p3 */
+endp4      = 0, /* to signal demise of p4 */
+endp7      = 0, /* to signal demise of p7 */
+endcreate  = 0, /* for a p7 leaf to signal its creation */
+blkleaves  = 0, /* for a p7 leaf to signal its creation */
+blkp7      = 0, /* to block p7 */
+blkp7child = 0; /* to block p7's children */
 
 state_t p2state, p3state, p4state, p5state, p6state;
 state_t p7rootstate, child1state, child2state;
@@ -317,12 +317,9 @@ void p2() {
     now1 = getTODLO();                                                       /* time of day   */
     SYSCALL(GETCPUTIME, (int)&user_t1, (int)&kernel_t1, (int)&wallclock_t1); /* CPU time used */
 
-    int localsem = 0;
     /* delay for some time */
-    for (i = 1; i < LOOPNUM; i++) {
-        SYSCALL(VERHOGEN, (int)&localsem, 0, 0);
-        SYSCALL(PASSEREN, (int)&localsem, 0, 0);
-    }
+    for (i = 1; i < LOOPNUM; i++)
+        ;
 
     SYSCALL(GETCPUTIME, (int)&user_t2, (int)&kernel_t2, (int)&wallclock_t2); /* CPU time used */
     now2 = getTODLO();                                                       /* time of day  */

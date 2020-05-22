@@ -50,4 +50,6 @@ pcb_t* headBlocked(int *key);
 // Rimuove il PCB puntato da p dalla coda del semaforo su cui è bloccato. Inoltre, elimina tutti i processi dell’albero radicato in p (ossia tutti i processi che hanno come avo p) dalle eventuali code dei semafori su cui sono bloccati.
 void outChildBlocked(pcb_t *p);
 
+
+void debug_asl();
 #endif
