@@ -5,7 +5,6 @@
 
 // ARCHITECTURE-INDEPENDENT UTILITY METHODS ===========================================================================
 
-
 // CPU state manipulation ---------------------------------------------------------------------------------------------
 
 // Initialize all the state values to 0

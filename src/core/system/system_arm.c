@@ -31,13 +31,13 @@ void reset_state(state_t *s)
 }
 
 //state_t della new_area
-void set_pc(state_t * s, void (*ptr)()) { //ptr puntatore all'handler assumendolo con la signature placeholder void handler()
+void set_pc(state_t * s, void (*ptr)()) {   //ptr puntatore all'handler assumendolo con la signature placeholder void handler()
 s->pc = (unsigned int)ptr;
 }
 
 void set_sp(state_t *s, unsigned int sp_val)
 {
-    s->sp = sp_val; //RAM_TOP is defined in arch.h with the value needed
+    s->sp = sp_val;     //RAM_TOP is defined in arch.h with the value needed
 }
 
 void set_virtual_mem(state_t *s, unsigned int on)
@@ -95,4 +95,8 @@ unsigned int get_exccode(state_t* state) {
         default:
             return EXCODE_OTHER;
     }
+}
+
+unsigned int* sys_n(state_t* s) {
+    return &s->a1;
 }

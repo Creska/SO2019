@@ -17,7 +17,7 @@ pcb_t* get_idle_proc() {
 
 void idle() {
     while (1) {
-        DEBUG_LOG("Idling");
+
     }
 }
 
@@ -99,7 +99,7 @@ void init_scheduler(proc_init_data starting_procs[], unsigned int procs_number, 
     proc_init_data idle_proc_data = {.km_on=1, .method=idle, .timer_int_on=1, .other_ints_on=1, .vm_on=0, .priority = 0};
     populate_pcb(&idle_proc, &idle_proc_data);
 
-    set_sp(&idle_proc.p_s, RAM_TOP - FRAME_SIZE*(21));                     // Use the index of the process as index of the frame, this should avoid overlaps at any time
+    set_sp(&idle_proc.p_s, RAM_TOP - FRAME_SIZE*(MAXPROC+1));                     // Use the index of the process as index of the frame, this should avoid overlaps at any time
 
 
 
@@ -273,8 +273,7 @@ int terminate_proc(pcb_t *p) {
         if (new_proc!=NULL) {
             set_running_proc(new_proc);                                             // so we run a new process if the ready queue isn't empty
         } else {
-            addokbuf("No processes left after the last process termination\n");
-            HALT();
+            set_running_proc(&idle_proc);
         }
     }
     return ret;

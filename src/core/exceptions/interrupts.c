@@ -103,10 +103,13 @@ void done_io(unsigned int line, unsigned int dev_n, unsigned int subdev) {
 }
 
 void consume_interrupts() {
+    DEBUG_LOG("Consume interrupts entry");
     // Check and handle interrupts pending line by line in order of priority
 
-    // INTER-PROCESSOR INTERRUPTS
-    // if (is_interrupt_pending(0)) { }
+     //INTER-PROCESSOR INTERRUPTS
+     if (is_interrupt_pending(0)) {
+         DEBUG_LOG("Inter processor interrupt");
+     }
 
     // PROCESSOR LOCAL TIMER INTERRUPTS (for umps)
     // if (is_interrupt_pending(1)) { }
@@ -164,5 +167,8 @@ void consume_interrupts() {
             }
         }
     }
+
+    DEBUG_LOG("Consume interrupts exit");
+
 }
 

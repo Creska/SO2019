@@ -24,6 +24,8 @@
 #include "core/const.h"
 #include "core/types-phase2.h"
 
+#include "utils/debug.h"        //TEMP
+
 #ifdef TARGET_UMPS
 
 #define FRAME_SIZE 4096
@@ -183,7 +185,7 @@ void print(char *msg) {
 /*                 p1 -- the root process                            */
 /*                                                                   */
 void test() {
-
+    DEBUG_LOG("Test entry");
     SYSCALL(VERHOGEN, (int)&testsem, 0, 0); /* V(testsem)   */
 
     if (testsem != 1) {

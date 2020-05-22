@@ -7,10 +7,6 @@
 #include "core/processes/scheduler.h"
 #include "core/processes/asl.h"
 
-#define BIKAYA_RESERVED_SPACE 0x20000800
-
-#define INTERRUPTED_PROC BIKAYA_RESERVED_SPACE
-
 
 #define EXC_TYPE_SYS    0
 #define EXC_TYPE_TLB    1
@@ -80,7 +76,6 @@ int is_passup_set(unsigned int type, pcb_t* p) {
 void handle_sysbreak() {
 
     pcb_t* interrupted_process = get_running_proc();          // Cache the running process before handling to avoid excessive use of memcpy (see handle_interrupts comments)
-    *(pcb_t**)INTERRUPTED_PROC = interrupted_process;
 
     DEBUG_LOG_UINT("HANDLING SYSCALL/BREAKPOINT EXCEPTION during proc ", get_process_index(interrupted_process));
     flush_user_time(interrupted_process);
@@ -95,10 +90,8 @@ void handle_sysbreak() {
         if (is_passup_set(EXC_TYPE_SYS, interrupted_process)) {
             DEBUG_LOG("SYS PASSUP!");
             state_t* spec_old_area = get_spec_area(AREA_TYPE_OLD, EXC_TYPE_SYS, interrupted_process);
-            memcpy(spec_old_area, get_old_area_sys_break(), sizeof(state_t));
-
+            memcpy(spec_old_area, interrupted_state, sizeof(state_t));
             state_t* spec_new_area = get_spec_area(AREA_TYPE_NEW, EXC_TYPE_SYS, interrupted_process);
-            *sys_n(spec_old_area) = *sys_n(interrupted_state);
             LDST(spec_new_area);
         } else {
             DEBUG_LOG_INT("No syscall vector, terminating process", get_process_index(get_running_proc()));
