@@ -21,8 +21,8 @@ void launch();
 
 
 typedef struct dev_waiting_list {
+    int sem;
     pcb_t* w_for_res;
-    struct list_head w_for_cmd;
 } dev_w_list;
 
 dev_w_list* get_dev_sem(unsigned int line, unsigned int instance, unsigned int subdev);

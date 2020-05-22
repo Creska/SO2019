@@ -106,7 +106,7 @@ void init_scheduler(proc_init_data starting_procs[], unsigned int procs_number, 
     // Initialize the waiting lists for sending commands to devices
     for (int l = 0; l < (N_EXT_IL + 2); ++l) {
         for (int d = 0; d < N_DEV_PER_IL; ++d) {
-            INIT_LIST_HEAD(&s_io[l][d].w_for_cmd);
+            s_io[l][d].sem = 1;
         }
     }
 }
@@ -228,12 +228,22 @@ pcb_t *get_running_proc() {
 int recursive_remove_proc(pcb_t* p) {                          // TODO test this functionality with actual process trees
 
     DEBUG_LOG_INT("Recursive trermination entry point fro proc ", get_process_index(p));
-    pcb_t* to_be_freed = outProcQ(&ready_queue, p);                     // Remove p from the process queue and free it
+                      // Remove p from the process queue and free it
 
+//    if (p->p_semkey!=NULL) {
+//        DEBUG_LOG("Semkey != NULL");
+//        to_be_freed = outBlocked(p);
+//    }
+
+    pcb_t* to_be_freed = NULL;
     if (p->p_semkey!=NULL) {
-        DEBUG_LOG("Semkey != NULL");
+        // The process is enqueued on a semaphore, remove it from the latter
         to_be_freed = outBlocked(p);
+    } else {
+        to_be_freed = outProcQ(&ready_queue, p);
     }
+
+
 
     DEBUG_LOG_INT("Freeing process: ", get_process_index(to_be_freed));
 

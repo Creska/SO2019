@@ -3,7 +3,6 @@
 #include "core/processes/scheduler.h"
 #include "core/processes/asl.h"
 #include "devices/devices.h"
-#include "utils/listx.h"
 
 
 
@@ -41,14 +40,26 @@ void wait_io(unsigned int command, devreg_t* dev_reg, int subdev) {
 
     pcb_t* target_proc = swap_running();        // Set as running the first proc of the ready queue (and retrieve the previously running proc)
     DEBUG_LOG_PTR("Target process: ", target_proc);
-    if (target_dev_list->w_for_res==NULL) {
-        DEBUG_LOG("Nobody is waiting for a response, sending command");
-        send_command(dev_line + 3, subdev, command, dev_reg);       //TEMP sdasd
-        target_dev_list->w_for_res = target_proc;
+//    if (target_dev_list->w_for_res==NULL) {
+//        DEBUG_LOG("Nobody is waiting for a response, sending command");
+//        send_command(dev_line + 3, subdev, command, dev_reg);       //TEMP sdasd
+//        target_dev_list->w_for_res = target_proc;
+//    } else {
+//        DEBUG_LOG("The device is buisy, going to the w_for_cmd queue");
+//        list_add_tail(&target_proc->p_next, &target_dev_list->w_for_cmd);
+//        target_proc->dev_command = command;
+//    }
+
+    target_dev_list->sem--;
+    if (target_dev_list->sem<0) {
+        insertBlocked(&target_dev_list->sem, target_proc);
+        target_proc->dev_command = command;     // TEMP
+        target_dev_list->sem++;
     } else {
-        DEBUG_LOG("The device is buisy, going to the w_for_cmd queue");
-        list_add_tail(&target_proc->p_next, &target_dev_list->w_for_cmd);
-        target_proc->dev_command = command;
+        // The device is ready, send the command and enqueue anyway
+        insertBlockedFifo(&target_dev_list->sem, target_proc);
+        send_command(dev_line+3, subdev, command, dev_reg);
+        target_dev_list->w_for_res = target_proc;
     }
 
 
@@ -69,37 +80,29 @@ void wait_io(unsigned int command, devreg_t* dev_reg, int subdev) {
 // Callback that needs to be called when a device interrupt is raised,
 // meaning that the executing command is completed.
 void done_io(unsigned int line, unsigned int dev_n, unsigned int subdev) {
-
-    DEBUG_LOG("Enetering DONE_IO");
     dev_w_list *target_dev_list = get_dev_sem(line, dev_n, subdev);
-    pcb_t* done_proc = target_dev_list->w_for_res;
-    DEBUG_LOG_PTR("Done proc address: ", done_proc);
-    schedule_proc(done_proc);
+
+    pcb_t* done_proc = removeBlocked(&target_dev_list->sem);
+    if (done_proc==target_dev_list->w_for_res) {
+        // The process wasn't terminated ehile waiting for response
+        schedule_proc(done_proc);
+        unsigned int ret_status = get_status(line, dev_n, subdev);
+        save_syscall_return_register(&done_proc->p_s, ret_status);
+    }       // else the process was terminated in the meanwhile (don't do nothing ragarding its execution)
+
 
     // Returns the device status through the syscall return register
-    unsigned int ret_status = get_status(line, dev_n, subdev);
-    save_syscall_return_register(&done_proc->p_s, ret_status);
-
     devreg_t* dev_reg = (devreg_t*)DEV_REG_ADDR(line, dev_n);
-    if (!list_empty(&target_dev_list->w_for_cmd)) {
+    pcb_t* next_proc = headBlocked(&target_dev_list->sem);
+    if (next_proc!=NULL) {
         DEBUG_LOG("The cmd waiting list isn't empty");
-        struct list_head* first_head = list_next(&target_dev_list->w_for_cmd);
-        DEBUG_LOG_PTR("1: ", &target_dev_list->w_for_cmd);
-
-        pcb_t *target_proc = container_of(first_head, struct pcb_t, p_next);
-
-        list_del(first_head);
-
-
-
-        send_command(line, subdev, target_proc->dev_command, dev_reg);
-        target_dev_list->w_for_res = target_proc;
+        send_command(line, subdev, next_proc->dev_command, dev_reg);
+        target_dev_list->w_for_res = next_proc;
     } else {
-        target_dev_list->w_for_res = NULL;
         send_command(line, subdev, DEVICE_CMD_ACK, dev_reg);
+        target_dev_list->w_for_res = NULL;
+        target_dev_list->sem++;
     }
-
-    DEBUG_LOG("ENDING DONE IO");
 }
 
 void consume_interrupts() {

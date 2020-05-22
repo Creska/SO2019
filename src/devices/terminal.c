@@ -12,7 +12,7 @@
 #define POINTERS_BITS                   32
 #define POINTERS_DIGITS                 32/4
 
-#define SYS_TERM    0
+#define SYS_TERM    1
 
 struct terminal {
     termreg_t *reg;
