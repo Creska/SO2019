@@ -10,11 +10,6 @@
 
 
 
-
-
-
-
-
 void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
 
     unsigned int sys_n, arg1, arg2, arg3;                       // Retrieving syscall number and arguments from processor registers
@@ -60,6 +55,7 @@ void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
         }
 
         case WAITIO: {
+            DEBUG_LOG("Wait io enter");
             wait_io(arg1, (devreg_t*) arg2, (int) arg3);
             break;
         }

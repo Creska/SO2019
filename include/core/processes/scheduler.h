@@ -18,14 +18,18 @@ void init_scheduler(proc_init_data starting_procs[], unsigned int procs_number, 
 // Launches the process with the higher priority in the ready queue, panics if the ready queue is empty.
 void launch();
 
-
+typedef struct common_dev_reg {
+    unsigned int status;
+    unsigned int command;
+} com_dev_reg;
 
 typedef struct dev_waiting_list {
     int sem;
     pcb_t* w_for_res;
+    com_dev_reg* dev_reg;
 } dev_w_list;
 
-dev_w_list* get_dev_sem(unsigned int line, unsigned int instance, unsigned int subdev);
+dev_w_list* get_dev_w_list(unsigned int line, unsigned int instance, unsigned int subdev);
 
 
 

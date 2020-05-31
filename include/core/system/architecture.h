@@ -44,4 +44,8 @@
 
 #define GET_DEV_START (N_INTERRUPT_LINES - N_EXT_IL)
 
+#define DEV_INDEX(line, subdev)  ((line-3) + subdev)
+#define DEV_LINE_FROM_INDEX(index)
+#define DEV_SUBDEV_FROM_INDEX(index)
+
 #endif //BIKAYA_ARCHITECTURE_H

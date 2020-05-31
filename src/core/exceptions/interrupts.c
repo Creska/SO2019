@@ -5,82 +5,58 @@
 #include "devices/devices.h"
 
 
-
 void send_command(unsigned int line, unsigned int subdev, unsigned int command, devreg_t* dev_reg) {
-    DEBUG_LOG_UINT("Sending command: ", command);
-    if  (line != IL_TERMINAL){
+    DEBUG_LOG("Sending command");
+    DEBUG_LOG_INT("Line: ", GET_DEV_LINE((int)dev_reg));
+    if  (line != IL_TERMINAL || subdev==1){
         dev_reg->dtp.command = command;
     } else {
-        if (subdev == 0) {
-            DEBUG_LOG("Sending transmit command");
-            dev_reg->term.transm_command = command; }
-        else { dev_reg->term.recv_command = command; }
+        dev_reg->term.transm_command = command;
     }
 }
 
 unsigned int get_status(unsigned int line, unsigned int dev_num, unsigned int subdev) {
     devreg_t* dev_reg = (devreg_t*) DEV_REG_ADDR(line, dev_num);
-    if (line != IL_TERMINAL) {
+    if (line != IL_TERMINAL || subdev==1) {
          return dev_reg->dtp.status;
     } else {
-        if (subdev == 0) { return dev_reg->term.transm_status; }
-        else { return dev_reg->term.recv_status; }
+        return dev_reg->term.transm_status;
     }
 }
 
 
 void wait_io(unsigned int command, devreg_t* dev_reg, int subdev) {
+    // Retrieve device coordinates (calculating them from dev_reg address)
     unsigned int dev_line = GET_DEV_LINE((int) dev_reg);
     unsigned int dev_num = GET_DEV_INSTANCE((int) dev_reg);
 
-    DEBUG_LOG_UINT("dev line after SYS6's call: ", dev_line);
-    DEBUG_LOG_UINT("dev num after SYS6's call: ", dev_num);
-
-    dev_w_list* target_dev_list = get_dev_sem(dev_line+3, dev_num, subdev);
+    dev_w_list* target_dev_list = get_dev_w_list(dev_line, dev_num, subdev);
 
     pcb_t* target_proc = swap_running();        // Set as running the first proc of the ready queue (and retrieve the previously running proc)
-    DEBUG_LOG_PTR("Target process: ", target_proc);
-//    if (target_dev_list->w_for_res==NULL) {
-//        DEBUG_LOG("Nobody is waiting for a response, sending command");
-//        send_command(dev_line + 3, subdev, command, dev_reg);       //TEMP sdasd
-//        target_dev_list->w_for_res = target_proc;
-//    } else {
-//        DEBUG_LOG("The device is buisy, going to the w_for_cmd queue");
-//        list_add_tail(&target_proc->p_next, &target_dev_list->w_for_cmd);
-//        target_proc->dev_command = command;
-//    }
 
+    DEBUG_LOG_INT("Sem:", target_dev_list->sem);
+    DEBUG_LOG_UINT("Semaphore addr: ", (unsigned int)&target_dev_list->sem);
     target_dev_list->sem--;
+    DEBUG_LOG("Pre if");
     if (target_dev_list->sem<0) {
+        DEBUG_LOG("Busy semaphore");
         insertBlocked(&target_dev_list->sem, target_proc);
         target_proc->dev_command = command;     // TEMP
         target_dev_list->sem++;
     } else {
         // The device is ready, send the command and enqueue anyway
         insertBlockedFifo(&target_dev_list->sem, target_proc);
-        send_command(dev_line+3, subdev, command, dev_reg);
+        send_command(dev_line, subdev, command, dev_reg);
         target_dev_list->w_for_res = target_proc;
     }
-
-
-
-//    if (*target_semaphore) {
-//        // We can send the command now
-//        (*target_semaphore)--;
-//        send_command(dev_line, subdev, command, dev_reg);
-//
-//    } else {
-//        // We can't send the command
-//        get_running_proc()->dev_command = command;
-//    }
-//
-//    p_fifo(target_semaphore);
+    DEBUG_LOG("Wait_io exit");
 }
 
 // Callback that needs to be called when a device interrupt is raised,
 // meaning that the executing command is completed.
 void done_io(unsigned int line, unsigned int dev_n, unsigned int subdev) {
-    dev_w_list *target_dev_list = get_dev_sem(line, dev_n, subdev);
+    DEBUG_LOG("Done_io entry");
+    dev_w_list *target_dev_list = get_dev_w_list(line, dev_n, subdev);
 
     pcb_t* done_proc = removeBlocked(&target_dev_list->sem);
     if (done_proc==target_dev_list->w_for_res) {
@@ -110,9 +86,9 @@ void consume_interrupts() {
     // Check and handle interrupts pending line by line in order of priority
 
      //INTER-PROCESSOR INTERRUPTS
-     if (is_interrupt_pending(0)) {
-         DEBUG_LOG("Inter processor interrupt");
-     }
+//     if (is_interrupt_pending(0)) {
+//         DEBUG_LOG("Inter processor interrupt");
+//     }
 
     // PROCESSOR LOCAL TIMER INTERRUPTS (for umps)
     // if (is_interrupt_pending(1)) { }
@@ -147,11 +123,22 @@ void consume_interrupts() {
         DEBUG_LOG("Terminal interrupt pending");
         unsigned int bitmap = *(unsigned int*)CDEV_BITMAP_ADDR(7);
         DEBUG_LOG_BININT("Bitmap:", bitmap);
+        unsigned int ya = 0;
+        bitmap = bitmap >> 0;
+        DEBUG_LOG_BININT("Bitmap:", bitmap);
 
-        for (int dev_num = 0; dev_num < N_DEV_PER_IL; ++dev_num) {
+
+        for (unsigned int dev_num = 0; dev_num < N_DEV_PER_IL; ++dev_num) {
             //DEBUG_LOG_INT("Device number ", dev_num);
+            unsigned int shifted;
+            if (dev_num!=0) {
+                shifted = bitmap >> (unsigned int)dev_num;
 
-            if ((bitmap >> dev_num) & 1) {
+            } else { shifted = bitmap; }
+            unsigned int yo = shifted & 0x1;        // FIXME
+            //DEBUG_LOG_BININT("Shifted: ", shifted);
+            //DEBUG_LOG_BININT("Complete: ", yo);
+            if (yo) {
                 DEBUG_LOG_INT("Interrupt pending for terminal ", dev_num);
 
                 unsigned int s0 = get_status(7, dev_num,0);

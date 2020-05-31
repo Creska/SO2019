@@ -11,25 +11,22 @@ pcb_t* running_proc = NULL;
 
 pcb_t idle_proc;
 
+// Semaphores for device waiting. One for each distinct device
+dev_w_list dev_w_lists[N_EXT_IL + 1][N_DEV_PER_IL];
+
+
 pcb_t* get_idle_proc() {
     return &idle_proc;
 }
 
 void idle() {
-    while (1) {
-
-    }
+    while (1) {}
 }
 
 
-
-// Semaphores for device waiting. One for each distinct device
-dev_w_list s_io[N_EXT_IL+1][N_DEV_PER_IL];
-
-dev_w_list* get_dev_sem(unsigned int line, unsigned int instance, unsigned int subdev) {
-    unsigned int index = line-3;
-    if (line == IL_TERMINAL && subdev) {index += 1;}
-    return &s_io[index][instance];
+dev_w_list* get_dev_w_list(unsigned int line, unsigned int instance, unsigned int subdev) {
+    unsigned int index = DEV_INDEX(line, subdev);
+    return &dev_w_lists[index][instance];
 }
 
 
@@ -94,19 +91,16 @@ void init_scheduler(proc_init_data starting_procs[], unsigned int procs_number, 
         insertProcQ(&ready_queue, p);
     }
 
-    // TEMP
+    // Setting up the idle process
     reset_state(&idle_proc.p_s);
     proc_init_data idle_proc_data = {.km_on=1, .method=idle, .timer_int_on=1, .other_ints_on=1, .vm_on=0, .priority = 0};
     populate_pcb(&idle_proc, &idle_proc_data);
 
-    set_sp(&idle_proc.p_s, RAM_TOP - FRAME_SIZE*(MAXPROC+1));                     // Use the index of the process as index of the frame, this should avoid overlaps at any time
+    set_sp(&idle_proc.p_s, RAM_TOP - FRAME_SIZE*(MAXPROC+1));      // TEMP maybe               // Use the index of the process as index of the frame, this should avoid overlaps at any time
 
-
-
-    // Initialize the waiting lists for sending commands to devices
-    for (int l = 0; l < (N_EXT_IL + 2); ++l) {
+    for (int l = 0; l < 6; ++l) {
         for (int d = 0; d < N_DEV_PER_IL; ++d) {
-            s_io[l][d].sem = 1;
+            dev_w_lists[l][d].sem = 1;
         }
     }
 }
@@ -225,27 +219,16 @@ pcb_t *get_running_proc() {
 
 
 // Removes the children of the given PCB.
-int recursive_remove_proc(pcb_t* p) {                          // TODO test this functionality with actual process trees
-
-    DEBUG_LOG_INT("Recursive trermination entry point fro proc ", get_process_index(p));
-                      // Remove p from the process queue and free it
-
-//    if (p->p_semkey!=NULL) {
-//        DEBUG_LOG("Semkey != NULL");
-//        to_be_freed = outBlocked(p);
-//    }
+int recursive_remove_proc(pcb_t* p) {
 
     pcb_t* to_be_freed = NULL;
     if (p->p_semkey!=NULL) {
         // The process is enqueued on a semaphore, remove it from the latter
         to_be_freed = outBlocked(p);
     } else {
+        // The process is in the ready queue, remove it
         to_be_freed = outProcQ(&ready_queue, p);
     }
-
-
-
-    DEBUG_LOG_INT("Freeing process: ", get_process_index(to_be_freed));
 
     if (to_be_freed!=NULL) {
         freePcb(to_be_freed);
