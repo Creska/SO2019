@@ -69,8 +69,8 @@ void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
             DEBUG_LOG_INT("SPECPASSUP for type ", type_code);
 
             pcb_t * current_proc = get_running_proc();
-            state_t** target_old_area = &(current_proc->spec_areas[type_code*2 + AREA_TYPE_OLD]);
-            state_t** target_new_area = &current_proc->spec_areas[type_code*2 + AREA_TYPE_NEW];
+            state_t** target_old_area = &(current_proc->spec_areas[type_code*2 + OLD]);
+            state_t** target_new_area = &current_proc->spec_areas[type_code*2 + NEW];
 
             if ((*target_new_area)==NULL && (*target_old_area) == NULL) {
                 DEBUG_LOG("The targeted spec areas weren't already set");

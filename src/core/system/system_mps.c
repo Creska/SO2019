@@ -2,7 +2,6 @@
 
 #include "core/system/system.h"
 #include "utils/utils.h"
-#include "utils/debug.h"
 
 
 void reset_state(state_t* s) {
@@ -52,7 +51,7 @@ void set_other_interrupts(state_t *s, unsigned int on) {
     if (on) {
         s->status = s->status | (STATUS_IM_MASK & ~STATUS_IM(IL_TIMER)) | (1 << STATUS_IEc_BIT);         // Turn on all bits of the interrupt mask (plus the global bit)
     } else {
-        s->status = s->status & ~(STATUS_IM_MASK & ~STATUS_IM(IL_TIMER));       // Turn off all bits
+        s->status = s->status & ~(STATUS_IM_MASK & ~STATUS_IM(IL_TIMER));                                // Turn off all bits
     }
 }
 

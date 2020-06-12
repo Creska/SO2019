@@ -4,27 +4,24 @@
 #include "core/system/architecture.h"
 
 
-// EXCEPTION TYPE CODES: they identify an exception type
+// Identify the exception type
+enum exc_type {SYS, PRG, TLB, INT};
 
-#define EXC_TYPE_SYS    0
-#define EXC_TYPE_PRG    1
-#define EXC_TYPE_TLB    2
-#define EXC_TYPE_INT    3
+// AREA AGES: they identify the type of area: old/new
+enum area_age {NEW, OLD};
 
-// AREA TYPE CODES: they identify the type of area: old/new
+// Gets a pointer a system new/old area
+#define GET_AREA(new_old, type_code)    ((state_t*)(AREA_BASE + (7 - type_code*2 - new_old)*STATE_T_SIZE))
 
-#define AREA_TYPE_OLD   1
-#define AREA_TYPE_NEW   0
 
 // EXCEPTION CODES: the allow to determine the cause of an exception in an arch-independent way
 
-#define EXCODE_BP           1
+#define EXCODE_BP           1           // TODO make enum
 #define EXCODE_SYS          2
 #define EXCODE_OTHER        3               // this will easily support more codes when needed
 
 
-// Gets a pointer a system new/old area
-#define GET_AREA(new_old, type_code)    ((state_t*)(AREA_BASE + (7 - type_code*2 - new_old)*STATE_T_SIZE))
+
 
 
 
