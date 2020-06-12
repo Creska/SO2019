@@ -10,11 +10,14 @@
 #include "types.h"
 #include "cp0.h"
 
+
+
 // MPS only defines NULL in stddef.h
 #define NULL            ((void*)0)
 
 // Addresses for new and old areas
 #define STATE_T_SIZE        140
+#define AREA_BASE           RAM_BASE
 #define INT_OLDAREA         (RAM_BASE)
 #define INT_NEWAREA         (RAM_BASE + STATE_T_SIZE)
 #define TLB_OLDAREA         (RAM_BASE + (2 * STATE_T_SIZE))
@@ -39,7 +42,7 @@
     #include "libuarm.h"
     #include "arch.h"
     #include "uARMtypes.h"
-
+#define AREA_BASE EXCV_BASE
 #endif
 
 #define GET_DEV_START (N_INTERRUPT_LINES - N_EXT_IL)
@@ -48,4 +51,4 @@
 #define DEV_LINE_FROM_INDEX(index)
 #define DEV_SUBDEV_FROM_INDEX(index)
 
-#endif //BIKAYA_ARCHITECTURE_H
+#endif

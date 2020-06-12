@@ -62,19 +62,20 @@ void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
 
         case SPECPASSUP:
         {
-            DEBUG_LOG_INT("SPECPASSUP for type ", arg1);
+
+            unsigned int type_code = arg1;              // Convert the type_code to the proper order (this facilitates area lookup on the long run)
+            if (type_code==1) type_code = 2;
+            else if (type_code==2) type_code = 1;
+            DEBUG_LOG_INT("SPECPASSUP for type ", type_code);
+
             pcb_t * current_proc = get_running_proc();
-            state_t** target_old_area = &(current_proc->spec_areas[arg1*2]);
-            state_t** target_new_area = &current_proc->spec_areas[arg1*2+1];
+            state_t** target_old_area = &(current_proc->spec_areas[type_code*2 + AREA_TYPE_OLD]);
+            state_t** target_new_area = &current_proc->spec_areas[type_code*2 + AREA_TYPE_NEW];
 
             if ((*target_new_area)==NULL && (*target_old_area) == NULL) {
                 DEBUG_LOG("The targeted spec areas weren't already set");
                 *target_old_area = (state_t*)arg2;
                 *target_new_area = (state_t*)arg3;
-
-                // TEMP not sure about value assignment to those pointers, remember to check if values are not null in these logs
-                DEBUG_LOG_UINT("The targeted old area is now set to ", current_proc->spec_areas[arg1*2]);
-                DEBUG_LOG_UINT("The targeted new area is now set to ", current_proc->spec_areas[arg1*2+1]);
 
             } else {
                 DEBUG_LOG("The targeted spec areas were already set, killing the callee");

@@ -8,12 +8,7 @@
 #include "core/processes/asl.h"
 
 
-#define EXC_TYPE_SYS    0           // TODO decide where this goes
-#define EXC_TYPE_TLB    1
-#define EXC_TYPE_PRG    2
 
-#define AREA_TYPE_OLD   0
-#define AREA_TYPE_NEW   1
 
 
 
@@ -49,28 +44,35 @@ void reset_cached_tod(pcb_t* proc) {
 
 // TODO check useless int timer resets (now the handler resets the timer when at the end of the interrupt the process has changed, verify that the scheduler doesn't do this when the handler will do it either way)
 
+// During an handler this pointer is set to the PCB that was running while the exception was raised
+pcb_t* interrupted_proc;
+
+void start_handler() {
+    interrupted_proc = get_running_proc();
+    flush_user_time(interrupted_proc);
+}
+void conclude_handler(unsigned int exc_type) {
+    pcb_t* resuming_proc = get_running_proc();
+    if (interrupted_proc != resuming_proc) {
+        reset_cached_tod(resuming_proc);
+        memcpy(&interrupted_proc->p_s, GET_AREA(AREA_TYPE_OLD, exc_type), sizeof(state_t));
+        LDST(&resuming_proc->p_s);                                             // Resume the execution of the changed process
+
+    } else {
+        flush_kernel_time(interrupted_proc);
+        LDST(GET_AREA(AREA_TYPE_OLD, exc_type));                                       // Resume the execution of the same process that was interrupted, retrieving it from the old area
+    }
+}
 
 void handle_interrupt() {
-
-    pcb_t* interrupted_running_proc = get_running_proc();               // We cache the running process before consuming interrupts
-    DEBUG_LOG_UINT("HANDLING INTERRUPT EXCEPTIONS during proc ", get_process_index(interrupted_running_proc));
-
-    flush_user_time(interrupted_running_proc);
+    DEBUG_LOG_UINT("HANDLING INTERRUPT EXCEPTIONS during proc ", get_process_index(get_running_proc()));
+    start_handler();
 
     consume_interrupts();                                               // this way we can know if the interrupt consumption changed the process running (see below)
     reset_int_timer();                                                  // reset the interval timer acknowledging the interrupt and guaranteeing a full time-slice for the process that will be resumed
 
     DEBUG_SPACING;
-    pcb_t* running_proc_after_consume = get_running_proc();
-    if (interrupted_running_proc!=running_proc_after_consume) {
-        reset_cached_tod(running_proc_after_consume);
-        memcpy(&interrupted_running_proc->p_s, get_old_area_int(), sizeof(state_t));
-        LDST(&running_proc_after_consume->p_s);                                             // Resume the execution of the changed process
-
-    } else {
-        flush_kernel_time(interrupted_running_proc);
-        LDST(get_old_area_int());                                       // Resume the execution of the same process that was interrupted, retrieving it from the old area
-    }                                                                   // this allows us to memcpy state_t information only when we swap processes
+    conclude_handler(EXC_TYPE_INT);                                                                 // this allows us to memcpy state_t information only when we swap processes
 }
 
 
@@ -88,13 +90,13 @@ void handle_sysbreak() {
     DEBUG_LOG_UINT("HANDLING SYSCALL/BREAKPOINT EXCEPTION during proc ", get_process_index(interrupted_process));
 
     flush_user_time(interrupted_process);
-    state_t* interrupted_state = get_old_area_sys_break();
+    state_t *interrupted_state = GET_AREA(AREA_TYPE_OLD, EXC_TYPE_SYS);
 
 #ifdef TARGET_UMPS
     interrupted_state->pc_epc += WORD_SIZE;
 #endif
 
-    unsigned int cause_code = get_exccode(get_old_area_sys_break());
+    unsigned int cause_code = get_exccode(interrupted_state);
 
     if (cause_code == EXCODE_SYS) {
         if (*sys_n(interrupted_state) > 8) {
@@ -158,7 +160,7 @@ void handle_TLB() {
     if (is_passup_set(EXC_TYPE_TLB, get_running_proc())) {
         DEBUG_LOG("Spec areas set");
         state_t* old_area = get_spec_area(AREA_TYPE_OLD, EXC_TYPE_TLB, get_running_proc());
-        memcpy(old_area, get_old_area_TLB(), sizeof(state_t));
+        memcpy(old_area, GET_AREA(AREA_TYPE_OLD, EXC_TYPE_TLB), sizeof(state_t));
         LDST(get_spec_area(AREA_TYPE_NEW, EXC_TYPE_TLB, get_running_proc()));
     }
     // TODO does this needs to be killed?
@@ -173,7 +175,7 @@ void handle_trap() {
     if (is_passup_set(EXC_TYPE_PRG, get_running_proc())) {
         DEBUG_LOG("Spec areas set");
         state_t* old_area = get_spec_area(AREA_TYPE_OLD, EXC_TYPE_PRG, get_running_proc());
-        memcpy(old_area, get_old_area_program_trap(), sizeof(state_t));
+        memcpy(old_area, GET_AREA(AREA_TYPE_OLD, EXC_TYPE_PRG), sizeof(state_t));
         LDST(get_spec_area(AREA_TYPE_NEW, EXC_TYPE_PRG, get_running_proc()));
     }
 

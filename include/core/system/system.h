@@ -3,6 +3,32 @@
 
 #include "core/system/architecture.h"
 
+
+// EXCEPTION TYPE CODES: they identify an exception type
+
+#define EXC_TYPE_SYS    0
+#define EXC_TYPE_PRG    1
+#define EXC_TYPE_TLB    2
+#define EXC_TYPE_INT    3
+
+// AREA TYPE CODES: they identify the type of area: old/new
+
+#define AREA_TYPE_OLD   1
+#define AREA_TYPE_NEW   0
+
+// EXCEPTION CODES: the allow to determine the cause of an exception in an arch-independent way
+
+#define EXCODE_BP           1
+#define EXCODE_SYS          2
+#define EXCODE_OTHER        3               // this will easily support more codes when needed
+
+
+// Gets a pointer a system new/old area
+#define GET_AREA(new_old, type_code)    ((state_t*)(AREA_BASE + (7 - type_code*2 - new_old)*STATE_T_SIZE))
+
+
+
+
 // ARCHITECTURE-INDEPENDENT UTILITY METHODS ===========================================================================
 
 // CPU state manipulation ---------------------------------------------------------------------------------------------
@@ -39,6 +65,7 @@ unsigned int is_interrupt_pending(unsigned int line);
 
 #define GET_DEV_REL_LINE(reg) ((reg - DEV_REG_START)/DEV_REG_SIZE)/N_DEV_PER_IL
 
+// A pointer to the TOD_LO register (the only one functional)
 #define TOD *(unsigned int*)BUS_REG_TOD_LO
 
 // BUS Register -------------------------------------------------------------------------------------------------------
@@ -54,37 +81,6 @@ void set_interval_timer(unsigned int val);
 
 
 
-// New/Old areas ------------------------------------------------------------------------------------------------------
-
-// Gets a pointer to the system/break new area
-state_t* get_new_area_sys_break();
-
-// Gets a pointer to the syscall/break old area
-// (where the processor state is saved during a syscall/breakpoint exception)
-state_t* get_old_area_sys_break();
-
-// Gets a pointer to the program trap new area
-state_t* get_new_area_program_trap();
-
-// Gets a pointer to the program trap old area
-// (where the processor state is saved during a program trap exception)
-state_t* get_old_area_program_trap();
-
-// Gets a pointer to the TLB new area
-state_t* get_new_area_TLB();
-
-// Gets a pointer to the program trap old area
-// (where the processor state is saved during a TLB exception)
-state_t* get_old_area_TLB();
-
-// Gets a pointer to the system/break new area
-state_t* get_new_area_int();
-
-// Gets a pointer to the program trap old area
-// (where the processor state is saved during a interrupt exception)
-state_t* get_old_area_int();
-
-
 // System initialization routines -------------------------------------------------------------------------------------
 
 void init_new_area(state_t* area, void (*handler)());
@@ -94,10 +90,6 @@ void init_new_area(state_t* area, void (*handler)());
 // Remarks: the TIME_SCALE (number of ticks per microseconds) is set at boot/reset, so we don't need to worry about it changing during execution.
 unsigned int clock_ticks_per_period(unsigned int microseconds);
 
-
-#define EXCODE_BP           1           // Codes used to determine the cause of an exception
-#define EXCODE_SYS          2
-#define EXCODE_OTHER        3           // this system will easily support more codes when needed
 
 // Returns an unsigned integer code corresponding to the cause of an exeption as defined in EXCODE_... macros
 unsigned int get_exccode(state_t* state);
