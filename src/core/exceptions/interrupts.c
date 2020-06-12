@@ -24,7 +24,6 @@ unsigned int get_status(unsigned int line, unsigned int dev_num, unsigned int su
     }
 }
 
-
 void wait_io(unsigned int command, devreg_t* dev_reg, int subdev) {
     // Retrieve device coordinates (calculating them from dev_reg address)
     unsigned int dev_line = GET_DEV_LINE((int) dev_reg);
@@ -85,6 +84,8 @@ void consume_interrupts() {
     DEBUG_LOG("Consume interrupts entry");
     // Check and handle interrupts pending line by line in order of priority
 
+    unsigned int reset_int_timer = 0;
+
      //INTER-PROCESSOR INTERRUPTS
 //     if (is_interrupt_pending(0)) {
 //         DEBUG_LOG("Inter processor interrupt");
@@ -97,6 +98,7 @@ void consume_interrupts() {
     if (is_interrupt_pending(2)) {
         DEBUG_LOG("Interval timer interrupt pending");
         time_slice_callback();                            // Allows the scheduler to switch process execution if necessary
+        reset_int_timer = 0;
     }
 
     // DEVICE INTERRUPTS ----------------------------------------------------------------------------------------------
@@ -120,12 +122,12 @@ void consume_interrupts() {
 
 
     if (is_interrupt_pending(7)) {
-        DEBUG_LOG("Terminal interrupt pending");
+//        DEBUG_LOG("Terminal interrupt pending");
         unsigned int bitmap = *(unsigned int*)CDEV_BITMAP_ADDR(7);
-        DEBUG_LOG_BININT("Bitmap:", bitmap);
+//        DEBUG_LOG_BININT("Bitmap:", bitmap);
         unsigned int ya = 0;
         bitmap = bitmap >> 0;
-        DEBUG_LOG_BININT("Bitmap:", bitmap);
+//        DEBUG_LOG_BININT("Bitmap:", bitmap);
 
 
         for (unsigned int dev_num = 0; dev_num < N_DEV_PER_IL; ++dev_num) {
@@ -136,8 +138,6 @@ void consume_interrupts() {
 
             } else { shifted = bitmap; }
             unsigned int yo = shifted & 0x1;        // FIXME
-            //DEBUG_LOG_BININT("Shifted: ", shifted);
-            //DEBUG_LOG_BININT("Complete: ", yo);
             if (yo) {
                 DEBUG_LOG_INT("Interrupt pending for terminal ", dev_num);
 

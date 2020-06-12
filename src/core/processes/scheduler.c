@@ -158,7 +158,7 @@ void time_slice_callback() {
         target_proc->priority += PRIORITY_INC_PER_TIME_SLICE;
     }
 #ifdef TARGET_UARM
-    get_old_area_int()->pc -= WORD_SIZE;                                       // On arm after an interrupt the pc needs to be decremented by one instruction (used ifdef to avoid useless complexity)
+    GET_AREA(OLD, INT)->pc -= WORD_SIZE;                                       // On arm after an interrupt the pc needs to be decremented by one instruction (used ifdef to avoid useless complexity)
 #endif
 
     if (!list_empty(&ready_queue) && running_proc->priority <= headProcQ(&ready_queue)->priority) {             // Swap execution if the first ready process has a greater priority than the one executing (obviously if the ready queue is empty we don't need to swap)

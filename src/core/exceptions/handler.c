@@ -11,6 +11,8 @@
 // During an handler this pointer is set to the PCB that was running while the exception was raised
 pcb_t* interrupted_proc;
 
+unsigned int int_timer_cache; // TODO should we cache and restore the interval timer on device interrupts?
+
 
 // Passup areas utility functions -------------------------------------------------------------------------------------
 
@@ -28,7 +30,7 @@ int is_passup_set(enum exc_type area_type, pcb_t* p) {
 void launch_spec_area(int exc_type, state_t* interrupted_state) {
     state_t* spec_old_area = get_spec_area(OLD, exc_type, get_running_proc());
     memcpy(spec_old_area, interrupted_state, sizeof(state_t));
-    state_t* spec_new_area = get_spec_area(OLD, exc_type, get_running_proc());
+    state_t* spec_new_area = get_spec_area(NEW, exc_type, get_running_proc());
     LDST(spec_new_area);
 }
 
@@ -57,21 +59,25 @@ void reset_cached_tod(pcb_t* proc) {
 
 
 void start_handler() {
+    int_timer_cache = get_interval_timer_macro();
     interrupted_proc = get_running_proc();
     flush_user_time(interrupted_proc);
 }
 
 void conclude_handler(enum exc_type exc_type) {
-    pcb_t* resuming_proc = get_running_proc();
 
     debug_ready_queue();
     debug_asl();
     DEBUG_SPACING;
 
+    pcb_t* resuming_proc = get_running_proc();
+    set_interval_timer(int_timer_cache);
     if (interrupted_proc != resuming_proc) {
         reset_cached_tod(resuming_proc);
-        memcpy(&interrupted_proc->p_s, GET_AREA(OLD, exc_type), sizeof(state_t));
-        LDST(&resuming_proc->p_s);                                             // Resume the execution of the changed process
+        reset_int_timer();
+        if (interrupted_proc!=get_idle_proc())
+            memcpy(&interrupted_proc->p_s, GET_AREA(OLD, exc_type), sizeof(state_t));
+        LDST(&resuming_proc->p_s);
     } else {
         flush_kernel_time(interrupted_proc);
         LDST(GET_AREA(OLD, exc_type));                                       // Resume the execution of the same process that was interrupted, retrieving it from the old area
@@ -85,18 +91,15 @@ void handle_interrupt() {
     start_handler();
 
     consume_interrupts();
-    reset_int_timer();                                       // reset the interval timer acknowledging the interrupt and guaranteeing a full time-slice for the process that will be resumed
 
+    reset_int_timer();                                       // reset the interval timer acknowledging the interrupt and guaranteeing a full time-slice for the process that will be resumed
     conclude_handler(INT);
 }
 
 
-
-
-
 void handle_sysbreak() {
 
-    DEBUG_LOG_UINT("HANDLING SYSCALL/BREAKPOINT EXCEPTION during proc ", get_process_index(interrupted_process));
+    DEBUG_LOG_UINT("HANDLING SYSCALL/BREAKPOINT EXCEPTION during proc ", get_process_index(interrupted_proc));
     start_handler();
 
     state_t *interrupted_state = GET_AREA(OLD, SYS);
@@ -108,23 +111,15 @@ void handle_sysbreak() {
     if (cause_code == EXCODE_SYS) {
         if (*sys_n(interrupted_state) > 8) {
             if (is_passup_set(SYS, interrupted_proc)) {
-                DEBUG_LOG("SYS PASSUP!");
                 launch_spec_area(SYS, interrupted_state);
-            } else {
-                DEBUG_LOG_INT("No syscall vector, terminating process", get_process_index(get_running_proc()));
-                terminate_proc(interrupted_proc);
-            }
+            } else { terminate_proc(interrupted_proc); }
         } else {
             consume_syscall(interrupted_state, interrupted_proc);
-            DEBUG_LOG("Syscall handled");
         }
     } else if (cause_code == EXCODE_BP) {
         DEBUG_LOG("Exception recognised as breakpoint");
-        if (is_passup_set(SYS, interrupted_proc)) {
-            launch_spec_area(SYS, interrupted_state);
-        } else {
-            adderrbuf("ERROR: BreakPoint launched, handler still not implemented!");
-        }
+        if (is_passup_set(SYS, interrupted_proc)) { launch_spec_area(SYS, interrupted_state); }
+        else { adderrbuf("ERROR: BreakPoint launched, handler still not implemented!"); }
     }
 
     flush_kernel_time(interrupted_proc);
@@ -134,29 +129,25 @@ void handle_sysbreak() {
 
 void handle_TLB() {
     DEBUG_LOG("HANDLING TLB EXCEPTION");
+    start_handler();
     if (is_passup_set(TLB, get_running_proc())) {
-        DEBUG_LOG("Spec areas set");
-
-        state_t* old_area = get_spec_area(OLD, TLB, get_running_proc());
-        memcpy(old_area, GET_AREA(OLD, TLB), sizeof(state_t));
-        LDST(get_spec_area(NEW, TLB, get_running_proc()));
+        DEBUG_LOG("Spec areas set, launching custom handler");
+        launch_spec_area(TLB, GET_AREA(OLD, TLB));
     }
-    // TODO does this needs to be killed?
+
     terminate_proc(get_running_proc());
-    LDST(&get_running_proc()->p_s);
+    conclude_handler(TLB);
 }
 
 
 void handle_trap() {
-    //check_passup(EXC_TYPE_PRG, get_running_proc());
     DEBUG_LOG("HANDLING PROGRAM TRAP EXCEPTION");
+    start_handler();
     if (is_passup_set(PRG, get_running_proc())) {
-        DEBUG_LOG("Spec areas set");
-        state_t* old_area = get_spec_area(OLD, PRG, get_running_proc());
-        memcpy(old_area, GET_AREA(OLD, PRG), sizeof(state_t));
-        LDST(get_spec_area(NEW, PRG, get_running_proc()));
+        DEBUG_LOG("Spec areas set, launching custom handler");
+        launch_spec_area(PRG, GET_AREA(OLD, PRG));
     }
 
     terminate_proc(get_running_proc());
-    LDST(&get_running_proc()->p_s);
+    conclude_handler(PRG);
 }
