@@ -23,7 +23,6 @@ state_t *get_spec_area(enum area_age area_age, enum exc_type area_type, pcb_t* p
 int is_passup_set(enum exc_type area_type, pcb_t* p) {
     state_t* old_area = p->spec_areas[area_type*2];
     state_t* new_area = p->spec_areas[area_type*2+1];
-
     return ((old_area)!=NULL && (new_area)!=NULL);
 }
 
@@ -79,6 +78,7 @@ void conclude_handler(enum exc_type exc_type) {
             memcpy(&interrupted_proc->p_s, GET_AREA(OLD, exc_type), sizeof(state_t));
         LDST(&resuming_proc->p_s);
     } else {
+        // TODO cache and restore the interval timer?
         flush_kernel_time(interrupted_proc);
         LDST(GET_AREA(OLD, exc_type));                                       // Resume the execution of the same process that was interrupted, retrieving it from the old area
     }

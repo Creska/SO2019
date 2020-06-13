@@ -1,10 +1,6 @@
 #include "core/exceptions/syscalls.h"
 #include "core/processes/scheduler.h"
-#include "core/exceptions/handler.h"
-#include "utils/utils.h"
 #include "utils/debug.h"
-#include "devices/devices.h"
-#include "core/processes/asl.h"
 #include "core/exceptions/interrupts.h"
 #include "core/system/system.h"
 
@@ -62,7 +58,6 @@ void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
 
         case SPECPASSUP:
         {
-
             unsigned int type_code = arg1;              // Convert the type_code to the proper order (this facilitates area lookup on the long run)
             if (type_code==1) type_code = 2;
             else if (type_code==2) type_code = 1;
@@ -76,7 +71,6 @@ void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
                 DEBUG_LOG("The targeted spec areas weren't already set");
                 *target_old_area = (state_t*)arg2;
                 *target_new_area = (state_t*)arg3;
-
             } else {
                 DEBUG_LOG("The targeted spec areas were already set, killing the callee");
                 terminate_proc(current_proc);

@@ -3,6 +3,8 @@
 
 #include "core/processes/pcb.h"
 #include "core/processes/process_initialization_data.h"
+#include "devices/devices.h"
+
 
 pcb_t* get_idle_proc();         //TEMP
 
@@ -29,7 +31,7 @@ typedef struct dev_waiting_list {
     com_dev_reg* dev_reg;
 } dev_w_list;
 
-dev_w_list* get_dev_w_list(unsigned int line, unsigned int instance, unsigned int subdev);
+dev_w_list* get_dev_w_list(enum ext_dev_type dev_type, unsigned int instance);
 
 
 

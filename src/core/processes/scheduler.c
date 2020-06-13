@@ -5,7 +5,7 @@
 #include "core/processes/asl.h"
 
 
-unsigned int clock_ticks_per_time_slice = 0;
+unsigned int clock_ticks_per_time_slice;
 struct list_head ready_queue;
 pcb_t* running_proc = NULL;
 
@@ -24,9 +24,8 @@ void idle() {
 }
 
 
-dev_w_list* get_dev_w_list(unsigned int line, unsigned int instance, unsigned int subdev) {
-    unsigned int index = DEV_INDEX(line, subdev);
-    return &dev_w_lists[index][instance];
+dev_w_list* get_dev_w_list(enum ext_dev_type dev_type, unsigned int instance) {
+    return &dev_w_lists[dev_type][instance];
 }
 
 
@@ -127,8 +126,6 @@ void set_running_proc(pcb_t* new_proc) {
     }
 }
 
-
-
 void launch() {
     if (!emptyProcQ(&ready_queue)) {
         set_running_proc(removeProcQ(&ready_queue));
@@ -148,10 +145,8 @@ void launch() {
 }
 
 
-
-
 void time_slice_callback() {
-
+    DEBUG_LOG("Timeslice callback");
     struct pcb_t* target_proc;
     list_for_each_entry(target_proc, &ready_queue, p_next) {                    // Increments the priority of each process in the ready_queue (anti-starvation measure)
         DEBUG_LOG_INT("Increasing priority of process ", get_process_index(target_proc));
