@@ -16,20 +16,23 @@ unsigned int int_timer_cache; // TODO should we cache and restore the interval t
 
 // Passup areas utility functions -------------------------------------------------------------------------------------
 
-state_t *get_spec_area(enum area_age area_age, enum exc_type area_type, pcb_t* proc) {
+// Returns a pointer to the passup area of a given process
+state_t *get_passup_area(enum area_age area_age, enum exc_type area_type, pcb_t* proc) {
     return proc->spec_areas[area_type*2 + area_age];
 }
 
+// Returns 1 if the passup areas (old AND new) are set for a given process and for a given exception type.
 int is_passup_set(enum exc_type area_type, pcb_t* p) {
     state_t* old_area = p->spec_areas[area_type*2];
     state_t* new_area = p->spec_areas[area_type*2+1];
     return ((old_area)!=NULL && (new_area)!=NULL);
 }
 
+// Executes the passup area of the running process of the given exception type.
 void launch_spec_area(int exc_type, state_t* interrupted_state) {
-    state_t* spec_old_area = get_spec_area(OLD, exc_type, get_running_proc());
+    state_t* spec_old_area = get_passup_area(OLD, exc_type, get_running_proc());
     memcpy(spec_old_area, interrupted_state, sizeof(state_t));
-    state_t* spec_new_area = get_spec_area(NEW, exc_type, get_running_proc());
+    state_t* spec_new_area = get_passup_area(NEW, exc_type, get_running_proc());
     LDST(spec_new_area);
 }
 
@@ -79,8 +82,10 @@ void conclude_handler(enum exc_type exc_type) {
         LDST(&resuming_proc->p_s);
     } else {
         // TODO cache and restore the interval timer?
+        //set_interval_timer(int_timer_cache);
         flush_kernel_time(interrupted_proc);
-        LDST(GET_AREA(OLD, exc_type));                                       // Resume the execution of the same process that was interrupted, retrieving it from the old area
+        state_t* interrupted_state = GET_AREA(OLD, exc_type);
+        LDST(interrupted_state);                                       // Resume the execution of the same process that was interrupted, retrieving it from the old area
     }
 }
 

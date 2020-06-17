@@ -28,17 +28,17 @@ void wait_io(unsigned int command, devreg_t* dev_reg, int subdev) {
     enum ext_dev_type dev_type = get_ext_dev_type(dev_line, subdev);
     dev_w_list* target_dev_list = get_dev_w_list(dev_type, dev_num);
 
-    pcb_t* target_proc = swap_running();        // Set as running the first proc of the ready queue (and retrieve the previously running proc)
+    pcb_t* target_proc = pop_running();        // Set as running the first proc of the ready queue (and retrieve the previously running proc)
 
 
-    target_dev_list->sem--;
-    if (target_dev_list->sem<0) {
-        insertBlocked(&target_dev_list->sem, target_proc);
+    target_dev_list->w_for_cmd_sem--;
+    if (target_dev_list->w_for_cmd_sem < 0) {
+        insertBlocked(&target_dev_list->w_for_cmd_sem, target_proc);
         target_proc->dev_command = command;                     // TEMP
-        target_dev_list->sem++;
+        target_dev_list->w_for_cmd_sem++;
     } else {
         // The device is ready, send the command and enqueue anyway
-        insertBlockedFifo(&target_dev_list->sem, target_proc);
+        insertBlockedFifo(&target_dev_list->w_for_cmd_sem, target_proc);
         send_command(dev_type, command, dev_reg);
         target_dev_list->w_for_res = target_proc;
     }
@@ -51,9 +51,8 @@ void done_io(enum ext_dev_type dev_type, unsigned int dev_n) {
     DEBUG_LOG("Done_io entry");
     dev_w_list *target_dev_list = get_dev_w_list(dev_type, dev_n);
 
-    pcb_t* done_proc = removeBlocked(&target_dev_list->sem);
-    if (done_proc==target_dev_list->w_for_res) {
-        // The process wasn't terminated while waiting for response
+    pcb_t* done_proc = removeBlocked(&target_dev_list->w_for_cmd_sem);
+    if (done_proc==target_dev_list->w_for_res) {                // The process wasn't terminated while waiting for response
         schedule_proc(done_proc);
 
         devreg_t *dev_reg = (devreg_t*)DEV_REG_ADDR(get_ext_dev_line(dev_type), dev_n);
@@ -64,7 +63,7 @@ void done_io(enum ext_dev_type dev_type, unsigned int dev_n) {
 
     // Returns the device status through the syscall return register
     devreg_t* dev_reg = (devreg_t*)DEV_REG_ADDR(get_ext_dev_line(dev_type), dev_n);
-    pcb_t* next_proc = headBlocked(&target_dev_list->sem);
+    pcb_t* next_proc = headBlocked(&target_dev_list->w_for_cmd_sem);
     if (next_proc!=NULL) {
         DEBUG_LOG("The cmd waiting list isn't empty");
         send_command(dev_type, next_proc->dev_command, dev_reg);
@@ -72,8 +71,9 @@ void done_io(enum ext_dev_type dev_type, unsigned int dev_n) {
     } else {
         send_command(dev_type, DEVICE_CMD_ACK, dev_reg);
         target_dev_list->w_for_res = NULL;
-        target_dev_list->sem++;
+        target_dev_list->w_for_cmd_sem++;
     }
+    DEBUG_LOG("Done io exit");
 }
 
 void consume_interrupts() {

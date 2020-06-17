@@ -26,9 +26,6 @@ dev_w_list dev_w_lists[N_EXT_IL + 1][N_DEV_PER_IL];
 // Retrieves a pcb from the freePCB list, panics if the freePCB list is empty, meaning that all the pcbs are already in use
 pcb_t* get_free_pcb_else_panic();
 
-// Returns the external device waiting list for the device identified by the given dev_type and dev_number
-dev_w_list* get_dev_w_list(enum ext_dev_type dev_type, unsigned int instance);
-
 // Returns the runing process to the ready queue (if the running process is the idle process is ignored)
 void stop_running_proc();
 
@@ -70,9 +67,9 @@ void init_scheduler(proc_init_data starting_procs[], unsigned int procs_number, 
     populate_pcb(&idle_proc, &idle_proc_data);
     set_sp(&idle_proc.p_s, RAM_TOP - FRAME_SIZE*(MAXPROC+1));      // TEMP maybe               // Use the index of the process as index of the frame, this should avoid overlaps at any time
 
-    for (int l = 0; l < 6; ++l) {                   // Initialize every external device waiting lists' semaphores to 1
+    for (int l = 0; l < N_EXT_IL+1; ++l) {                   // Initialize every external device waiting lists' semaphores to 1
         for (int d = 0; d < N_DEV_PER_IL; ++d) {
-            dev_w_lists[l][d].sem = 1;
+            dev_w_lists[l][d].w_for_cmd_sem = 1;
         }
     }
 }
@@ -178,13 +175,17 @@ void debug_ready_queue() {
     }
 }
 
-pcb_t *swap_running() {
+pcb_t *pop_running() {
     pcb_t* prev_running = running_proc;
     set_running_proc(removeProcQ(&ready_queue));
 
     DEBUG_LOG_UINT("Swapped proc: ", get_process_index(prev_running));
     DEBUG_LOG_UINT("...with proc: ", get_process_index(running_proc));
     return prev_running;
+}
+
+dev_w_list* get_dev_w_list(enum ext_dev_type dev_type, unsigned int instance) {
+    return &dev_w_lists[dev_type][instance];
 }
 
 
@@ -269,11 +270,6 @@ void time_slice_callback() {
 
 
 // Private utils ======================================================================================================
-
-dev_w_list* get_dev_w_list(enum ext_dev_type dev_type, unsigned int instance) {
-    return &dev_w_lists[dev_type][instance];
-}
-
 
 pcb_t* get_free_pcb_else_panic() {
     pcb_t* p = allocPcb();

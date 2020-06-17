@@ -27,14 +27,14 @@ void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
             break;
         }
 
-        case TERMINATEPROCESS: {
-            save_syscall_return_register(interrupted_state, terminate_proc((pcb_t *) arg1));
-            break;
-        }
-
         case CREATEPROCESS: {
             save_syscall_return_register(interrupted_state,
                                          create_process((state_t *) arg1, (int) arg2, (pcb_t **) arg3));
+            break;
+        }
+
+        case TERMINATEPROCESS: {
+            save_syscall_return_register(interrupted_state, terminate_proc((pcb_t *) arg1));
             break;
         }
 
