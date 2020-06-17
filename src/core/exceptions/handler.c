@@ -62,6 +62,8 @@ void reset_cached_tod(pcb_t* proc) {
 
 void start_handler() {
     int_timer_cache = get_interval_timer_macro();
+    DEBUG_LOG_UINT("FFF: ", int_timer_cache);
+    if (int_timer_cache > get_clock_ticks_per_time_slice()) { int_timer_cache = get_clock_ticks_per_time_slice(); }
     interrupted_proc = get_running_proc();
     flush_user_time(interrupted_proc);
 }
@@ -73,7 +75,6 @@ void conclude_handler(enum exc_type exc_type) {
     DEBUG_SPACING;
 
     pcb_t* resuming_proc = get_running_proc();
-    set_interval_timer(int_timer_cache);
     if (interrupted_proc != resuming_proc) {
         reset_cached_tod(resuming_proc);
         reset_int_timer();
@@ -81,8 +82,7 @@ void conclude_handler(enum exc_type exc_type) {
             memcpy(&interrupted_proc->p_s, GET_AREA(OLD, exc_type), sizeof(state_t));
         LDST(&resuming_proc->p_s);
     } else {
-        // TODO cache and restore the interval timer?
-        //set_interval_timer(int_timer_cache);
+        set_interval_timer(int_timer_cache);
         flush_kernel_time(interrupted_proc);
         state_t* interrupted_state = GET_AREA(OLD, exc_type);
         LDST(interrupted_state);                                       // Resume the execution of the same process that was interrupted, retrieving it from the old area
@@ -97,7 +97,6 @@ void handle_interrupt() {
 
     consume_interrupts();
 
-    reset_int_timer();                                       // reset the interval timer acknowledging the interrupt and guaranteeing a full time-slice for the process that will be resumed
     conclude_handler(INT);
 }
 

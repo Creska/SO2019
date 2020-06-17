@@ -51,28 +51,31 @@ void done_io(enum ext_dev_type dev_type, unsigned int dev_n) {
     DEBUG_LOG("Done_io entry");
     dev_w_list *target_dev_list = get_dev_w_list(dev_type, dev_n);
 
-    pcb_t* done_proc = removeBlocked(&target_dev_list->w_for_cmd_sem);
-    if (done_proc==target_dev_list->w_for_res) {                // The process wasn't terminated while waiting for response
-        schedule_proc(done_proc);
+    if (target_dev_list->w_for_res!=NULL) {     // TODO PENGUIN PROBLEMS: done_io triggered and nonsense pointer retrieved
+        pcb_t* done_proc = removeBlocked(&target_dev_list->w_for_cmd_sem);
+        if (done_proc==target_dev_list->w_for_res) {                // The process wasn't terminated while waiting for response
+            schedule_proc(done_proc);
 
-        devreg_t *dev_reg = (devreg_t*)DEV_REG_ADDR(get_ext_dev_line(dev_type), dev_n);
-        unsigned int ret_status = get_status(dev_type, dev_reg);
-        save_syscall_return_register(&done_proc->p_s, ret_status);
-    }       // else the process was terminated in the meanwhile (don't do nothing ragarding its execution)
+            devreg_t *dev_reg = (devreg_t*)DEV_REG_ADDR(get_ext_dev_line(dev_type), dev_n);
+            unsigned int ret_status = get_status(dev_type, dev_reg);
+            save_syscall_return_register(&done_proc->p_s, ret_status);
+        }       // else the process was terminated in the meanwhile (don't do nothing ragarding its execution)
 
 
-    // Returns the device status through the syscall return register
-    devreg_t* dev_reg = (devreg_t*)DEV_REG_ADDR(get_ext_dev_line(dev_type), dev_n);
-    pcb_t* next_proc = headBlocked(&target_dev_list->w_for_cmd_sem);
-    if (next_proc!=NULL) {
-        DEBUG_LOG("The cmd waiting list isn't empty");
-        send_command(dev_type, next_proc->dev_command, dev_reg);
-        target_dev_list->w_for_res = next_proc;
-    } else {
-        send_command(dev_type, DEVICE_CMD_ACK, dev_reg);
-        target_dev_list->w_for_res = NULL;
-        target_dev_list->w_for_cmd_sem++;
+        // Returns the device status through the syscall return register
+        devreg_t* dev_reg = (devreg_t*)DEV_REG_ADDR(get_ext_dev_line(dev_type), dev_n);
+        pcb_t* next_proc = headBlocked(&target_dev_list->w_for_cmd_sem);
+        if (next_proc!=NULL) {
+            DEBUG_LOG("The cmd waiting list isn't empty");
+            send_command(dev_type, next_proc->dev_command, dev_reg);
+            target_dev_list->w_for_res = next_proc;
+        } else {
+            send_command(dev_type, DEVICE_CMD_ACK, dev_reg);
+            target_dev_list->w_for_res = NULL;
+            target_dev_list->w_for_cmd_sem++;
+        }
     }
+
     DEBUG_LOG("Done io exit");
 }
 
@@ -83,6 +86,10 @@ void consume_interrupts() {
 
     // PROCESSOR LOCAL TIMER INTERRUPTS (when supported)
     // if (is_interrupt_pending(1)) { }
+
+#ifdef TARGET_UARM
+    GET_AREA(OLD, INT)->pc -= WORD_SIZE;                                       // On arm after an interrupt the pc needs to be decremented by one instruction (used ifdef to avoid useless complexity)
+#endif
 
     // INTERVAL TIMER INTERRUPT
     if (is_interrupt_pending(2)) {

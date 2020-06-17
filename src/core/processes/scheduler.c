@@ -70,6 +70,7 @@ void init_scheduler(proc_init_data starting_procs[], unsigned int procs_number, 
     for (int l = 0; l < N_EXT_IL+1; ++l) {                   // Initialize every external device waiting lists' semaphores to 1
         for (int d = 0; d < N_DEV_PER_IL; ++d) {
             dev_w_lists[l][d].w_for_cmd_sem = 1;
+            dev_w_lists[l][d].w_for_res = NULL;
         }
     }
 }
@@ -112,6 +113,8 @@ pcb_t *get_running_proc() {
 pcb_t* get_idle_proc() {
     return &idle_proc;
 }
+
+unsigned int get_clock_ticks_per_time_slice() { return clock_ticks_per_time_slice; }
 
 void schedule_proc(pcb_t* p) {
     DEBUG_LOG_INT("Scheduling process: ", get_process_index(p));
@@ -243,9 +246,7 @@ void time_slice_callback() {
         DEBUG_LOG_INT("Increasing priority of process ", get_process_index(target_proc));
         target_proc->priority += PRIORITY_INC_PER_TIME_SLICE;
     }
-#ifdef TARGET_UARM
-    GET_AREA(OLD, INT)->pc -= WORD_SIZE;                                       // On arm after an interrupt the pc needs to be decremented by one instruction (used ifdef to avoid useless complexity)
-#endif
+
 
     if (!list_empty(&ready_queue) && running_proc->priority <= headProcQ(&ready_queue)->priority) {             // Swap execution if the first ready process has a greater priority than the one executing (obviously if the ready queue is empty we don't need to swap)
         pcb_t* to_start = removeProcQ(&ready_queue);
@@ -260,6 +261,7 @@ void time_slice_callback() {
             DEBUG_LOG("The current process still has the higher priority, resuming its execution");
         }
     }
+    reset_int_timer();
 }
 
 

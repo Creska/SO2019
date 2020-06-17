@@ -11,7 +11,6 @@
 #include "cp0.h"
 
 
-
 // MPS only defines NULL in stddef.h
 #define NULL            ((void*)0)
 
@@ -28,6 +27,8 @@
 #define FRAME_SIZE 4096
 
 #endif
+
+
 #ifdef TARGET_UARM
 // Architecture-specific headers
     #include "libuarm.h"
@@ -35,6 +36,7 @@
     #include "uARMtypes.h"
 #define AREA_BASE EXCV_BASE
 #endif
+
 
 #define GET_DEV_START (N_INTERRUPT_LINES - N_EXT_IL)
 

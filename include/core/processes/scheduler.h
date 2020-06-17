@@ -43,6 +43,8 @@ pcb_t* get_running_proc();
 // Returns a pointer to the idle process
 pcb_t* get_idle_proc();
 
+unsigned int get_clock_ticks_per_time_slice();
+
 // Sets as running the first proc in the ready queue (idle if empty) and returns a pointer to the process that was running WITHOUT returning it to the ready queue
 pcb_t* pop_running();
 
