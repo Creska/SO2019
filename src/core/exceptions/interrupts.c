@@ -112,7 +112,6 @@ void consume_interrupts() {
             if (bitmap & 1) {
                 DEBUG_LOG_INT("Interrupt pending for terminal ", dev_num);
                 devreg_t *dev_reg = (devreg_t*)DEV_REG_ADDR(7, dev_num);
-
                 if ((get_status(TERM_RX, dev_reg) & 0xff) == TERM_ST_DONE) done_io(TERM_RX, dev_num);
                 if ((get_status(TERM_TX, dev_reg) & 0xff) == TERM_ST_DONE) done_io(TERM_TX, dev_num);
             }

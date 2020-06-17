@@ -6,9 +6,16 @@
 #include "devices/devices.h"
 
 
-pcb_t* get_idle_proc();         //TEMP
 
-void idle();
+typedef struct dev_waiting_list {
+    int sem;
+    pcb_t* w_for_res;
+} dev_w_list;
+
+dev_w_list* get_dev_w_list(enum ext_dev_type dev_type, unsigned int instance);
+
+
+
 
 #define PRIORITY_INC_PER_TIME_SLICE     1               // The amount the priority of each process in the ready queue is increased every time slice
 
@@ -20,21 +27,6 @@ void init_scheduler(proc_init_data starting_procs[], unsigned int procs_number, 
 // Launches the process with the higher priority in the ready queue, panics if the ready queue is empty.
 void launch();
 
-typedef struct common_dev_reg {
-    unsigned int status;
-    unsigned int command;
-} com_dev_reg;
-
-typedef struct dev_waiting_list {
-    int sem;
-    pcb_t* w_for_res;
-    com_dev_reg* dev_reg;
-} dev_w_list;
-
-dev_w_list* get_dev_w_list(enum ext_dev_type dev_type, unsigned int instance);
-
-
-
 // --------------------------------------------------------------------------------------------------------------------
 
 // Resets the interval timer value to the number of ticks corresponding to the correct time-slice.
@@ -45,12 +37,20 @@ void reset_int_timer();
 // Returns a pointer to the running PCB
 pcb_t* get_running_proc();
 
+// Returns a pointer to the idle process
+pcb_t* get_idle_proc();
+
 // Sets as running the first proc in the ready queue and returns the process that was running previously
 pcb_t* swap_running();
 
+// Schedules a new process for execution. If it has an higher priority than the running process
+// it is executed immediately, otherwise it goes in the ready queue.
 void schedule_proc(pcb_t* p);
 
 void debug_ready_queue();
+
+void idle();
+
 
 // Exception handling methods -----------------------------------------------------------------------------------------
 
@@ -67,9 +67,6 @@ int terminate_proc(pcb_t* p);
 // priority:    is the priority of the new process
 // cpid:        is the location of the (pcb_t*) variable where the new process id should be saved
 int create_process(state_t* s, int priority, pcb_t** cpid);
-
-//deletes all the pcb_t * p's childs starting from the given pcb
-int recursive_remove_proc(pcb_t * p);
 
 void p(int* semaddr);
 
