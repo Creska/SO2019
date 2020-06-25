@@ -54,7 +54,3 @@ void proc_termination_tester() {
     addokbuf("I'm printing this message and then I'm going to terminate myself\n");
     SYSCALL(3, (unsigned int)NULL, 0, 0);
 }
-
-void proc_creation_tester() {
-    // TODO test process creation
-}

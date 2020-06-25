@@ -27,6 +27,10 @@ typedef struct pcb_t {
     /* key of the semaphore on which the process is eventually blocked */
     int *p_semkey;
 
+    /* The device waiting list this process is enqueued on (NULL if not enqueued) */
+    struct pcb_t **dev_w_list;
+
+
     unsigned int kernel_timer;
     unsigned int user_timer;
 
@@ -35,18 +39,6 @@ typedef struct pcb_t {
 
     // Holds the value of the TOD at the first execution of the process
     unsigned int tod_at_start;
-
-//    //old & new sysbreak's area
-//    unsigned int * old_area_sysbreak;
-//    unsigned int * new_area_sysbreak;
-//
-//    //old & new TLB's area
-//    unsigned int * old_area_TLB;
-//    unsigned int * new_area_TLB;
-//
-//    //old & new programtrap's area
-//    unsigned int * old_area_progtrap;
-//    unsigned int * new_area_progtrap;
 
     // Array of pointers to the old/new areas defined through the SPECPASSUP syscall
     // Order: sys_old | sys_new | TLB_old | TLB_new | trap_old | trap_new

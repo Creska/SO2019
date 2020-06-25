@@ -13,12 +13,6 @@
 
 typedef unsigned int memaddr;               // TODO decide where to put this stuff
 
-
-
-
-
-
-
 #endif
 
 

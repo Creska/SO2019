@@ -4,7 +4,7 @@
 #include "utils/debug.h"
 #include "core/processes/asl.h"
 
-// Cached value (calculated at initialization) for how the lenght of a time_slice (in ticks per microsecond)
+// Cached value (calculated at initialization) for how the length of a time_slice (in ticks per microsecond)
 unsigned int clock_ticks_per_time_slice;
 
 // Procs ready queue, holding processes ready to be run
@@ -132,13 +132,12 @@ int create_process(state_t *s, int priority, pcb_t **cpid) {
     pcb_t* p = allocPcb();
     if (p!=NULL) {
         DEBUG_LOG_INT("Creating new process: ", get_process_index(p));
-        memcpy(&p->p_s, s, sizeof(state_t));            // todo check
+        memcpy(&p->p_s, s, sizeof(state_t));
         p->priority = priority;
         p->original_priority = priority;
         insertChild(running_proc, p);               // Set the new process as child of the running one
         if (cpid!=NULL) {(*cpid) = p;}
         DEBUG_LOG("Ending creation");
-
         schedule_proc(p);
         return 0;
     } else {
@@ -200,19 +199,18 @@ void p(int* semaddr) {
 
     (*semaddr)--;
 
-    if ((*semaddr)<0) {                                                       // If there are no available resources
-        if (insertBlocked(semaddr, running_proc)) {                         // blocks the process on the semaphore
+    if ((*semaddr)<0) {                                         // If there are no available resources
+        flush_kernel_time(running_proc);                        // Count the time passed since the start of the syscall handler up to here as kernel time of this proc
+        if (insertBlocked(semaddr, running_proc)) {             // blocks the process on the semaphore
             adderrbuf("No free SEMDs");
         }
-        pcb_t* new_proc = removeProcQ(&ready_queue);                          // Resume another process from the ready_queue
+
+        pcb_t* new_proc = removeProcQ(&ready_queue);       // Resume another process from the ready_queue
         if (new_proc!=NULL) {
             set_running_proc(new_proc);
 
         } else {
-            // TODO idle dummy proc
-            set_running_proc(&idle_proc);
-//            adderrbuf("No process left after a PASSEREN call. Something must be wrong, "
-//                      "every process is waiting on a semaphore, there's no ready process that can call a VERHOGEN.");
+            set_running_proc(&idle_proc);                   // Since there's no ready process launch the idle process
         }
         (*semaddr)++;
     }
@@ -247,7 +245,6 @@ void time_slice_callback() {
         target_proc->priority += PRIORITY_INC_PER_TIME_SLICE;
     }
 
-
     if (!list_empty(&ready_queue) && running_proc->priority <= headProcQ(&ready_queue)->priority) {             // Swap execution if the first ready process has a greater priority than the one executing (obviously if the ready queue is empty we don't need to swap)
         pcb_t* to_start = removeProcQ(&ready_queue);
         DEBUG_LOG_UINT("Swapping to process: ", get_process_index(to_start));
@@ -263,12 +260,6 @@ void time_slice_callback() {
     }
     reset_int_timer();
 }
-
-
-// Roba semafori
-// TODO controllare che non venga contato il tempo in coda a un semaforo per CPU time
-// TODO rimozione di un processo dalla coda di un semaforo con terminate process
-
 
 
 // Private utils ======================================================================================================
@@ -327,15 +318,20 @@ int recursive_remove_proc(pcb_t* p) {
     if (p->p_semkey!=NULL) {
         // The process is enqueued on a semaphore, remove it from the latter
         to_be_freed = outBlocked(p);
+    } else if (p->dev_w_list!=NULL) {
+        // The process is waiting for a response from a device
+        to_be_freed = p;
+        *p->dev_w_list = NULL;
     } else {
         // The process is in the ready queue, remove it
         to_be_freed = outProcQ(&ready_queue, p);
     }
 
+
     if (to_be_freed!=NULL) {
         freePcb(to_be_freed);
     } else {
-        adderrbuf("Qualcosa è andato storto");
+        adderrbuf("Error during recursive process removal, the given process isn't on the ready queue or in a semaphore queue.");
         return -1;
     }
 
@@ -343,11 +339,27 @@ int recursive_remove_proc(pcb_t* p) {
     while (target_child!=NULL) {
         DEBUG_LOG_INT("Calling termination on child: ", get_process_index(target_child));
         if (recursive_remove_proc(target_child)) {
-            return -1;                                                      // TODO return right away or try to continue? despite the error?
+            return -1;              // There was some problem during termination, stop recursion and let the user handle it
         }
         target_child = removeChild(p);
     }
     return 0;
+}
+
+void flush_user_time(pcb_t* proc) {
+    unsigned int cached_TOD = TOD;
+    proc->user_timer += cached_TOD - proc->tod_cache;
+    proc->tod_cache = cached_TOD;
+}
+
+void flush_kernel_time(pcb_t* proc) {
+    unsigned int cached_TOD = TOD;
+    proc->kernel_timer += cached_TOD - proc->tod_cache;
+    proc->tod_cache = cached_TOD;
+}
+
+void reset_cached_tod(pcb_t* proc) {
+    proc->tod_cache = TOD;
 }
 
 

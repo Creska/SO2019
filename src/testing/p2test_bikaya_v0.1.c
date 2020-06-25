@@ -18,16 +18,14 @@
  *      Modified by Renzo Davoli 2010
  *      Modified by Miro Mannino on May 8, 2010
  *      Modified by Mattia Maldini, Renzo Davoli 2020
+ *      Modified by Group 13 (Andrea Paoletti) 2020 -> just changed platform dependent inclusions
  */
 
 #include "core/system/system.h"
 #include "core/const.h"
 #include "core/types-phase2.h"
 
-#include "utils/debug.h"        //TEMP
-
 #ifdef TARGET_UMPS
-
 #define FRAME_SIZE 4096
 /* Elapsed clock ticks (CPU instructions executed) since system power on.
    Only the "low" part is actually used. */
@@ -185,6 +183,7 @@ void print(char *msg) {
 /*                 p1 -- the root process                            */
 /*                                                                   */
 void test() {
+
     SYSCALL(VERHOGEN, (int)&testsem, 0, 0); /* V(testsem)   */
 
     if (testsem != 1) {

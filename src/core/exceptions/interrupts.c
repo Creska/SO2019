@@ -4,6 +4,7 @@
 #include "core/processes/asl.h"
 #include "devices/devices.h"
 
+// TODO check with debug logs if resetting cached tod on proc creation
 
 void send_command(enum ext_dev_type ext_dev, unsigned int command, devreg_t* dev_reg) {
     if  (ext_dev != TERM_TX){
@@ -34,14 +35,16 @@ void wait_io(unsigned int command, devreg_t* dev_reg, int subdev) {
     target_dev_list->w_for_cmd_sem--;
     if (target_dev_list->w_for_cmd_sem < 0) {
         insertBlocked(&target_dev_list->w_for_cmd_sem, target_proc);
-        target_proc->dev_command = command;                     // TEMP
+        target_proc->dev_command = command; // TEMP
         target_dev_list->w_for_cmd_sem++;
     } else {
         // The device is ready, send the command and enqueue anyway
         insertBlockedFifo(&target_dev_list->w_for_cmd_sem, target_proc);
         send_command(dev_type, command, dev_reg);
         target_dev_list->w_for_res = target_proc;
+        target_proc->dev_w_list = &target_dev_list->w_for_res;
     }
+    flush_kernel_time(target_proc);
     DEBUG_LOG("Wait_io exit");
 }
 
@@ -51,9 +54,10 @@ void done_io(enum ext_dev_type dev_type, unsigned int dev_n) {
     DEBUG_LOG("Done_io entry");
     dev_w_list *target_dev_list = get_dev_w_list(dev_type, dev_n);
 
-    if (target_dev_list->w_for_res!=NULL) {     // TODO PENGUIN PROBLEMS: done_io triggered and nonsense pointer retrieved
+    if (target_dev_list->w_for_res!=NULL) {                         // Ensures that the proper syscall was used
         pcb_t* done_proc = removeBlocked(&target_dev_list->w_for_cmd_sem);
         if (done_proc==target_dev_list->w_for_res) {                // The process wasn't terminated while waiting for response
+            done_proc->dev_w_list = NULL;
             schedule_proc(done_proc);
 
             devreg_t *dev_reg = (devreg_t*)DEV_REG_ADDR(get_ext_dev_line(dev_type), dev_n);
@@ -69,11 +73,15 @@ void done_io(enum ext_dev_type dev_type, unsigned int dev_n) {
             DEBUG_LOG("The cmd waiting list isn't empty");
             send_command(dev_type, next_proc->dev_command, dev_reg);
             target_dev_list->w_for_res = next_proc;
+            next_proc->dev_w_list = &target_dev_list->w_for_res;
         } else {
             send_command(dev_type, DEVICE_CMD_ACK, dev_reg);
             target_dev_list->w_for_res = NULL;
             target_dev_list->w_for_cmd_sem++;
         }
+    } else {
+        addokbuf("A device interrupt was raised, but there's no process in the device queue, maybe you sent the "
+                 "command directly to the dev without the proper syscall?");
     }
 
     DEBUG_LOG("Done io exit");

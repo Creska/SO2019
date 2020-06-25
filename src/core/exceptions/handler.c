@@ -11,7 +11,9 @@
 // During an handler this pointer is set to the PCB that was running while the exception was raised
 pcb_t* interrupted_proc;
 
-unsigned int int_timer_cache; // TODO should we cache and restore the interval timer on device interrupts?
+// Cache for the interval timer set at the beginning of an handler and used to restore the interval
+// timer value at the end of the handler (when appropriate)
+unsigned int int_timer_cache;
 
 
 // Passup areas utility functions -------------------------------------------------------------------------------------
@@ -38,27 +40,7 @@ void launch_spec_area(int exc_type, state_t* interrupted_state) {
 
 // Timer utility functions --------------------------------------------------------------------------------------------
 
-void flush_user_time(pcb_t* proc) {
-    unsigned int cached_TOD = TOD;
-    proc->user_timer += cached_TOD - proc->tod_cache;
-    proc->tod_cache = cached_TOD;
-}
-
-void flush_kernel_time(pcb_t* proc) {
-    unsigned int cached_TOD = TOD;
-    proc->kernel_timer += cached_TOD - proc->tod_cache;
-    proc->tod_cache = cached_TOD;
-}
-
-void reset_cached_tod(pcb_t* proc) {
-    proc->tod_cache = TOD;
-}
-
 // Handler routines ---------------------------------------------------------------------------------------------------
-
-
-// TODO check useless int timer resets (now the handler resets the timer when at the end of the interrupt the process has changed, verify that the scheduler doesn't do this when the handler will do it either way)
-
 
 void start_handler() {
     int_timer_cache = get_interval_timer_macro();
@@ -76,15 +58,15 @@ void conclude_handler(enum exc_type exc_type) {
 
     pcb_t* resuming_proc = get_running_proc();
     if (interrupted_proc != resuming_proc) {
-        reset_cached_tod(resuming_proc);
+        reset_cached_tod(resuming_proc);            // Don't count the kernel time if we're swapping processes
         reset_int_timer();
         if (interrupted_proc!=get_idle_proc())
             memcpy(&interrupted_proc->p_s, GET_AREA(OLD, exc_type), sizeof(state_t));
         LDST(&resuming_proc->p_s);
     } else {
         set_interval_timer(int_timer_cache);
-        flush_kernel_time(interrupted_proc);
         state_t* interrupted_state = GET_AREA(OLD, exc_type);
+        flush_kernel_time(interrupted_proc);
         LDST(interrupted_state);                                       // Resume the execution of the same process that was interrupted, retrieving it from the old area
     }
 }
@@ -115,6 +97,7 @@ void handle_sysbreak() {
     if (cause_code == EXCODE_SYS) {
         if (*sys_n(interrupted_state) > 8) {
             if (is_passup_set(SYS, interrupted_proc)) {
+                flush_kernel_time(interrupted_proc);
                 launch_spec_area(SYS, interrupted_state);
             } else { terminate_proc(interrupted_proc); }
         } else {
@@ -125,7 +108,6 @@ void handle_sysbreak() {
         if (is_passup_set(SYS, interrupted_proc)) { launch_spec_area(SYS, interrupted_state); }
         else { adderrbuf("ERROR: BreakPoint launched, handler still not implemented!"); }
     }
-
     flush_kernel_time(interrupted_proc);
     conclude_handler(SYS);
 }

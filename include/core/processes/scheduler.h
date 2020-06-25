@@ -59,6 +59,12 @@ void debug_ready_queue();
 void idle();
 
 
+void flush_user_time(pcb_t* proc);
+void flush_kernel_time(pcb_t* proc);
+void reset_cached_tod(pcb_t* proc);
+
+
+
 // Exception handling methods -----------------------------------------------------------------------------------------
 
 // The method called while handling an interval timer interrupt
