@@ -65,7 +65,6 @@ void init_scheduler(proc_init_data starting_procs[], unsigned int procs_number, 
     reset_state(&idle_proc.p_s);
     proc_init_data idle_proc_data = {.km_on=1, .method=idle, .timer_int_on=1, .other_ints_on=1, .vm_on=0, .priority = 0};
     populate_pcb(&idle_proc, &idle_proc_data);
-    set_sp(&idle_proc.p_s, RAM_TOP - FRAME_SIZE*(MAXPROC+1));      // TEMP maybe               // Use the index of the process as index of the frame, this should avoid overlaps at any time
 
     for (int l = 0; l < N_EXT_IL+1; ++l) {                   // Initialize every external device waiting lists' semaphores to 1
         for (int d = 0; d < N_DEV_PER_IL; ++d) {
@@ -195,7 +194,7 @@ dev_w_list* get_dev_w_list(enum ext_dev_type dev_type, unsigned int instance) {
 
 void p(int* semaddr) {
     DEBUG_LOG_INT("P enter, semaphore has value ", *semaddr);
-    DEBUG_LOG_UINT("Semaphore: ", semaddr);
+    DEBUG_LOG_UINT("Semaphore: ", (unsigned)semaddr);
 
     (*semaddr)--;
 
@@ -277,7 +276,7 @@ pcb_t* get_free_pcb_else_panic() {
 void populate_pcb(pcb_t* p, proc_init_data* data) {
 
     set_pc(&p->p_s, data->method);
-    set_sp(&p->p_s, RAM_TOP - FRAME_SIZE*(get_process_index(p)+1));                     // Use the index of the process as index of the frame, this should avoid overlaps at any time
+    set_sp(&p->p_s, RAM_TOP - FRAME_SIZE*(get_proc_scheduler_index(p)+1));                     // Use the index of the process as index of the frame, this should avoid overlaps at any time
     set_interval_timer_interrupts(&p->p_s, data->timer_int_on);
     set_other_interrupts(&p->p_s, data->other_ints_on);
     p->priority = data->priority;
@@ -360,6 +359,11 @@ void flush_kernel_time(pcb_t* proc) {
 
 void reset_cached_tod(pcb_t* proc) {
     proc->tod_cache = TOD;
+}
+
+int get_proc_scheduler_index(pcb_t* p) {
+    if (p==get_idle_proc()) return MAXPROC;
+    else return get_process_index(p);
 }
 
 

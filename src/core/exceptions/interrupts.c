@@ -4,8 +4,6 @@
 #include "core/processes/asl.h"
 #include "devices/devices.h"
 
-// TODO check with debug logs if resetting cached tod on proc creation
-
 void send_command(enum ext_dev_type ext_dev, unsigned int command, devreg_t* dev_reg) {
     if  (ext_dev != TERM_TX){
         dev_reg->dtp.command = command;
@@ -34,8 +32,8 @@ void wait_io(unsigned int command, devreg_t* dev_reg, int subdev) {
 
     target_dev_list->w_for_cmd_sem--;
     if (target_dev_list->w_for_cmd_sem < 0) {
+        // The device is already running -> go to the semaphore queue
         insertBlocked(&target_dev_list->w_for_cmd_sem, target_proc);
-        target_proc->dev_command = command; // TEMP
         target_dev_list->w_for_cmd_sem++;
     } else {
         // The device is ready, send the command and enqueue anyway
@@ -71,7 +69,8 @@ void done_io(enum ext_dev_type dev_type, unsigned int dev_n) {
         pcb_t* next_proc = headBlocked(&target_dev_list->w_for_cmd_sem);
         if (next_proc!=NULL) {
             DEBUG_LOG("The cmd waiting list isn't empty");
-            send_command(dev_type, next_proc->dev_command, dev_reg);
+            unsigned int cmd_argument = load_syscall_arg1(&next_proc->p_s);
+            send_command(dev_type, cmd_argument, dev_reg);
             target_dev_list->w_for_res = next_proc;
             next_proc->dev_w_list = &target_dev_list->w_for_res;
         } else {

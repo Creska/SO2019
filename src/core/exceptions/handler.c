@@ -93,8 +93,8 @@ void handle_sysbreak() {
     interrupted_state->pc_epc += WORD_SIZE;
 #endif
 
-    unsigned int cause_code = get_exccode(interrupted_state);
-    if (cause_code == EXCODE_SYS) {
+    enum exc_code cause_code = get_exccode(interrupted_state);
+    if (cause_code == E_SYS) {
         if (*sys_n(interrupted_state) > 8) {
             if (is_passup_set(SYS, interrupted_proc)) {
                 flush_kernel_time(interrupted_proc);
@@ -103,7 +103,7 @@ void handle_sysbreak() {
         } else {
             consume_syscall(interrupted_state, interrupted_proc);
         }
-    } else if (cause_code == EXCODE_BP) {
+    } else if (cause_code == E_BP) {
         DEBUG_LOG("Exception recognised as breakpoint");
         if (is_passup_set(SYS, interrupted_proc)) { launch_spec_area(SYS, interrupted_state); }
         else { adderrbuf("ERROR: BreakPoint launched, handler still not implemented!"); }

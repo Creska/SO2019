@@ -15,7 +15,6 @@ void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
     switch (sys_n) {                                                        // Using a switch since this will handle a few different syscalls in the next phases
 
         case GETCPUTIME: {
-
             unsigned int* user = (unsigned int*)arg1;
             unsigned int* kernel = (unsigned int*)arg2;
             unsigned int* wallclock = (unsigned int*)arg3;
@@ -82,7 +81,6 @@ void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
             // TODO check if this makes sense (test)
             pcb_t** pid = (pcb_t**) arg1;
             pcb_t** ppid = (pcb_t**) arg2;
-
 
             pcb_t* current_proc = get_running_proc();
             if (pid != NULL) {

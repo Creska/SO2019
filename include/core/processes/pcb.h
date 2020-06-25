@@ -44,9 +44,6 @@ typedef struct pcb_t {
     // Order: sys_old | sys_new | TLB_old | TLB_new | trap_old | trap_new
     state_t* spec_areas[6];
 
-    // Holds a device command waiting for exacution
-    unsigned int dev_command;
-
 } pcb_t;
 
 

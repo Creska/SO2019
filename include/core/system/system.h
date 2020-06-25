@@ -15,11 +15,10 @@ enum area_age {NEW, OLD};
 
 
 // EXCEPTION CODES: the allow to determine the cause of an exception in an arch-independent way
+enum exc_code {E_BP, E_SYS, E_OTHER};
 
-#define EXCODE_BP           1           // TODO make enum
-#define EXCODE_SYS          2
-#define EXCODE_OTHER        3               // this will easily support more codes when needed
 
+typedef unsigned int memaddr;
 
 
 
@@ -89,9 +88,11 @@ unsigned int clock_ticks_per_period(unsigned int microseconds);
 
 
 // Returns an unsigned integer code corresponding to the cause of an exeption as defined in EXCODE_... macros
-unsigned int get_exccode(state_t* state);
+enum exc_code get_exccode(state_t* state);
 
 void load_syscall_registers(state_t* s, unsigned int* n, unsigned int* a1, unsigned int* a2, unsigned int* a3);
+
+unsigned int load_syscall_arg1(state_t* s);
 
 unsigned int* sys_n(state_t* s);
 

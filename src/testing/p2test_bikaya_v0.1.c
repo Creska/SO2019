@@ -23,7 +23,6 @@
 
 #include "core/system/system.h"
 #include "core/const.h"
-#include "core/types-phase2.h"
 
 #ifdef TARGET_UMPS
 #define FRAME_SIZE 4096

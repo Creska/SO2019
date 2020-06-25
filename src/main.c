@@ -3,6 +3,8 @@
 #include "testing/our_tests.h"
 #include "bikaya.h"
 
+// TODO build system CUSTOM
+
 int main() {
 
 //     Array containing all the relevant data for process initialization
@@ -13,8 +15,6 @@ int main() {
              .km_on = 1, .vm_on = 0,
              .timer_int_on = 1, .other_ints_on = 1}
     };
-
-
 
 //    proc_init_data starting_processes[] =  {
 //
@@ -40,6 +40,5 @@ int main() {
     };
 
     bikaya_launch(&init_data);
-
 }
 

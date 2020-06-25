@@ -64,18 +64,18 @@ void set_interval_timer_interrupts(state_t *s, unsigned int on) {
 }
 
 
-unsigned int get_exccode(state_t* state) {
+enum exc_code get_exccode(state_t* state) {
     unsigned int val = CAUSE_GET_EXCCODE(state->cause);
 
     switch (val) {
         case EXC_BP:
-            return EXCODE_BP;
+            return E_BP;
 
         case EXC_SYS:
-            return EXCODE_SYS;
+            return E_SYS;
 
         default:
-            return EXCODE_OTHER;
+            return E_OTHER;
     }
 }
 

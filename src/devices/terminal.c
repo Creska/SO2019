@@ -120,29 +120,6 @@ char *int_to_str_binary(int i, char *b) {
     return b;
 }
 
-char* ptr_to_str(void* p, char *b) {
-    b[0] = '0';
-    b[1] = 'x';
-
-    char* buf_p = b+2;      // Add leading 0s
-    int digits = 0;
-    int i = (int)p;
-    while (i) {
-        i = i / 16;
-        digits++;
-    }
-    digits = POINTERS_DIGITS - digits;
-    while (digits) {
-        *buf_p = '0';
-        buf_p++;
-        digits--;
-    }
-
-    char* first_free_char = num_to_str_buf(p, "0123456789ABCD", 16, buf_p);
-    *first_free_char = '\0';
-    return b;
-}
-
 
 char* num_to_str_buf(int i, const char digit[], int base, char* b) {
     char* p = b;

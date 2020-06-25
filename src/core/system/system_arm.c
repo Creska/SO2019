@@ -81,19 +81,19 @@ void set_interval_timer_interrupts(state_t* s, unsigned int on) {
 
 
 
-unsigned int get_exccode(state_t* state) {
+enum exc_code get_exccode(state_t* state) {
 
     unsigned int val = CAUSE_EXCCODE_GET(state->CP15_Cause);
 
     switch (val) {
         case EXC_BREAKPOINT:
-            return EXCODE_BP;
+            return E_BP;
 
         case EXC_SYSCALL:
-            return EXCODE_SYS;
+            return E_SYS;
 
         default:
-            return EXCODE_OTHER;
+            return E_OTHER;
     }
 }
 

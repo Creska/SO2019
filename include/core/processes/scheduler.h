@@ -87,4 +87,6 @@ void p(int* semaddr);
 // Verhogen
 void v(int* semaddr);
 
+int get_proc_scheduler_index(pcb_t* p);
+
 #endif //BIKAYA_SCHEDULER_H

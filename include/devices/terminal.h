@@ -49,10 +49,6 @@ char* uint_to_str(unsigned int i, char *b);
 // returns a pointer to the given buffer
 char* int_to_str_binary(int i, char *b);
 
-// Prints a string representation of a pointer in a buffer
-// returns a pointer to the given buffer
-char* ptr_to_str(void* p, char *b);
-
 // Prints a string representation of a number on a string buffer
 //
 // i                the target number
