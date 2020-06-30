@@ -10,13 +10,11 @@ enum exc_type {SYS, PRG, TLB, INT};
 // AREA AGES: they identify the type of area: old/new
 enum area_age {NEW, OLD};
 
-// Gets a pointer a system new/old area
-#define GET_AREA(new_old, type_code)    ((state_t*)(AREA_BASE + (7 - type_code*2 - new_old)*STATE_T_SIZE))
-
-
 // EXCEPTION CODES: the allow to determine the cause of an exception in an arch-independent way
 enum exc_code {E_BP, E_SYS, E_OTHER};
 
+// Gets a pointer a system new/old area
+#define GET_AREA(new_old, type_code)    ((state_t*)(AREA_BASE + (7 - type_code*2 - new_old)*STATE_T_SIZE))
 
 typedef unsigned int memaddr;
 
@@ -42,6 +40,7 @@ void set_other_interrupts(state_t* s, unsigned int on);
 
 // Sets the stack pointer value for the given state
 void set_sp(state_t* s, unsigned int sp_val);
+
 
 // Sets the program counter value for the given state
 void set_pc(state_t* s, void (*ptr)());

@@ -43,13 +43,11 @@ void wait_io(unsigned int command, devreg_t* dev_reg, int subdev) {
         target_proc->dev_w_list = &target_dev_list->w_for_res;
     }
     flush_kernel_time(target_proc);
-    DEBUG_LOG("Wait_io exit");
 }
 
 // Callback that needs to be called when a device interrupt is raised,
 // meaning that the executing command is completed.
 void done_io(enum ext_dev_type dev_type, unsigned int dev_n) {
-    DEBUG_LOG("Done_io entry");
     dev_w_list *target_dev_list = get_dev_w_list(dev_type, dev_n);
 
     if (target_dev_list->w_for_res!=NULL) {                         // Ensures that the proper syscall was used
@@ -82,12 +80,9 @@ void done_io(enum ext_dev_type dev_type, unsigned int dev_n) {
         addokbuf("A device interrupt was raised, but there's no process in the device queue, maybe you sent the "
                  "command directly to the dev without the proper syscall?");
     }
-
-    DEBUG_LOG("Done io exit");
 }
 
 void consume_interrupts() {
-
     // INTER-PROCESSOR INTERRUPTS
     //  if (is_interrupt_pending(0)) { }
 
@@ -126,12 +121,15 @@ void consume_interrupts() {
             if (bitmap & 1) {
                 DEBUG_LOG_INT("Interrupt pending for terminal ", dev_num);
                 devreg_t *dev_reg = (devreg_t*)DEV_REG_ADDR(7, dev_num);
-                if ((get_status(TERM_RX, dev_reg) & 0xff) == TERM_ST_DONE) done_io(TERM_RX, dev_num);
-                if ((get_status(TERM_TX, dev_reg) & 0xff) == TERM_ST_DONE) done_io(TERM_TX, dev_num);
+                if ((get_status(TERM_RX, dev_reg) & 0xff) == TERM_ST_DONE) {
+                    done_io(TERM_RX, dev_num);
+                }
+                if ((get_status(TERM_TX, dev_reg) & 0xff) == TERM_ST_DONE) {
+                    done_io(TERM_TX, dev_num);
+                }
             }
             bitmap = bitmap >> 1;
         }
     }
-    DEBUG_LOG("Consume interrupts exit");
 }
 

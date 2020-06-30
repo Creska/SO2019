@@ -5,7 +5,6 @@
 #include "core/exceptions/syscalls.h"
 #include "core/exceptions/interrupts.h"
 #include "core/processes/scheduler.h"
-#include "core/processes/asl.h"
 
 
 // During an handler this pointer is set to the PCB that was running while the exception was raised
@@ -44,16 +43,20 @@ void launch_spec_area(int exc_type, state_t* interrupted_state) {
 
 void start_handler() {
     int_timer_cache = get_interval_timer_macro();
-    if (int_timer_cache > get_clock_ticks_per_time_slice()) { int_timer_cache = get_clock_ticks_per_time_slice(); }
+    if (int_timer_cache > get_clock_ticks_per_time_slice()) {       // The interval timer under-flowed, this avoids
+        int_timer_cache = get_clock_ticks_per_time_slice();         // restoring an incorrect value at the end of the handler
+    }
     interrupted_proc = get_running_proc();
     flush_user_time(interrupted_proc);
 }
 
 void conclude_handler(enum exc_type exc_type) {
 
+#ifdef DEBUG
     debug_ready_queue();
     debug_asl();
     DEBUG_SPACING;
+#endif
 
     pcb_t* resuming_proc = get_running_proc();
     if (interrupted_proc != resuming_proc) {
@@ -76,7 +79,7 @@ void handle_interrupt() {
     DEBUG_LOG_UINT("HANDLING INTERRUPT EXCEPTIONS during proc ", get_process_index(get_running_proc()));
     start_handler();
 
-    consume_interrupts();
+    consume_interrupts();           // Actually handle the interrupts pending
 
     conclude_handler(INT);
 }
@@ -92,9 +95,9 @@ void handle_sysbreak() {
     interrupted_state->pc_epc += WORD_SIZE;
 #endif
 
-    enum exc_code cause_code = get_exccode(interrupted_state);
+    enum exc_code cause_code = get_exccode(interrupted_state);      // Retrieve a platform-independent exception cause code
     if (cause_code == E_SYS) {
-        if (*sys_n(interrupted_state) > 8) {
+        if (*sys_n(interrupted_state) > 8) {  // TODO make a macro for this
             if (is_passup_set(SYS, interrupted_proc)) {
                 flush_kernel_time(interrupted_proc);
                 launch_spec_area(SYS, interrupted_state);
@@ -106,8 +109,7 @@ void handle_sysbreak() {
         DEBUG_LOG("Exception recognised as breakpoint");
         if (is_passup_set(SYS, interrupted_proc)) { launch_spec_area(SYS, interrupted_state); }
         else { adderrbuf("ERROR: BreakPoint launched, handler still not implemented!"); }
-    }
-    flush_kernel_time(interrupted_proc);
+    } else { adderrbuf("Exc cause code not recognised"); }
     conclude_handler(SYS);
 }
 
@@ -118,10 +120,11 @@ void handle_TLB() {
     if (is_passup_set(TLB, get_running_proc())) {
         DEBUG_LOG("Spec areas set, launching custom handler");
         launch_spec_area(TLB, GET_AREA(OLD, TLB));
+    } else {
+        DEBUG_LOG("WARNING: a TLB exception was raised, terminating the process");
+        terminate_proc(get_running_proc());
+        conclude_handler(TLB);
     }
-
-    terminate_proc(get_running_proc());
-    conclude_handler(TLB);
 }
 
 
@@ -131,8 +134,9 @@ void handle_trap() {
     if (is_passup_set(PRG, get_running_proc())) {
         DEBUG_LOG("Spec areas set, launching custom handler");
         launch_spec_area(PRG, GET_AREA(OLD, PRG));
+    } else {
+        DEBUG_LOG("WARNING: a program trap was raised, terminating the process");
+        terminate_proc(get_running_proc());
+        conclude_handler(PRG);
     }
-
-    terminate_proc(get_running_proc());
-    conclude_handler(PRG);
 }
