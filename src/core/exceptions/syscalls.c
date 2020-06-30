@@ -45,6 +45,7 @@ void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
 
         case PASSEREN: {
             int* semaddr = (int*)arg1;
+            DEBUG_LOG_INT("Semaddr before p: ", arg1);
             p(semaddr);
             break;
         }

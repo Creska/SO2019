@@ -44,7 +44,6 @@ void launch_spec_area(int exc_type, state_t* interrupted_state) {
 
 void start_handler() {
     int_timer_cache = get_interval_timer_macro();
-    DEBUG_LOG_UINT("FFF: ", int_timer_cache);
     if (int_timer_cache > get_clock_ticks_per_time_slice()) { int_timer_cache = get_clock_ticks_per_time_slice(); }
     interrupted_proc = get_running_proc();
     flush_user_time(interrupted_proc);

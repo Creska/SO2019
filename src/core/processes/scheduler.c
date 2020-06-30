@@ -26,7 +26,7 @@ dev_w_list dev_w_lists[N_EXT_IL + 1][N_DEV_PER_IL];
 // Retrieves a pcb from the freePCB list, panics if the freePCB list is empty, meaning that all the pcbs are already in use
 pcb_t* get_free_pcb_else_panic();
 
-// Returns the runing process to the ready queue (if the running process is the idle process is ignored)
+// Returns the running process to the ready queue (if the running process is the idle process is ignored)
 void stop_running_proc();
 
 // Sets the given process as running, if NULL is given the idle process is run
@@ -80,7 +80,6 @@ void launch() {
 
         running_proc->tod_at_start = TOD;
         running_proc->tod_cache = TOD;
-
 
         DEBUG_LOG_INT("LAUNCHING PROCESS WITH ID: ", get_process_index(running_proc));
         DEBUG_SPACING;
@@ -207,7 +206,6 @@ void p(int* semaddr) {
         pcb_t* new_proc = removeProcQ(&ready_queue);       // Resume another process from the ready_queue
         if (new_proc!=NULL) {
             set_running_proc(new_proc);
-
         } else {
             set_running_proc(&idle_proc);                   // Since there's no ready process launch the idle process
         }
@@ -365,8 +363,3 @@ int get_proc_scheduler_index(pcb_t* p) {
     if (p==get_idle_proc()) return MAXPROC;
     else return get_process_index(p);
 }
-
-
-
-
-
