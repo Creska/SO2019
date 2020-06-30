@@ -192,7 +192,7 @@ dev_w_list* get_dev_w_list(enum ext_dev_type dev_type, unsigned int instance) {
 // Exception handling -------------------------------------------------------------------------------------------------
 
 void p(int* semaddr) {
-    DEBUG_LOG_INT("P enter, semaphore has value ", *semaddr);
+    //DEBUG_LOG_INT("P enter, semaphore has value ", *semaddr);
     DEBUG_LOG_UINT("Semaphore: ", (unsigned)semaddr);
 
     (*semaddr)--;
