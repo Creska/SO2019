@@ -30,7 +30,6 @@
 
 #ifdef TARGET_UMPS
 
-
 /* Values for CP0 Cause.ExcCode */
 #define EXC_INTERRUPT      0
 #define EXC_TLBMOD         1

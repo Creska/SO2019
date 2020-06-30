@@ -1,5 +1,4 @@
 #include "testing/p2test_bikaya_v0.1.h"
-#include "testing/old/p1.5test_bikaya_v0.h"
 #include "testing/our_tests.h"
 #include "bikaya.h"
 
@@ -9,11 +8,10 @@ int main() {
 
 //     Array containing all the relevant data for process initialization
     proc_init_data starting_processes[] =  {
-
             {.method = test,
-             .priority = 1,
-             .km_on = 1, .vm_on = 0,
-             .timer_int_on = 1, .other_ints_on = 1}
+                    .priority = 1,
+                    .km_on = 1, .vm_on = 0,
+                    .timer_int_on = 1, .other_ints_on = 1}
     };
 
 //    proc_init_data starting_processes[] =  {

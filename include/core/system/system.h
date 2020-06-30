@@ -21,10 +21,6 @@ enum exc_code {E_BP, E_SYS, E_OTHER};
 typedef unsigned int memaddr;
 
 
-
-
-
-
 // ARCHITECTURE-INDEPENDENT UTILITY METHODS ===========================================================================
 
 // CPU state manipulation ---------------------------------------------------------------------------------------------
