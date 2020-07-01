@@ -37,6 +37,7 @@ pcb_t *allocPcb(void) {
         first_free_pcb->kernel_timer = 0;
         first_free_pcb->user_timer = 0;
         first_free_pcb->tod_cache = 0;
+        first_free_pcb->tod_at_start = 0;
         INIT_LIST_HEAD(&first_free_pcb->p_next);
         INIT_LIST_HEAD(&first_free_pcb->p_sib);
         reset_state(&first_free_pcb->p_s);

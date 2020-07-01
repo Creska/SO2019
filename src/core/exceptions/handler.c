@@ -96,7 +96,7 @@ void handle_sysbreak() {
 
     enum exc_code cause_code = get_exccode(interrupted_state);      // Retrieve a platform-independent exception cause code
     if (cause_code == E_SYS) {
-        if (SYSCALL_N(interrupted_state) > 8) {                    // TODO make a macro for this
+        if (SYSCALL_N(interrupted_state) > SYSTEM_SYSCALL_MAX) {
             if (is_passup_set(SYS, interrupted_proc)) {
                 flush_kernel_time(interrupted_proc);
                 launch_spec_area(SYS, interrupted_state);

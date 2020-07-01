@@ -37,6 +37,7 @@
 #define AREA_BASE EXCV_BASE
 #endif
 
+#define DEV_STATUS_MASK 0x000000ff
 
 #define GET_DEV_START (N_INTERRUPT_LINES - N_EXT_IL)
 

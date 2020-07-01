@@ -106,16 +106,17 @@ void consume_interrupts() {
         }
     }
 
+
     if (is_interrupt_pending(IL_TERMINAL)) {
-        unsigned int bitmap = *(unsigned int*)CDEV_BITMAP_ADDR(7);
+        unsigned int bitmap = *(unsigned int*)CDEV_BITMAP_ADDR(IL_TERMINAL);
         for (unsigned int dev_num = 0; dev_num < N_DEV_PER_IL; ++dev_num) {
             if (bitmap & 1) {
                 DEBUG_LOG_INT("Interrupt pending for terminal ", dev_num);
-                devreg_t *dev_reg = (devreg_t*)DEV_REG_ADDR(7, dev_num);
-                if ((get_status(TERM_RX, dev_reg) & 0xff) == TERM_ST_DONE) {
+                devreg_t *dev_reg = (devreg_t*)DEV_REG_ADDR(IL_TERMINAL, dev_num);
+                if ((get_status(TERM_RX, dev_reg) & DEV_STATUS_MASK) == TERM_ST_DONE) {
                     done_io(TERM_RX, dev_num);
                 }
-                if ((get_status(TERM_TX, dev_reg) & 0xff) == TERM_ST_DONE) {
+                if ((get_status(TERM_TX, dev_reg) & DEV_STATUS_MASK) == TERM_ST_DONE) {
                     done_io(TERM_TX, dev_num);
                 }
             }

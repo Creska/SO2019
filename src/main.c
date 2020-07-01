@@ -3,7 +3,6 @@
 #include "bikaya.h"
 
 // TODO test last syscall
-// TODO check pcb/state resets
 
 int main() {
 
@@ -12,7 +11,7 @@ int main() {
         .method = test,
         .priority = 1,
         .km_on = 1, .vm_on = 0,
-        .timer_int_on = 1, .other_ints_on = 1}};
+        .timer_int_on = 1, .other_ints_on = 1 }};
 
 //    proc_init_data starting_processes[] =  {
 //

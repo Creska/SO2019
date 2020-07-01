@@ -6,14 +6,8 @@
 
 // Syscall codes ------------------------------------------------------------------------------------------------------
 
-// Syscall that terminates the running process and removes all its offspring from the ready queue
-#define SYSCALL_TERMINATE_PROC      3
-
-// Syscall that schedules a process for execution, causing it to be executed right away if it has an higher priority than the running process
-// arg1: a pointer to a proc_init_data struct that defines all the relevant information for process initialization
-#define SYSCALL_ADD_PROC            20
-
-
+// The maximum syscall number reserved by system syscalls
+#define SYSTEM_SYSCALL_MAX      8
 
 void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process);
 
