@@ -11,6 +11,9 @@
     #define DEVICE_CMD_ACK              1
     #define DEVICE_CMD_FUNC_SPECIFIC    2
 
+    // Extra device's number
+    #define EXTRA_DEV_NUM  1
+
     // All the available types of external devices
     enum ext_dev_type { DISK, TAPE, NETW, PRIN, TERM_TX, TERM_RX };
 

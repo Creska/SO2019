@@ -66,7 +66,7 @@ void init_scheduler(proc_init_data starting_procs[], unsigned int procs_number, 
     proc_init_data idle_proc_data = {.km_on=1, .method=idle, .timer_int_on=1, .other_ints_on=1, .vm_on=0, .priority = 0};
     populate_pcb(&idle_proc, &idle_proc_data);
 
-for (int l = 0; l < N_EXT_IL+1; ++l) {                // Initialize every external device waiting list
+for (int l = 0; l < N_EXT_IL+EXTRA_DEV_NUM; ++l) {                // Initialize every external device waiting list
         for (int d = 0; d < N_DEV_PER_IL; ++d) {
             dev_w_lists[l][d].w_for_cmd_sem = 1;
             dev_w_lists[l][d].w_for_res = NULL;
@@ -170,7 +170,7 @@ int terminate_proc(pcb_t *p) {
 void debug_ready_queue() {
     struct pcb_t* target_proc;
     DEBUG_LOG("Ready queue:");
-    list_for_each_entry(target_proc, &ready_queue, p_next) {                    // Increments the priority of each process in the ready_queue (anti-starvation measure)
+    list_for_each_entry(target_proc, &ready_queue, p_next) {
         DEBUG_LOG_INT("\tproc ", get_process_index(target_proc));
     }
 }
@@ -192,9 +192,6 @@ dev_w_list* get_dev_w_list(enum ext_dev_type dev_type, unsigned int instance) {
 // Exception handling -------------------------------------------------------------------------------------------------
 
 void p(int* semaddr) {
-    //DEBUG_LOG_INT("P enter, semaphore has value ", *semaddr);
-    DEBUG_LOG_UINT("Semaphore: ", (unsigned)semaddr);
-
     (*semaddr)--;
 
     if ((*semaddr)<0) {                                         // If there are no available resources
@@ -203,21 +200,15 @@ void p(int* semaddr) {
             adderrbuf("No free SEMDs");
         }
 
-        pcb_t* new_proc = removeProcQ(&ready_queue);       // Resume another process from the ready_queue
-        if (new_proc!=NULL) {
-            set_running_proc(new_proc);
-        } else {
-            set_running_proc(&idle_proc);                   // Since there's no ready process launch the idle process
-        }
+        set_running_proc(removeProcQ(&ready_queue)); //Resume another process from the ready_queue if it is NULL start the idle_proc
         (*semaddr)++;
     }
-    DEBUG_LOG_INT("P exit, semaphore has value ", *semaddr);
-
 }
 
 void v(int* semaddr) {
     (*semaddr)++;
     pcb_t* dequeued_proc = removeBlocked(semaddr);
+
     if (dequeued_proc != NULL) {
         dequeued_proc->priority = dequeued_proc->original_priority;         // Restore the dequeued process' priority to the original
         semd_t* s = getSemd(semaddr);
@@ -229,33 +220,25 @@ void v(int* semaddr) {
         }
         schedule_proc(dequeued_proc);
 
-        (*semaddr)--;               // or p(semaddr)?
+        (*semaddr)--;
     }
-    DEBUG_LOG("V exit");
 }
 
 void time_slice_callback() {
     DEBUG_LOG("Timeslice callback");
     struct pcb_t* target_proc;
-    list_for_each_entry(target_proc, &ready_queue, p_next) {                    // Increments the priority of each process in the ready_queue (anti-starvation measure)
+    list_for_each_entry(target_proc, &ready_queue, p_next) {        // Increments the priority of each process in the ready_queue (anti-starvation measure)
         DEBUG_LOG_INT("Increasing priority of process ", get_process_index(target_proc));
         target_proc->priority += PRIORITY_INC_PER_TIME_SLICE;
     }
 
-    if (!list_empty(&ready_queue) && running_proc->priority <= headProcQ(&ready_queue)->priority) {             // Swap execution if the first ready process has a greater priority than the one executing (obviously if the ready queue is empty we don't need to swap)
+    if (!list_empty(&ready_queue) && running_proc->priority <= headProcQ(&ready_queue)->priority) {     // Swap execution if the first ready process has a greater priority than the one executing (obviously if the ready queue is empty we don't need to swap)
         pcb_t* to_start = removeProcQ(&ready_queue);
         DEBUG_LOG_UINT("Swapping to process: ", get_process_index(to_start));
 
         stop_running_proc();// and set the first ready process as running (and remove it from the ready queue)
         set_running_proc(to_start);
-    } else {
-        if (list_empty(&ready_queue)) {
-            DEBUG_LOG("The ready queue is empty, resuming current proc execution");
-        } else {
-            DEBUG_LOG("The current process still has the higher priority, resuming its execution");
-        }
     }
-    reset_int_timer();
 }
 
 

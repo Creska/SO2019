@@ -14,8 +14,6 @@ void launcher() {
                 .km_on = 1, .vm_on = 0,
                 .timer_int_on = 1, .other_ints_on = 0
         };
-
-        bikaya_add_proc(&test_proc);
     }
 
     addokbuf("I've terminate scheduling of the 19 processes");

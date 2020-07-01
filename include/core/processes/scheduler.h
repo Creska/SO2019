@@ -54,6 +54,9 @@ pcb_t* pop_running();
 // it is executed immediately, otherwise it goes in the ready queue.
 void schedule_proc(pcb_t* p);
 
+//Runs a new proc and check if it is the idle_proc to avoid returning it to the ready queue
+void swap_running_proc(pcb_t* new_proc);
+
 // Debug-prints the ready queue
 void debug_ready_queue();
 
@@ -96,6 +99,7 @@ void p(int* semaddr);
 // Verhogen
 void v(int* semaddr);
 
+//Return the process' index. If it is the idle_proc return the MAX_PROC's macro to recognize it
 unsigned int get_proc_scheduler_index(pcb_t* p);
 
 #endif //BIKAYA_SCHEDULER_H

@@ -90,9 +90,8 @@ void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
         }
 
         default: {
-            adderrbuf("ERROR: Syscall not recognised");
+            adderrbuf("ERROR: Syscall not recognised. Did you mean syscall number 42?");
             break;
         }
     }
 }
-

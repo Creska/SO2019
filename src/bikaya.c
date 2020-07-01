@@ -36,7 +36,3 @@ void bikaya_launch(bikaya_init_data* init_data) {
     launch();
 }
 
-void bikaya_add_proc(proc_init_data *new_proc) {
-    SYSCALL(SYSCALL_ADD_PROC, (unsigned int)new_proc,0,0);
-}
-
