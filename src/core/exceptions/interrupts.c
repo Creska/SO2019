@@ -4,21 +4,13 @@
 #include "core/processes/asl.h"
 #include "devices/devices.h"
 
-void send_command(enum ext_dev_type ext_dev, unsigned int command, devreg_t* dev_reg) {
-    if  (ext_dev != TERM_TX){
-        dev_reg->dtp.command = command;
-    } else {
-        dev_reg->term.transm_command = command;
-    }
-}
 
-unsigned int get_status(enum ext_dev_type dev_type, devreg_t* dev_reg) {
-    if (dev_type!=TERM_TX) {
-         return dev_reg->dtp.status;
-    } else {
-        return dev_reg->term.transm_status;
-    }
-}
+// Sends a command to the given external device
+void send_command(enum ext_dev_type ext_dev, unsigned int command, devreg_t* dev_reg);
+
+// Returns the status of the given external device
+unsigned int get_status(enum ext_dev_type dev_type, devreg_t* dev_reg);
+
 
 void wait_io(unsigned int command, devreg_t* dev_reg, int subdev) {
     // Retrieve device coordinates (calculating them from dev_reg address)
@@ -32,11 +24,11 @@ void wait_io(unsigned int command, devreg_t* dev_reg, int subdev) {
 
     target_dev_list->w_for_cmd_sem--;
     if (target_dev_list->w_for_cmd_sem < 0) {
-        // The device is already running -> go to the semaphore queue
+        // The device is already running, go to the semaphore queue
         insertBlocked(&target_dev_list->w_for_cmd_sem, target_proc);
         target_dev_list->w_for_cmd_sem++;
     } else {
-        // The device is ready, send the command and enqueue anyway
+        // The device is ready, send the command and go to w_for_res
         insertBlockedFifo(&target_dev_list->w_for_cmd_sem, target_proc);
         send_command(dev_type, command, dev_reg);
         target_dev_list->w_for_res = target_proc;
@@ -45,8 +37,8 @@ void wait_io(unsigned int command, devreg_t* dev_reg, int subdev) {
     flush_kernel_time(target_proc);
 }
 
-// Callback that needs to be called when a device interrupt is raised,
-// meaning that the executing command is completed.
+// Callback triggered when a specific external device interrupt is raised, meaning that the given command
+// is completed. The process that was waiting for a response is re-scheduled, if appropriate a new command is sent.
 void done_io(enum ext_dev_type dev_type, unsigned int dev_n) {
     dev_w_list *target_dev_list = get_dev_w_list(dev_type, dev_n);
 
@@ -58,8 +50,8 @@ void done_io(enum ext_dev_type dev_type, unsigned int dev_n) {
 
             devreg_t *dev_reg = (devreg_t*)DEV_REG_ADDR(get_ext_dev_line(dev_type), dev_n);
             unsigned int ret_status = get_status(dev_type, dev_reg);
-            save_syscall_return_register(&done_proc->p_s, ret_status);
-        }       // else the process was terminated in the meanwhile (don't do nothing ragarding its execution)
+            SYSCALL_RET_REG(&done_proc->p_s) = ret_status;
+        }       // else the process was terminated in the meanwhile
 
 
         // Returns the device status through the syscall return register
@@ -67,7 +59,7 @@ void done_io(enum ext_dev_type dev_type, unsigned int dev_n) {
         pcb_t* next_proc = headBlocked(&target_dev_list->w_for_cmd_sem);
         if (next_proc!=NULL) {
             DEBUG_LOG("The cmd waiting list isn't empty");
-            unsigned int cmd_argument = load_syscall_arg1(&next_proc->p_s);
+            unsigned int cmd_argument = SYSCALL_ARG1(&next_proc->p_s);
             send_command(dev_type, cmd_argument, dev_reg);
             target_dev_list->w_for_res = next_proc;
             next_proc->dev_w_list = &target_dev_list->w_for_res;
@@ -90,7 +82,7 @@ void consume_interrupts() {
     // if (is_interrupt_pending(1)) { }
 
 #ifdef TARGET_UARM
-    GET_AREA(OLD, INT)->pc -= WORD_SIZE;                                       // On arm after an interrupt the pc needs to be decremented by one instruction (used ifdef to avoid useless complexity)
+    GET_AREA(OLD, INT)->pc -= WORD_SIZE;     // On arm after an interrupt the pc needs to be decremented by one instruction (used ifdef to avoid useless complexity)
 #endif
 
     // INTERVAL TIMER INTERRUPT
@@ -114,7 +106,6 @@ void consume_interrupts() {
         }
     }
 
-
     if (is_interrupt_pending(IL_TERMINAL)) {
         unsigned int bitmap = *(unsigned int*)CDEV_BITMAP_ADDR(7);
         for (unsigned int dev_num = 0; dev_num < N_DEV_PER_IL; ++dev_num) {
@@ -130,6 +121,23 @@ void consume_interrupts() {
             }
             bitmap = bitmap >> 1;
         }
+    }
+}
+
+
+void send_command(enum ext_dev_type ext_dev, unsigned int command, devreg_t* dev_reg) {
+    if  (ext_dev != TERM_TX){
+        dev_reg->dtp.command = command;
+    } else {
+        dev_reg->term.transm_command = command;
+    }
+}
+
+unsigned int get_status(enum ext_dev_type dev_type, devreg_t* dev_reg) {
+    if (dev_type!=TERM_TX) {
+        return dev_reg->dtp.status;
+    } else {
+        return dev_reg->term.transm_status;
     }
 }
 

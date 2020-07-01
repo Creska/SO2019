@@ -1,10 +1,10 @@
-#include "utils/utils.h"
 #include "core/processes/scheduler.h"
+#include "utils/utils.h"
 #include "core/system/system.h"
 #include "utils/debug.h"
 #include "core/processes/asl.h"
 
-// Cached value (calculated at initialization) for how the length of a time_slice (in ticks per microsecond)
+// Cached value (calculated at initialization) for the length of a time_slice (in ticks per microsecond)
 unsigned int clock_ticks_per_time_slice;
 
 // Procs ready queue, holding processes ready to be run
@@ -13,10 +13,10 @@ struct list_head ready_queue;
 // Pointer to the running process
 pcb_t* running_proc = NULL;
 
-// Dummy process run by the system when waiting for all other processes to resume
+// Dummy process run by the system when waiting for other processes to resume
 pcb_t idle_proc;
 
-// Semaphores for device waiting. One for each distinct device
+// Waiting lists for devices, one for each distinct device
 dev_w_list dev_w_lists[N_EXT_IL + 1][N_DEV_PER_IL];
 
 
@@ -34,7 +34,7 @@ void set_running_proc(pcb_t* new_proc);
 
 // Populates a pcb with the given data
 //
-// WARNING: the pcb is assumed to have all the fields initialized to 0/NULL (for example retrieved through get_free_pcb),
+// WARNING: the pcb is assumed to have all the fields initialized to 0/NULL (for example when retrieved through get_free_pcb),
 // if not might cause undefined behaviour since for efficiency this methods overrides some of the values only when target values are non-zero/non-NULL
 void populate_pcb(pcb_t* p, proc_init_data* data);
 
@@ -50,7 +50,7 @@ void init_scheduler(proc_init_data starting_procs[], unsigned int procs_number, 
     time_slice = time_slice*10;
 #endif
 
-    clock_ticks_per_time_slice = clock_ticks_per_period(time_slice);                      // This value will be the same until reboot or reset, we can just cache it
+    clock_ticks_per_time_slice = clock_ticks_per_period(time_slice);
     initPcbs();
     initASL();
     mkEmptyProcQ(&ready_queue);
@@ -66,7 +66,7 @@ void init_scheduler(proc_init_data starting_procs[], unsigned int procs_number, 
     proc_init_data idle_proc_data = {.km_on=1, .method=idle, .timer_int_on=1, .other_ints_on=1, .vm_on=0, .priority = 0};
     populate_pcb(&idle_proc, &idle_proc_data);
 
-    for (int l = 0; l < N_EXT_IL+1; ++l) {                   // Initialize every external device waiting lists' semaphores to 1
+for (int l = 0; l < N_EXT_IL+1; ++l) {                // Initialize every external device waiting list
         for (int d = 0; d < N_DEV_PER_IL; ++d) {
             dev_w_lists[l][d].w_for_cmd_sem = 1;
             dev_w_lists[l][d].w_for_res = NULL;
@@ -294,7 +294,7 @@ void populate_pcb(pcb_t* p, proc_init_data* data) {
 void stop_running_proc() {
     if (running_proc!=&idle_proc) {
         running_proc->priority = running_proc->original_priority;                                               // Reset the previously running process' priority to the original
-        insertProcQ(&ready_queue, running_proc);// Insert the previously running process in the ready queue
+        insertProcQ(&ready_queue, running_proc);    // Insert the previously running process in the ready queue
     } else {
         DEBUG_LOG("The running process was the IDLE PROC, stopping it without putting it in the ready queue");
     }
@@ -355,11 +355,11 @@ void flush_kernel_time(pcb_t* proc) {
     proc->tod_cache = cached_TOD;
 }
 
-void reset_cached_tod(pcb_t* proc) {
+void flush_reset_time(pcb_t* proc) {
     proc->tod_cache = TOD;
 }
 
-int get_proc_scheduler_index(pcb_t* p) {
+unsigned int get_proc_scheduler_index(pcb_t* p) {
     if (p==get_idle_proc()) return MAXPROC;
     else return get_process_index(p);
 }

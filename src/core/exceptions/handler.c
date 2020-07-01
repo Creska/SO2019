@@ -5,6 +5,7 @@
 #include "core/exceptions/syscalls.h"
 #include "core/exceptions/interrupts.h"
 #include "core/processes/scheduler.h"
+#include "core/processes/asl.h"
 
 
 // During an handler this pointer is set to the PCB that was running while the exception was raised
@@ -37,8 +38,6 @@ void launch_spec_area(int exc_type, state_t* interrupted_state) {
     LDST(spec_new_area);
 }
 
-// Timer utility functions --------------------------------------------------------------------------------------------
-
 // Handler routines ---------------------------------------------------------------------------------------------------
 
 void start_handler() {
@@ -60,8 +59,8 @@ void conclude_handler(enum exc_type exc_type) {
 
     pcb_t* resuming_proc = get_running_proc();
     if (interrupted_proc != resuming_proc) {
-        reset_cached_tod(resuming_proc);            // Don't count the kernel time if we're swapping processes
-        reset_int_timer();
+        flush_reset_time(resuming_proc);                    // Don't count the kernel time if we're swapping processes
+        reset_int_timer();                                  // give the new running process a full time slice
         if (interrupted_proc!=get_idle_proc())
             memcpy(&interrupted_proc->p_s, GET_AREA(OLD, exc_type), sizeof(state_t));
         LDST(&resuming_proc->p_s);
@@ -97,7 +96,7 @@ void handle_sysbreak() {
 
     enum exc_code cause_code = get_exccode(interrupted_state);      // Retrieve a platform-independent exception cause code
     if (cause_code == E_SYS) {
-        if (*sys_n(interrupted_state) > 8) {  // TODO make a macro for this
+        if (SYSCALL_N(interrupted_state) > 8) {                    // TODO make a macro for this
             if (is_passup_set(SYS, interrupted_proc)) {
                 flush_kernel_time(interrupted_proc);
                 launch_spec_area(SYS, interrupted_state);

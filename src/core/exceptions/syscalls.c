@@ -8,11 +8,12 @@
 
 void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
 
-    unsigned int sys_n, arg1, arg2, arg3;                       // Retrieving syscall number and arguments from processor registers
-    load_syscall_registers(interrupted_state, &sys_n, &arg1, &arg2, &arg3);
+    unsigned int arg1 = SYSCALL_ARG1(interrupted_state),
+                 arg2 = SYSCALL_ARG2(interrupted_state),
+                 arg3 = SYSCALL_ARG3(interrupted_state);
 
-    DEBUG_LOG_INT("Exception recognised as syscall number ", sys_n);
-    switch (sys_n) {                                                        // Using a switch since this will handle a few different syscalls in the next phases
+    DEBUG_LOG_INT("Exception recognised as syscall number ", SYSCALL_N(interrupted_state));
+    switch (SYSCALL_N(interrupted_state)) {                                                        // Using a switch since this will handle a few different syscalls in the next phases
 
         case GETCPUTIME: {
             unsigned int* user = (unsigned int*)arg1;
@@ -27,25 +28,22 @@ void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
         }
 
         case CREATEPROCESS: {
-            save_syscall_return_register(interrupted_state,
-                                         create_process((state_t *) arg1, (int) arg2, (pcb_t **) arg3));
+            SYSCALL_RET_REG(interrupted_state) = create_process((state_t *)arg1, (int)arg2, (pcb_t **)arg3);
             break;
         }
 
         case TERMINATEPROCESS: {
-            save_syscall_return_register(interrupted_state, terminate_proc((pcb_t *) arg1));
+            SYSCALL_RET_REG(interrupted_state) = terminate_proc((pcb_t *)arg1);
             break;
         }
 
         case VERHOGEN: {
-            int* semaddr = (int*)arg1;
-            v(semaddr);
+            v((int*)arg1);
             break;
         }
 
         case PASSEREN: {
-            int* semaddr = (int*)arg1;
-            p(semaddr);
+            p((int *) arg1);
             break;
         }
 
@@ -77,7 +75,6 @@ void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
         }
 
         case GETPID: {
-            // TODO check if this makes sense (test)
             pcb_t** pid = (pcb_t**) arg1;
             pcb_t** ppid = (pcb_t**) arg2;
 

@@ -24,9 +24,8 @@ void initialize_new_areas() {
 
 
 void bikaya_launch(bikaya_init_data* init_data) {
-    DEBUG_LOG("Debug logs are enabled, set CMAKE_BUILD_TYPE to any other value than Debug to disable them");
-    DEBUG_SPACING;
-    DEBUG_LOG("BIKAYA INITIALIZATION");
+    DEBUG_LOG("BIKAYA INITIALIZATION\n"
+                       "[Debug logs are enabled, set CMAKE_BUILD_TYPE to any other value than Debug to disable them]");
     initialize_new_areas();
 
     DEBUG_LOG("Scheduler initialization");

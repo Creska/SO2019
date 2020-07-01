@@ -13,8 +13,8 @@ enum area_age {NEW, OLD};
 // EXCEPTION CODES: the allow to determine the cause of an exception in an arch-independent way
 enum exc_code {E_BP, E_SYS, E_OTHER};
 
-// Gets a pointer a system new/old area
-#define GET_AREA(new_old, type_code)    ((state_t*)(AREA_BASE + (7 - type_code*2 - new_old)*STATE_T_SIZE))
+// A pointer to a system new/old area
+#define GET_AREA(new_old, exc_type)    ((state_t*)(AREA_BASE + (7 - exc_type*2 - new_old)*STATE_T_SIZE))
 
 typedef unsigned int memaddr;
 
@@ -40,7 +40,6 @@ void set_other_interrupts(state_t* s, unsigned int on);
 
 // Sets the stack pointer value for the given state
 void set_sp(state_t* s, unsigned int sp_val);
-
 
 // Sets the program counter value for the given state
 void set_pc(state_t* s, void (*ptr)());
@@ -85,13 +84,25 @@ unsigned int clock_ticks_per_period(unsigned int microseconds);
 // Returns an unsigned integer code corresponding to the cause of an exeption as defined in EXCODE_... macros
 enum exc_code get_exccode(state_t* state);
 
-void load_syscall_registers(state_t* s, unsigned int* n, unsigned int* a1, unsigned int* a2, unsigned int* a3);
 
-unsigned int load_syscall_arg1(state_t* s);
+#ifdef TARGET_UMPS
 
-unsigned int* sys_n(state_t* s);
+    #define SYSCALL_RET_REG(state) (state)->reg_v0
+    #define SYSCALL_N(state)       (state)->reg_a0
+    #define SYSCALL_ARG1(state)    (state)->reg_a1
+    #define SYSCALL_ARG2(state)    (state)->reg_a2
+    #define SYSCALL_ARG3(state)    (state)->reg_a3
 
-void save_syscall_return_register(state_t *s, unsigned int return_val);
+#elif TARGET_UARM
+
+    #define SYSCALL_RET_REG(state) (state)->a1
+    #define SYSCALL_N(state)       (state)->a1
+    #define SYSCALL_ARG1(state)    (state)->a2
+    #define SYSCALL_ARG2(state)    (state)->a3
+    #define SYSCALL_ARG3(state)    (state)->a4
+
+#endif
+
 
 #endif
 

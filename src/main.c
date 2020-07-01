@@ -2,17 +2,17 @@
 #include "testing/our_tests.h"
 #include "bikaya.h"
 
-// TODO build system CUSTOM
+// TODO test last syscall
+// TODO check pcb/state resets
 
 int main() {
 
 //     Array containing all the relevant data for process initialization
-    proc_init_data starting_processes[] =  {
-            {.method = test,
-                    .priority = 1,
-                    .km_on = 1, .vm_on = 0,
-                    .timer_int_on = 1, .other_ints_on = 1}
-    };
+    proc_init_data starting_processes[] =  {{
+        .method = test,
+        .priority = 1,
+        .km_on = 1, .vm_on = 0,
+        .timer_int_on = 1, .other_ints_on = 1}};
 
 //    proc_init_data starting_processes[] =  {
 //
