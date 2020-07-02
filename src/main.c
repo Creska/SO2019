@@ -1,5 +1,4 @@
 #include "testing/p2test_bikaya_v0.1.h"
-#include "testing/our_tests.h"
 #include "bikaya.h"
 
 int main() {
@@ -11,6 +10,7 @@ int main() {
         .km_on = 1, .vm_on = 0,
         .timer_int_on = 1, .other_ints_on = 1 }};
 
+    // Bikaya settings
     bikaya_init_data init_data = {
             .time_slice = 3000,
             .starting_procs_data = starting_processes,

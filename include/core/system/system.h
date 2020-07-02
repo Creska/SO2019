@@ -3,7 +3,8 @@
 
 #include "core/system/architecture.h"
 
-
+// Memory address
+typedef unsigned int memaddr;
 
 // Identify the exception type
 enum exc_type {SYS, PRG, TLB, INT};
@@ -13,9 +14,6 @@ enum area_age {NEW, OLD};
 
 // EXCEPTION CODES: the allow to determine the cause of an exception in an arch-independent way
 enum exc_code {E_BP, E_SYS, E_OTHER};
-
-// Memory address
-typedef unsigned int memaddr;
 
 
 // ARCHITECTURE-INDEPENDENT UTILITY METHODS ===========================================================================
