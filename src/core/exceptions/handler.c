@@ -46,7 +46,7 @@ void conclude_handler(enum exc_type exc_type);
 
 
 void handle_interrupt() {
-    DEBUG_LOG_UINT("HANDLING INTERRUPT EXCEPTIONS during proc ", get_proc_scheduler_index(get_running_proc()));
+    DEBUG_LOG_UINT("HANDLING INTERRUPT EXCEPTIONS during proc ", get_proc_index(get_running_proc()));
     start_handler();
 
     consume_interrupts();           // Actually handle the interrupts pending
@@ -57,7 +57,7 @@ void handle_interrupt() {
 
 void handle_sysbreak() {
 
-    DEBUG_LOG_UINT("HANDLING SYSCALL/BREAKPOINT EXCEPTION during proc ", get_proc_scheduler_index(interrupted_proc));
+    DEBUG_LOG_UINT("HANDLING SYSCALL/BREAKPOINT EXCEPTION during proc ", get_proc_index(interrupted_proc));
     start_handler();
 
     state_t *interrupted_state = AREA(OLD, SYS);

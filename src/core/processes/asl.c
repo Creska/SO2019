@@ -26,7 +26,7 @@ void debug_asl() {
 
         pcb_t* proc;
         list_for_each_entry(proc, &semd->s_procQ, p_next) {
-            DEBUG_LOG_INT("    Proc: ", get_process_index(proc));
+            DEBUG_LOG_INT("    Proc: ", get_pcb_index(proc));
         }
     }
 }

@@ -2,8 +2,6 @@
 #include "testing/our_tests.h"
 #include "bikaya.h"
 
-// TODO test last syscall
-
 int main() {
 
 //     Array containing all the relevant data for process initialization
@@ -12,23 +10,6 @@ int main() {
         .priority = 1,
         .km_on = 1, .vm_on = 0,
         .timer_int_on = 1, .other_ints_on = 1 }};
-
-//    proc_init_data starting_processes[] =  {
-//
-//            {.method = test1,
-//                    .priority = 1,
-//                    .km_on = 1, .vm_on = 0,
-//                    .timer_int_on = 1, .other_ints_on = 0},
-//            {.method = test2,
-//                    .priority = 2,
-//                    .km_on = 1, .vm_on = 0,
-//                    .timer_int_on = 1, .other_ints_on = 0},
-//            {.method = test3,
-//                    .priority = 3,
-//                    .km_on = 1, .vm_on = 0,
-//                    .timer_int_on = 1, .other_ints_on = 0},
-//
-//    };
 
     bikaya_init_data init_data = {
             .time_slice = 3000,

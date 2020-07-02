@@ -101,6 +101,6 @@ pcb_t *outChild(pcb_t *p);
 pcb_t *nextSibling(pcb_t *target_sibling, pcb_t* first_sibling);
 
 // Returns the index that the given pcb occupies in the internal array, it can double as a unique process id
-unsigned int get_process_index(pcb_t* p);
+unsigned int get_pcb_index(pcb_t* p);
 
 #endif

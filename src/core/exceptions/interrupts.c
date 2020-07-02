@@ -1,6 +1,7 @@
 #include "core/exceptions/interrupts.h"
 
 
+
 // Callback triggered when an external device raises an interrupt (meaning it is done with the current command or it has raised some error)
 void done_io(enum ext_dev_type dev_type, unsigned int dev_n);
 

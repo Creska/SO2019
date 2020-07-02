@@ -4,6 +4,7 @@
 #include "core/system/architecture.h"
 
 
+
 // Identify the exception type
 enum exc_type {SYS, PRG, TLB, INT};
 
@@ -45,6 +46,24 @@ unsigned int clock_ticks_per_period(unsigned int microseconds);
 
 // CPU state manipulation ---------------------------------------------------------------------------------------------
 
+#ifdef TARGET_UMPS
+
+#define SYSCALL_RET_REG(state) (state)->reg_v0
+#define SYSCALL_N(state)       (state)->reg_a0
+#define SYSCALL_ARG1(state)    (state)->reg_a1
+#define SYSCALL_ARG2(state)    (state)->reg_a2
+#define SYSCALL_ARG3(state)    (state)->reg_a3
+
+#elif TARGET_UARM
+
+#define SYSCALL_RET_REG(state) (state)->a1
+#define SYSCALL_N(state)       (state)->a1
+#define SYSCALL_ARG1(state)    (state)->a2
+#define SYSCALL_ARG2(state)    (state)->a3
+#define SYSCALL_ARG3(state)    (state)->a4
+
+#endif
+
 // Initialize all the state values to 0
 void reset_state(state_t* s);
 
@@ -68,24 +87,6 @@ void set_pc(state_t* s, void (*ptr)());
 
 // Returns an unsigned integer code corresponding to the cause of an exeption as defined in EXCODE_... macros
 enum exc_code get_exccode(state_t* state);
-
-#ifdef TARGET_UMPS
-
-#define SYSCALL_RET_REG(state) (state)->reg_v0
-    #define SYSCALL_N(state)       (state)->reg_a0
-    #define SYSCALL_ARG1(state)    (state)->reg_a1
-    #define SYSCALL_ARG2(state)    (state)->reg_a2
-    #define SYSCALL_ARG3(state)    (state)->reg_a3
-
-#elif TARGET_UARM
-
-#define SYSCALL_RET_REG(state) (state)->a1
-#define SYSCALL_N(state)       (state)->a1
-#define SYSCALL_ARG1(state)    (state)->a2
-#define SYSCALL_ARG2(state)    (state)->a3
-#define SYSCALL_ARG3(state)    (state)->a4
-
-#endif
 
 
 #endif

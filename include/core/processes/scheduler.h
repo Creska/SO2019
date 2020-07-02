@@ -103,6 +103,6 @@ void p(int* semaddr);
 void v(int* semaddr);
 
 //Return the process' index. If it is the idle_proc return the MAX_PROC's macro to recognize it
-unsigned int get_proc_scheduler_index(pcb_t* p);
+unsigned int get_proc_index(pcb_t* p);
 
 #endif //BIKAYA_SCHEDULER_H
