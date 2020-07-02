@@ -9,14 +9,14 @@ struct list_head pcbFree_h;             // L'elemento sentinella della lista di 
 void initPcbs(void) {
     INIT_LIST_HEAD(&pcbFree_h);
 
-    for (int i = MAXPROC-1; i >= 0; --i) {                             // Aggiunge tutti i pcb alla lista dei pcb liberi
+    for (int i = MAXPROC-1; i >= 0; --i) {          // Aggiunge tutti i pcb alla lista dei pcb liberi
         freePcb(&pcbFree_table[i]);
     }
 }
 
 
 void freePcb(pcb_t *p) {
-    list_add(&p->p_next, &pcbFree_h);                               // Utilizziamo p_next per gestire la coda dei pcb liberi
+    list_add(&p->p_next, &pcbFree_h);              // Utilizziamo p_next per gestire la coda dei pcb liberi
 }
 
 

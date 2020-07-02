@@ -81,7 +81,7 @@ void launch() {
         running_proc->tod_at_start = TOD;
         running_proc->tod_cache = TOD;
 
-        DEBUG_LOG_INT("LAUNCHING PROCESS WITH ID: ", get_process_index(running_proc));
+        DEBUG_LOG_INT("LAUNCHING PROCESS WITH ID: ", get_proc_scheduler_index(running_proc));
         DEBUG_SPACING;
 
         reset_int_timer();
@@ -95,7 +95,7 @@ void launch() {
 
 void reset_int_timer() {
     DEBUG_LOG_INT("Resetting interval timer to ", clock_ticks_per_time_slice);
-    set_interval_timer(clock_ticks_per_time_slice);
+    INTERVAL_TIMER = clock_ticks_per_time_slice;
 }
 
 // Process management -------------------------------------------------------------------------------------------------
@@ -115,7 +115,7 @@ pcb_t* get_idle_proc() {
 unsigned int get_clock_ticks_per_time_slice() { return clock_ticks_per_time_slice; }
 
 void schedule_proc(pcb_t* p) {
-    DEBUG_LOG_INT("Scheduling process: ", get_process_index(p));
+    DEBUG_LOG_INT("Scheduling process: ", get_proc_scheduler_index(p));
     if (p->priority > running_proc->priority || running_proc==&idle_proc) {
         DEBUG_LOG("The newly created process has higher priority than the running one, swapping them instantly");
         stop_running_proc();
@@ -129,7 +129,7 @@ void schedule_proc(pcb_t* p) {
 int create_process(state_t *s, int priority, pcb_t **cpid) {
     pcb_t* p = allocPcb();
     if (p!=NULL) {
-        DEBUG_LOG_INT("Creating new process: ", get_process_index(p));
+        DEBUG_LOG_INT("Creating new process: ", get_proc_scheduler_index(p));
         memcpy(&p->p_s, s, sizeof(state_t));
         p->priority = priority;
         p->original_priority = priority;
@@ -145,7 +145,7 @@ int create_process(state_t *s, int priority, pcb_t **cpid) {
 }
 
 int terminate_proc(pcb_t *p) {
-    DEBUG_LOG_INT("Termination entry point for proc ", get_process_index(p));
+    DEBUG_LOG_INT("Termination entry point for proc ", get_proc_scheduler_index(p));
     if (p==NULL) { p = running_proc; }
 
     if (p->p_parent!=NULL) {
@@ -171,16 +171,13 @@ void debug_ready_queue() {
     struct pcb_t* target_proc;
     DEBUG_LOG("Ready queue:");
     list_for_each_entry(target_proc, &ready_queue, p_next) {
-        DEBUG_LOG_INT("\tproc ", get_process_index(target_proc));
+        DEBUG_LOG_INT("\tproc ", get_proc_scheduler_index(target_proc));
     }
 }
 
 pcb_t *pop_running() {
     pcb_t* prev_running = running_proc;
     set_running_proc(removeProcQ(&ready_queue));
-
-    DEBUG_LOG_UINT("Swapped proc: ", get_process_index(prev_running));
-    DEBUG_LOG_UINT("...with proc: ", get_process_index(running_proc));
     return prev_running;
 }
 
@@ -228,13 +225,13 @@ void time_slice_callback() {
     DEBUG_LOG("Timeslice callback");
     struct pcb_t* target_proc;
     list_for_each_entry(target_proc, &ready_queue, p_next) {        // Increments the priority of each process in the ready_queue (anti-starvation measure)
-        DEBUG_LOG_INT("Increasing priority of process ", get_process_index(target_proc));
+        DEBUG_LOG_INT("Increasing priority of process ", get_proc_scheduler_index(target_proc));
         target_proc->priority += PRIORITY_INC_PER_TIME_SLICE;
     }
 
     if (!list_empty(&ready_queue) && running_proc->priority <= headProcQ(&ready_queue)->priority) {     // Swap execution if the first ready process has a greater priority than the one executing (obviously if the ready queue is empty we don't need to swap)
         pcb_t* to_start = removeProcQ(&ready_queue);
-        DEBUG_LOG_UINT("Swapping to process: ", get_process_index(to_start));
+        DEBUG_LOG_UINT("Swapping to process: ", get_proc_scheduler_index(to_start));
 
         stop_running_proc();// and set the first ready process as running (and remove it from the ready queue)
         set_running_proc(to_start);
@@ -287,7 +284,7 @@ void set_running_proc(pcb_t* new_proc) {
     if (new_proc) {
         running_proc = new_proc;
     } else {
-        DEBUG_LOG_UINT("Setting IDLE PROC as running process: ", get_process_index(&idle_proc));
+        DEBUG_LOG("Setting IDLE PROC as running process");
         running_proc = &idle_proc;
     }
 }
@@ -317,7 +314,7 @@ int recursive_remove_proc(pcb_t* p) {
 
     pcb_t* target_child = removeChild(p);
     while (target_child!=NULL) {
-        DEBUG_LOG_INT("Calling termination on child: ", get_process_index(target_child));
+        DEBUG_LOG_INT("Calling termination on child: ", get_proc_scheduler_index(target_child));
         if (recursive_remove_proc(target_child)) {
             return -1;              // There was some problem during termination, stop recursion and let the user handle it
         }

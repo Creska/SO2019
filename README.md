@@ -1,22 +1,23 @@
-# Bikaya 1.5
+# Bikaya 2
 
-This phase implements **process scheduling** and some parts of other systems that this feature is based on like **interrupt handling**, **syscall handling** and of course **system initialization**.
+This phase implements a more complete exception handling system, integrating it with the process scheduling from the previous phase.
 
-Similarly to the previous phases most of the notes on the implementation of these features can be found in the source files, 
-here we briefly go over the project structure and the main architectural choices.
+As in the previous phases most of the notes on the implementation can be found as comments or debug logs in the source code.
+If you want to dive in the source a good place to start is `/src/core/exceptions/handler.h`, which exposes the 4 handler functions
+that are called when the corresponding exception is raised. From here the flow of execution can be followed to the most relevant modules: `scheduler`, `syscalls` and `interrupts`.
 
 ### Project structure
 
-    ├── bikaya.h                    // This gives access to high level functionality like system initialization and process addition
+    ├── bikaya.h                    // This gives access to high level functionality like system initialization
     ├── core                        
     │   ├── exceptions              // All functionality related to exception handling
     │   ├── processes               // All functionality related to process management
     │   └── system                  // System abstraction and architecture layer (see below)
-    ├── devices                     // Devices functionality (from the previous phases)
+    ├── devices                     // Devices functionality
     ├── testing                     // Testing files (the one provided + some custom functions for in-depth debugging)
     └── utils                       // Utility libraries and helper functions
 
-### Data hiding
+### Abstraction layers
 
 The level of access in bikaya is organized in three different layers:
 
@@ -117,6 +118,11 @@ Compile the latest version from [github](https://github.com/mellotanica/uARM), w
 ## Old phases
 
 Here are stored the readme comments for the old phases
+
+### Bikaya 1.5
+
+This phase implements **process scheduling** and some parts of other systems that this feature is based on like **interrupt handling**, **syscall handling** and of course **system initialization**.
+
 
 ### Bikaya - Phase 1
 

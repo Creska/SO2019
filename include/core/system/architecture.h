@@ -10,12 +10,13 @@
 #include "types.h"
 #include "cp0.h"
 
-
 // MPS only defines NULL in stddef.h
 #define NULL            ((void*)0)
 
 // Addresses for new and old areas
 #define STATE_T_SIZE        140
+
+// Starting point for system's old/new areas
 #define AREA_BASE           RAM_BASE
 
 //the following three lines are copied from p1.5test_bikaya_v0.c
@@ -34,15 +35,16 @@
     #include "libuarm.h"
     #include "arch.h"
     #include "uARMtypes.h"
+
+// Starting point for system's old/new areas
 #define AREA_BASE EXCV_BASE
+
 #endif
 
+// Mask for the device status bits
 #define DEV_STATUS_MASK 0x000000ff
 
+// The first line corresponding to an external device
 #define GET_DEV_START (N_INTERRUPT_LINES - N_EXT_IL)
-
-#define DEV_INDEX(line, subdev)  ((line-3) + subdev)
-#define DEV_LINE_FROM_INDEX(index)
-#define DEV_SUBDEV_FROM_INDEX(index)
 
 #endif

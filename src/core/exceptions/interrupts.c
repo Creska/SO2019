@@ -11,68 +11,10 @@ void send_command(enum ext_dev_type ext_dev, unsigned int command, devreg_t* dev
 // Returns the status of the given external device
 unsigned int get_status(enum ext_dev_type dev_type, devreg_t* dev_reg);
 
-
-void wait_io(unsigned int command, devreg_t* dev_reg, int subdev) {
-    // Retrieve device coordinates (calculating them from dev_reg address)
-    unsigned int dev_line = GET_DEV_LINE((int) dev_reg);
-    unsigned int dev_num = GET_DEV_INSTANCE((int) dev_reg);
-    enum ext_dev_type dev_type = get_ext_dev_type(dev_line, subdev);
-    dev_w_list* target_dev_list = get_dev_w_list(dev_type, dev_num);
-
-    pcb_t* target_proc = pop_running();        // Set as running the first proc of the ready queue (and retrieve the previously running proc)
+// Callback triggered when an external device raises an interrupt (meaning it is done with the current command or it has raised some error)
+void done_io(enum ext_dev_type dev_type, unsigned int dev_n);
 
 
-    target_dev_list->w_for_cmd_sem--;
-    if (target_dev_list->w_for_cmd_sem < 0) {
-        // The device is already running, go to the semaphore queue
-        insertBlocked(&target_dev_list->w_for_cmd_sem, target_proc);
-        target_dev_list->w_for_cmd_sem++;
-    } else {
-        // The device is ready, send the command and go to w_for_res
-        insertBlockedFifo(&target_dev_list->w_for_cmd_sem, target_proc);
-        send_command(dev_type, command, dev_reg);
-        target_dev_list->w_for_res = target_proc;
-        target_proc->dev_w_list = &target_dev_list->w_for_res;
-    }
-    flush_kernel_time(target_proc);
-}
-
-// Callback triggered when a specific external device interrupt is raised, meaning that the given command
-// is completed. The process that was waiting for a response is re-scheduled, if appropriate a new command is sent.
-void done_io(enum ext_dev_type dev_type, unsigned int dev_n) {
-    dev_w_list *target_dev_list = get_dev_w_list(dev_type, dev_n);
-
-    if (target_dev_list->w_for_res!=NULL) {                         // Ensures that the proper syscall was used
-        pcb_t* done_proc = removeBlocked(&target_dev_list->w_for_cmd_sem);
-        if (done_proc==target_dev_list->w_for_res) {                // The process wasn't terminated while waiting for response
-            done_proc->dev_w_list = NULL;
-            schedule_proc(done_proc);
-
-            devreg_t *dev_reg = (devreg_t*)DEV_REG_ADDR(get_ext_dev_line(dev_type), dev_n);
-            unsigned int ret_status = get_status(dev_type, dev_reg);
-            SYSCALL_RET_REG(&done_proc->p_s) = ret_status;
-        }       // else the process was terminated in the meanwhile
-
-
-        // Returns the device status through the syscall return register
-        devreg_t* dev_reg = (devreg_t*)DEV_REG_ADDR(get_ext_dev_line(dev_type), dev_n);
-        pcb_t* next_proc = headBlocked(&target_dev_list->w_for_cmd_sem);
-        if (next_proc!=NULL) {
-            DEBUG_LOG("The cmd waiting list isn't empty");
-            unsigned int cmd_argument = SYSCALL_ARG1(&next_proc->p_s);
-            send_command(dev_type, cmd_argument, dev_reg);
-            target_dev_list->w_for_res = next_proc;
-            next_proc->dev_w_list = &target_dev_list->w_for_res;
-        } else {
-            send_command(dev_type, DEVICE_CMD_ACK, dev_reg);
-            target_dev_list->w_for_res = NULL;
-            target_dev_list->w_for_cmd_sem++;
-        }
-    } else {
-        addokbuf("A device interrupt was raised, but there's no process in the device queue, maybe you sent the "
-                 "command directly to the dev without the proper syscall?");
-    }
-}
 
 void consume_interrupts() {
     // INTER-PROCESSOR INTERRUPTS
@@ -82,7 +24,7 @@ void consume_interrupts() {
     // if (is_interrupt_pending(1)) { }
 
 #ifdef TARGET_UARM
-    GET_AREA(OLD, INT)->pc -= WORD_SIZE;     // On arm after an interrupt the pc needs to be decremented by one instruction (used ifdef to avoid useless complexity)
+    AREA(OLD, INT)->pc -= WORD_SIZE;     // On arm after an interrupt the pc needs to be decremented by one instruction (used ifdef to avoid useless complexity)
 #endif
 
     // INTERVAL TIMER INTERRUPT
@@ -122,6 +64,69 @@ void consume_interrupts() {
             }
             bitmap = bitmap >> 1;
         }
+    }
+}
+
+
+void wait_io(unsigned int command, devreg_t* dev_reg, int subdev) {
+    // Retrieve device coordinates (calculating them from dev_reg address)
+    unsigned int dev_line = GET_DEV_LINE((int) dev_reg);
+    unsigned int dev_num = GET_DEV_INSTANCE((int) dev_reg);
+    enum ext_dev_type dev_type = get_ext_dev_type(dev_line, subdev);
+    dev_w_list* target_dev_list = get_dev_w_list(dev_type, dev_num);
+
+    pcb_t* target_proc = pop_running();        // Set as running the first proc of the ready queue (and retrieve the previously running proc)
+
+
+    target_dev_list->w_for_cmd_sem--;
+    if (target_dev_list->w_for_cmd_sem < 0) {
+        // The device is already running, go to the semaphore queue
+        insertBlocked(&target_dev_list->w_for_cmd_sem, target_proc);
+        target_dev_list->w_for_cmd_sem++;
+    } else {
+        // The device is ready, send the command and go to w_for_res
+        insertBlockedFifo(&target_dev_list->w_for_cmd_sem, target_proc);
+        send_command(dev_type, command, dev_reg);
+        target_dev_list->w_for_res = target_proc;
+        target_proc->dev_w_list = &target_dev_list->w_for_res;
+    }
+    flush_kernel_time(target_proc);
+}
+
+// Callback triggered when a specific external device interrupt is raised, meaning that the given command
+// is completed. The process that was waiting for a response is re-scheduled, if appropriate a new command is sent.
+void done_io(enum ext_dev_type dev_type, unsigned int dev_n) {
+    dev_w_list *target_dev_list = get_dev_w_list(dev_type, dev_n);
+
+    if (target_dev_list->w_for_res!=NULL) {
+        pcb_t* done_proc = removeBlocked(&target_dev_list->w_for_cmd_sem);
+        if (done_proc==target_dev_list->w_for_res) {                // The process wasn't terminated while waiting for response (since a termination would have removed it from the semaphore queue)
+            done_proc->dev_w_list = NULL;
+            schedule_proc(done_proc);
+
+            devreg_t *dev_reg = (devreg_t*)DEV_REG_ADDR(get_ext_dev_line(dev_type), dev_n);
+            unsigned int ret_status = get_status(dev_type, dev_reg);
+            SYSCALL_RET_REG(&done_proc->p_s) = ret_status;
+        }       // else the process was terminated in the meanwhile
+
+
+        // Returns the device status through the syscall return register
+        devreg_t* dev_reg = (devreg_t*)DEV_REG_ADDR(get_ext_dev_line(dev_type), dev_n);
+        pcb_t* next_proc = headBlocked(&target_dev_list->w_for_cmd_sem);
+        if (next_proc!=NULL) {
+            DEBUG_LOG("The cmd waiting list isn't empty");
+            unsigned int cmd_argument = SYSCALL_ARG1(&next_proc->p_s);
+            send_command(dev_type, cmd_argument, dev_reg);
+            target_dev_list->w_for_res = next_proc;
+            next_proc->dev_w_list = &target_dev_list->w_for_res;
+        } else {
+            send_command(dev_type, DEVICE_CMD_ACK, dev_reg);
+            target_dev_list->w_for_res = NULL;
+            target_dev_list->w_for_cmd_sem++;
+        }
+    } else {
+        addokbuf("A device interrupt was raised, but there's no process in the device queue, maybe you sent the "
+                 "command directly to the device without the proper syscall?");
     }
 }
 

@@ -9,16 +9,16 @@
 void initialize_new_areas() {
 
     DEBUG_LOG("New areas initialization");
-    state_t* int_new_area = GET_AREA(NEW, INT);
+    state_t* int_new_area = AREA(NEW, INT);
     init_new_area(int_new_area, handle_interrupt);
 
-    state_t* sysbrk_new_area = GET_AREA(NEW, SYS);
+    state_t* sysbrk_new_area = AREA(NEW, SYS);
     init_new_area(sysbrk_new_area, handle_sysbreak);
 
-    state_t* TLB_new_area = GET_AREA(NEW, TLB);
+    state_t* TLB_new_area = AREA(NEW, TLB);
     init_new_area(TLB_new_area, handle_TLB);
 
-    state_t* trap_new_area = GET_AREA(NEW, PRG);
+    state_t* trap_new_area = AREA(NEW, PRG);
     init_new_area(trap_new_area, handle_trap);
 }
 

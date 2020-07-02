@@ -96,7 +96,3 @@ enum exc_code get_exccode(state_t* state) {
             return E_OTHER;
     }
 }
-
-unsigned int* sys_n(state_t* s) {
-    return &s->a1;
-}

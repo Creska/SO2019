@@ -17,8 +17,7 @@ void reset_state(state_t* s) {
 }
 
 
-//state_t della new_area
-void set_pc(state_t * s, void (*ptr)()) {       //ptr puntatore all'handler assumendolo con la signature void handler()
+void set_pc(state_t * s, void (*ptr)()) {
 s->pc_epc = (unsigned int)ptr;
 s->reg_t9 = (unsigned int)ptr;
 }
@@ -77,8 +76,4 @@ enum exc_code get_exccode(state_t* state) {
         default:
             return E_OTHER;
     }
-}
-
-unsigned int* sys_n(state_t *s) {
-    return &s->reg_a0;
 }

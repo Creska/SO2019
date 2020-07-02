@@ -3,10 +3,6 @@
 #include "core/system/system.h"
 
 
-void set_interval_timer(unsigned int val) {
-    *(unsigned int*)BUS_REG_TIMER = val;
-}
-
 void init_new_area(state_t *area, void (*handler)()) {
     set_kernel_mode(area, 1);
     set_virtual_mem(area, 0);
