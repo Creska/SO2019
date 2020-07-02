@@ -1,8 +1,6 @@
 #include "core/processes/scheduler.h"
 #include "utils/utils.h"
-#include "core/system/system.h"
 #include "utils/debug.h"
-#include "core/processes/asl.h"
 
 // Cached value (calculated at initialization) for the length of a time_slice (in ticks per microsecond)
 unsigned int clock_ticks_per_time_slice;

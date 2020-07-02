@@ -1,9 +1,4 @@
 #include "core/exceptions/syscalls.h"
-#include "core/processes/scheduler.h"
-#include "utils/debug.h"
-#include "core/exceptions/interrupts.h"
-#include "core/system/system.h"
-
 
 
 void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
@@ -20,9 +15,10 @@ void consume_syscall(state_t *interrupted_state, pcb_t *interrupted_process) {
             unsigned int* kernel = (unsigned int*)arg2;
             unsigned int* wallclock = (unsigned int*)arg3;
 
+            unsigned int tod_cache = TOD;
             *user = interrupted_process->user_timer;
-            *kernel = interrupted_process->kernel_timer + (TOD - interrupted_process->tod_cache);
-            *wallclock = TOD - interrupted_process->tod_at_start;
+            *kernel = interrupted_process->kernel_timer + (tod_cache - interrupted_process->tod_cache);     // Returns the kernet time up to this point
+            *wallclock = tod_cache - interrupted_process->tod_at_start;
 
             break;
         }

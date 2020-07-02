@@ -41,6 +41,8 @@ unsigned int is_interrupt_pending(unsigned int line);
 unsigned int clock_ticks_per_period(unsigned int microseconds);
 
 
+
+
 // CPU state manipulation ---------------------------------------------------------------------------------------------
 
 // Initialize all the state values to 0
@@ -89,11 +91,7 @@ enum exc_code get_exccode(state_t* state);
 #endif
 
 
-// Returns the device's instance
-#define GET_DEV_INSTANCE(reg) ((reg - DEV_REG_START)/(DEV_REG_SIZE)) % N_DEV_PER_IL
 
-// Returns the device line's number from it's device register address
-#define GET_DEV_LINE(reg) ((reg - DEV_REG_START)/DEV_REG_SIZE)/N_DEV_PER_IL + GET_DEV_START
 
 
 

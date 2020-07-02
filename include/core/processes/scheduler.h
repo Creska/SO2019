@@ -1,9 +1,12 @@
 #ifndef BIKAYA_SCHEDULER_H
 #define BIKAYA_SCHEDULER_H
 
+#include "core/system/system.h"
 #include "core/processes/pcb.h"
+#include "core/processes/asl.h"
 #include "core/processes/process_initialization_data.h"
 #include "devices/devices.h"
+#include "utils/debug.h"
 
 #define PRIORITY_INC_PER_TIME_SLICE     1     // The amount the priority of each process in the ready queue is increased every time slice
 

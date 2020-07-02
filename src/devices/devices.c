@@ -1,6 +1,4 @@
 #include "devices/devices.h"
-#include "core/system/architecture.h"
-#include "utils/debug.h"
 
 
 enum ext_dev_type get_ext_dev_type(unsigned int line, unsigned int subdev) {
@@ -19,6 +17,22 @@ unsigned int get_ext_dev_line(enum ext_dev_type dev_type) {
     unsigned int l = dev_type;
     if (l==TERM_RX) l = TERM_TX;
     return l + 3;
+}
+
+void send_command(enum ext_dev_type ext_dev, unsigned int command, devreg_t* dev_reg) {
+    if  (ext_dev != TERM_TX){
+        dev_reg->dtp.command = command;
+    } else {
+        dev_reg->term.transm_command = command;
+    }
+}
+
+unsigned int get_status(enum ext_dev_type dev_type, devreg_t* dev_reg) {
+    if (dev_type!=TERM_TX) {
+        return dev_reg->dtp.status;
+    } else {
+        return dev_reg->term.transm_status;
+    }
 }
 
 

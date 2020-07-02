@@ -1,6 +1,9 @@
 #ifndef BIKAYA_HANDLER_H
 #define BIKAYA_HANDLER_H
 
+#include "core/exceptions/syscalls.h"
+#include "core/exceptions/interrupts.h"
+
 // EXPOSED EXCEPTION HANDLER FUNCTIONS | called when the corresponding exception is raised ----------------------------
 
 // Handler called when an interrupt (or multiple) is raised

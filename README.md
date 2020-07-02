@@ -4,7 +4,10 @@ This phase implements a more complete exception handling system, integrating it 
 
 As in the previous phases most of the notes on the implementation can be found as comments or debug logs in the source code.
 If you want to dive in the source a good place to start is `/src/core/exceptions/handler.h`, which exposes the 4 handler functions
-that are called when the corresponding exception is raised. From here the flow of execution can be followed to the most relevant modules: `scheduler`, `syscalls` and `interrupts`.
+that are called when the corresponding exception is raised. From here the flow of execution can be followed to the most relevant modules: 
+- `scheduler`: keeps track of the processes: which one should be running, which ones are ready to run, etc.
+- `syscalls`: simply maps a syscall number to its logic, often redirecting the flow of execution to other modules
+- `interrupts`: handles interrupt exceptions for the interval timer and external devices
 
 ### Project structure
 

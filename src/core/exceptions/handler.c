@@ -1,14 +1,8 @@
 #include "core/exceptions/handler.h"
-#include "utils/debug.h"
 #include "utils/utils.h"
-#include "core/system/system.h"
-#include "core/exceptions/syscalls.h"
-#include "core/exceptions/interrupts.h"
-#include "core/processes/scheduler.h"
-#include "core/processes/asl.h"
 
 
-// During an handler this pointer is set to the PCB that was running while the exception was raised
+// During handler execution (after start_handler()) this pointer is set to the PCB that was running while the exception was raised
 pcb_t* interrupted_proc;
 
 // Cache for the interval timer set at the beginning of an handler and used to restore the interval
@@ -167,6 +161,6 @@ void conclude_handler(enum exc_type exc_type) {
         state_t* interrupted_state = AREA(OLD, exc_type);
         flush_kernel_time(interrupted_proc);
         DEBUG_SPACING;
-        LDST(interrupted_state);                                       // Resume the execution of the same process that was interrupted, retrieving it from the old area
+        LDST(interrupted_state);                            // Resume the execution of the same process that was interrupted, retrieving it from the old area
     }
 }

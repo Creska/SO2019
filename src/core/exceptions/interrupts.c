@@ -1,31 +1,21 @@
 #include "core/exceptions/interrupts.h"
-#include "utils/debug.h"
-#include "core/processes/scheduler.h"
-#include "core/processes/asl.h"
-#include "devices/devices.h"
 
-
-// Sends a command to the given external device
-void send_command(enum ext_dev_type ext_dev, unsigned int command, devreg_t* dev_reg);
-
-// Returns the status of the given external device
-unsigned int get_status(enum ext_dev_type dev_type, devreg_t* dev_reg);
 
 // Callback triggered when an external device raises an interrupt (meaning it is done with the current command or it has raised some error)
 void done_io(enum ext_dev_type dev_type, unsigned int dev_n);
 
 
-
 void consume_interrupts() {
+
+#ifdef TARGET_UARM
+    AREA(OLD, INT)->pc -= WORD_SIZE;     // On arm after an interrupt the pc needs to be decremented by one instruction (used ifdef to avoid useless complexity)
+#endif
+
     // INTER-PROCESSOR INTERRUPTS
     //  if (is_interrupt_pending(0)) { }
 
     // PROCESSOR LOCAL TIMER INTERRUPTS (when supported)
     // if (is_interrupt_pending(1)) { }
-
-#ifdef TARGET_UARM
-    AREA(OLD, INT)->pc -= WORD_SIZE;     // On arm after an interrupt the pc needs to be decremented by one instruction (used ifdef to avoid useless complexity)
-#endif
 
     // INTERVAL TIMER INTERRUPT
     if (is_interrupt_pending(2)) {
@@ -35,25 +25,24 @@ void consume_interrupts() {
 
     // DEVICE INTERRUPTS ----------------------------------------------------------------------------------------------
 
-    for (unsigned int line = N_IL-N_EXT_IL; line < IL_TERMINAL; ++line) {
+    for (unsigned int line = N_IL-N_EXT_IL; line < IL_TERMINAL; ++line) {               // For each external device line (terminal excluded)
         if (is_interrupt_pending(line)) {
             DEBUG_LOG_UINT("Interrupt(s) pending on line ", line);
             unsigned int bitmap = *(unsigned*)CDEV_BITMAP_ADDR(line);
             for (int dev_num = 0; dev_num < N_DEV_PER_IL; ++dev_num) {                  // For each device on this line
                 if (bitmap & 1) {                                                       // check the corresponding bit on the interrupt bitmap
-                    done_io(get_ext_dev_type(line, 0), dev_num);
+                    done_io(get_ext_dev_type(line, 0), dev_num);       // if the bit is 1 there is an interrupt pending, call a done_io callback
                 }
                 bitmap = bitmap >> 1;
             }
         }
     }
 
-
     if (is_interrupt_pending(IL_TERMINAL)) {
         unsigned int bitmap = *(unsigned int*)CDEV_BITMAP_ADDR(IL_TERMINAL);
         for (unsigned int dev_num = 0; dev_num < N_DEV_PER_IL; ++dev_num) {
-            if (bitmap & 1) {
-                DEBUG_LOG_INT("Interrupt pending for terminal ", dev_num);
+            if (bitmap & 1) {                                                                       // As above we check each terminal,
+                DEBUG_LOG_INT("Interrupt pending for terminal ", dev_num);               // but this time we also need to check each subdevice
                 devreg_t *dev_reg = (devreg_t*)DEV_REG_ADDR(IL_TERMINAL, dev_num);
                 if ((get_status(TERM_RX, dev_reg) & DEV_STATUS_MASK) == TERM_ST_DONE) {
                     done_io(TERM_RX, dev_num);
@@ -75,10 +64,8 @@ void wait_io(unsigned int command, devreg_t* dev_reg, int subdev) {
     enum ext_dev_type dev_type = get_ext_dev_type(dev_line, subdev);
     dev_w_list* target_dev_list = get_dev_w_list(dev_type, dev_num);
 
-    pcb_t* target_proc = pop_running();        // Set as running the first proc of the ready queue (and retrieve the previously running proc)
-
-
-    target_dev_list->w_for_cmd_sem--;
+    pcb_t* target_proc = pop_running();             // Set as running the first proc of the ready queue (and retrieve the previously running proc)
+    target_dev_list->w_for_cmd_sem--;               // decrement the semaphore (passeren-like logic)
     if (target_dev_list->w_for_cmd_sem < 0) {
         // The device is already running, go to the semaphore queue
         insertBlocked(&target_dev_list->w_for_cmd_sem, target_proc);
@@ -100,18 +87,18 @@ void done_io(enum ext_dev_type dev_type, unsigned int dev_n) {
 
     if (target_dev_list->w_for_res!=NULL) {
         pcb_t* done_proc = removeBlocked(&target_dev_list->w_for_cmd_sem);
-        if (done_proc==target_dev_list->w_for_res) {                // The process wasn't terminated while waiting for response (since a termination would have removed it from the semaphore queue)
+        devreg_t *dev_reg = (devreg_t*)DEV_REG_ADDR(get_ext_dev_line(dev_type), dev_n);
+        if (done_proc==target_dev_list->w_for_res) {
+            // The process wasn't terminated while waiting for response (since a termination would have removed it from the semaphore queue)
             done_proc->dev_w_list = NULL;
             schedule_proc(done_proc);
 
-            devreg_t *dev_reg = (devreg_t*)DEV_REG_ADDR(get_ext_dev_line(dev_type), dev_n);
             unsigned int ret_status = get_status(dev_type, dev_reg);
             SYSCALL_RET_REG(&done_proc->p_s) = ret_status;
-        }       // else the process was terminated in the meanwhile
+        }  // else the process was terminated in the meanwhile
 
 
         // Returns the device status through the syscall return register
-        devreg_t* dev_reg = (devreg_t*)DEV_REG_ADDR(get_ext_dev_line(dev_type), dev_n);
         pcb_t* next_proc = headBlocked(&target_dev_list->w_for_cmd_sem);
         if (next_proc!=NULL) {
             DEBUG_LOG("The cmd waiting list isn't empty");
@@ -131,19 +118,5 @@ void done_io(enum ext_dev_type dev_type, unsigned int dev_n) {
 }
 
 
-void send_command(enum ext_dev_type ext_dev, unsigned int command, devreg_t* dev_reg) {
-    if  (ext_dev != TERM_TX){
-        dev_reg->dtp.command = command;
-    } else {
-        dev_reg->term.transm_command = command;
-    }
-}
 
-unsigned int get_status(enum ext_dev_type dev_type, devreg_t* dev_reg) {
-    if (dev_type!=TERM_TX) {
-        return dev_reg->dtp.status;
-    } else {
-        return dev_reg->term.transm_status;
-    }
-}
 

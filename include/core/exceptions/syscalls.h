@@ -2,7 +2,9 @@
 #define BIKAYA_SYSCALLS_H
 
 #include <core/processes/pcb.h>
-#include "core/system/architecture.h"
+#include "core/processes/scheduler.h"
+#include "core/exceptions/interrupts.h"
+
 
 // Syscall codes ------------------------------------------------------------------------------------------------------
 

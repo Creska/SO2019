@@ -18,6 +18,7 @@
  *      Modified by Renzo Davoli 2010
  *      Modified by Miro Mannino on May 8, 2010
  *      Modified by Mattia Maldini, Renzo Davoli 2020
+ *      Modified by Andrea Paoletti, 2020 (include statements were modified to integrate with our build setup)
  */
 
 #include "core/system/system.h"
