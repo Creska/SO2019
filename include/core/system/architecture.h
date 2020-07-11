@@ -15,15 +15,9 @@
 
 // Addresses for new and old areas
 #define STATE_T_SIZE        140
-#define INT_OLDAREA         (RAM_BASE)
-#define INT_NEWAREA         (RAM_BASE + STATE_T_SIZE)
-#define TLB_OLDAREA         (RAM_BASE + (2 * STATE_T_SIZE))
-#define TLB_NEWAREA         (RAM_BASE + (3 * STATE_T_SIZE))
-#define PGMTRAP_OLDAREA     (RAM_BASE + (4 * STATE_T_SIZE))
-#define PGMTRAP_NEWAREA     (RAM_BASE + (5 * STATE_T_SIZE))
-#define SYSBK_OLDAREA       (RAM_BASE + (6 * STATE_T_SIZE))
-#define SYSBK_NEWAREA       (RAM_BASE + (7 * STATE_T_SIZE))
 
+// Starting point for system's old/new areas
+#define AREA_BASE           RAM_BASE
 
 //the following three lines are copied from p1.5test_bikaya_v0.c
 #define RAMBASE    *((unsigned int *)BUS_REG_RAM_BASE)      //BUS_REG_RAM_BASE and BUS_REG_RAM_SIZE are defined in arch.h
@@ -34,13 +28,23 @@
 #define FRAME_SIZE 4096
 
 #endif
+
+
 #ifdef TARGET_UARM
 // Architecture-specific headers
     #include "libuarm.h"
     #include "arch.h"
     #include "uARMtypes.h"
 
+// Starting point for system's old/new areas
+#define AREA_BASE EXCV_BASE
+
 #endif
 
+// Mask for the device status bits
+#define DEV_STATUS_MASK 0x000000ff
 
-#endif //BIKAYA_ARCHITECTURE_H
+// The first line corresponding to an external device
+#define GET_DEV_START (N_INTERRUPT_LINES - N_EXT_IL)
+
+#endif

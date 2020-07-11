@@ -13,6 +13,4 @@ typedef struct bikaya_initialiation_data bikaya_init_data;
 
 void bikaya_launch(bikaya_init_data* init_data);
 
-void bikaya_add_proc(proc_init_data* new_proc);
-
 #endif //BIKAYA_BIKAYA_H

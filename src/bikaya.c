@@ -9,24 +9,23 @@
 void initialize_new_areas() {
 
     DEBUG_LOG("New areas initialization");
-    state_t* int_new_area = get_new_area_int();
+    state_t* int_new_area = AREA(NEW, INT);
     init_new_area(int_new_area, handle_interrupt);
 
-    state_t* sysbrk_new_area = get_new_area_sys_break();
+    state_t* sysbrk_new_area = AREA(NEW, SYS);
     init_new_area(sysbrk_new_area, handle_sysbreak);
 
-    state_t* TLB_new_area = get_new_area_TLB();
+    state_t* TLB_new_area = AREA(NEW, TLB);
     init_new_area(TLB_new_area, handle_TLB);
 
-    state_t* trap_new_area = get_new_area_program_trap();
+    state_t* trap_new_area = AREA(NEW, PRG);
     init_new_area(trap_new_area, handle_trap);
 }
 
 
 void bikaya_launch(bikaya_init_data* init_data) {
-    DEBUG_LOG("Debug logs are enabled, set CMAKE_BUILD_TYPE to any other value than Debug to disable them");
-    DEBUG_SPACING;
-    DEBUG_LOG("BIKAYA INITIALIZATION");
+    DEBUG_LOG("BIKAYA INITIALIZATION\n"
+                       "[Debug logs are enabled, set CMAKE_BUILD_TYPE to any other value than Debug to disable them]");
     initialize_new_areas();
 
     DEBUG_LOG("Scheduler initialization");
@@ -35,9 +34,5 @@ void bikaya_launch(bikaya_init_data* init_data) {
     DEBUG_LOG("Initialization completed, launching the system");
 
     launch();
-}
-
-void bikaya_add_proc(proc_init_data *new_proc) {
-    SYSCALL(SYSCALL_ADD_PROC, (unsigned int)new_proc,0,0);
 }
 

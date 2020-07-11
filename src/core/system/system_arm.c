@@ -31,13 +31,13 @@ void reset_state(state_t *s)
 }
 
 //state_t della new_area
-void set_pc(state_t * s, void (*ptr)()) { //ptr puntatore all'handler assumendolo con la signature placeholder void handler()
+void set_pc(state_t * s, void (*ptr)()) {   //ptr puntatore all'handler assumendolo con la signature placeholder void handler()
 s->pc = (unsigned int)ptr;
 }
 
 void set_sp(state_t *s, unsigned int sp_val)
 {
-    s->sp = sp_val; //RAM_TOP is defined in arch.h with the value needed
+    s->sp = sp_val;     //RAM_TOP is defined in arch.h with the value needed
 }
 
 void set_virtual_mem(state_t *s, unsigned int on)
@@ -81,18 +81,18 @@ void set_interval_timer_interrupts(state_t* s, unsigned int on) {
 
 
 
-unsigned int get_exccode(state_t* state) {
+enum exc_code get_exccode(state_t* state) {
 
     unsigned int val = CAUSE_EXCCODE_GET(state->CP15_Cause);
 
     switch (val) {
         case EXC_BREAKPOINT:
-            return EXCODE_BP;
+            return E_BP;
 
         case EXC_SYSCALL:
-            return EXCODE_SYS;
+            return E_SYS;
 
         default:
-            return EXCODE_OTHER;
+            return E_OTHER;
     }
 }

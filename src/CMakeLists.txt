@@ -1,6 +1,8 @@
 target_sources(kernel PRIVATE                   # Adds this files as sources to our target
         main.c
-        testing/p1.5test_bikaya_v0.c
+
+        testing/p2test_bikaya_v0.1.c
+        testing/old/p1.5test_bikaya_v0.c
         testing/our_tests.c
 
         bikaya.c
@@ -16,6 +18,7 @@ target_sources(kernel PRIVATE                   # Adds this files as sources to 
         utils/utils.c
         utils/debug.c
 
+        devices/devices.c
         devices/printer.c
         devices/terminal.c
 

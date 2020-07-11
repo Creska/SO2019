@@ -26,6 +26,24 @@ typedef struct pcb_t {
 
     /* key of the semaphore on which the process is eventually blocked */
     int *p_semkey;
+
+    /* The device waiting list this process is enqueued on (NULL if not enqueued) */
+    struct pcb_t **dev_w_list;
+
+
+    unsigned int kernel_timer;
+    unsigned int user_timer;
+
+    // Holds the value of the TOD at the last "mode switch"
+    unsigned int tod_cache;
+
+    // Holds the value of the TOD at the first execution of the process
+    unsigned int tod_at_start;
+
+    // Array of pointers to the old/new areas defined through the SPECPASSUP syscall
+    // Order: sys_old | sys_new | TLB_old | TLB_new | trap_old | trap_new
+    state_t* spec_areas[6];
+
 } pcb_t;
 
 
@@ -64,8 +82,6 @@ pcb_t *removeProcQ(struct list_head *head);
 // Rimuove il PCB puntato da p dalla coda dei processi puntata da head. Se p non è presente nella coda, restituisce NULL
 pcb_t *outProcQ(struct list_head *head, pcb_t *p);
 
-
-
 // PCB TREE FUNCTIONS -------------------------------------------------------------------------------------------------
 
 // Restituisce TRUE se il PCB puntato da p non ha figli, restituisce FALSE altrimenti.
@@ -85,6 +101,6 @@ pcb_t *outChild(pcb_t *p);
 pcb_t *nextSibling(pcb_t *target_sibling, pcb_t* first_sibling);
 
 // Returns the index that the given pcb occupies in the internal array, it can double as a unique process id
-unsigned int get_process_index(pcb_t* p);
+unsigned int get_pcb_index(pcb_t* p);
 
 #endif

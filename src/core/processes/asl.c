@@ -1,17 +1,34 @@
 #include "core/processes/asl.h"
+#include "utils/debug.h"
 
 
 semd_t semd_table[MAXPROC];
 struct list_head semdFree_h;        // Elemento sentinella della lista di semd liberi
 struct list_head semd_h;            // Elemento sentinella della lista ASL (Active Semaphore List)
 
-/* ASL handling functions */
 semd_t* getSemd(int *key) {
     semd_t* semd;
     list_for_each_entry(semd, &semd_h, s_next) {
         if (semd->s_key==key) return semd;
     }
     return NULL;                                            // In questo modo è O(n), può essere ottimizzata ad O(log n) nelle fasi successive se necessario
+}
+
+int get_semd_index(semd_t* semd) {
+    return semd - semd_table;
+}
+
+void debug_asl() {
+    semd_t* semd;
+    DEBUG_LOG("ASL:");
+    list_for_each_entry(semd, &semd_h, s_next) {
+        DEBUG_LOG_INT("  SEMD: ", get_semd_index(semd));
+
+        pcb_t* proc;
+        list_for_each_entry(proc, &semd->s_procQ, p_next) {
+            DEBUG_LOG_INT("    Proc: ", get_pcb_index(proc));
+        }
+    }
 }
 
 void initASL() {
@@ -25,22 +42,41 @@ void initASL() {
     }
 }
 
+semd_t* retrieve_free_semd(int* key, pcb_t* p) {
+    if (list_empty(&semdFree_h)) {
+        return NULL;
+    } else {                                                                           // La lista dei semd liberi non è vuota, ne spostiamo uno nella ASL e settiamo i suoi campi
+        struct list_head* first_free_semd_head = list_next(&semdFree_h);
+        list_del(first_free_semd_head);
+        list_add(first_free_semd_head, &semd_h);                                       // Spostiamo un semd dalla lista free all'ASL
+
+        semd_t* target_semd = container_of(first_free_semd_head, struct semd_t, s_next);
+        target_semd->s_key = key;
+        INIT_LIST_HEAD(&target_semd->s_procQ);
+        return target_semd;
+    }
+}
+
+int insertBlockedFifo(int* key, pcb_t* p) {
+    struct semd_t* target_semd = getSemd(key);
+    if (target_semd == NULL) {                                                              // Il semaforo corrispondente non è presente nella ASL
+        target_semd = retrieve_free_semd(key, p);
+        if (target_semd==NULL) return TRUE;
+    }
+
+    list_add_tail(&p->p_next, &target_semd->s_procQ);
+    p->p_semkey = key;
+    return FALSE;
+}
+
 int insertBlocked(int *key,pcb_t* p) {
     struct semd_t* target_semd = getSemd(key);
     if (target_semd == NULL) {                                                              // Il semaforo corrispondente non è presente nella ASL
-         if (list_empty(&semdFree_h)) {
-             return TRUE;
-         } else {                                                                           // La lista dei semd liberi non è vuota, ne spostiamo uno nella ASL e settiamo i suoi campi
-             struct list_head* first_free_semd_head = list_next(&semdFree_h);
-             list_del(first_free_semd_head);
-             list_add(first_free_semd_head, &semd_h);                                       // Spostiamo un semd dalla lista free all'ASL
-
-             target_semd = container_of(first_free_semd_head, struct semd_t, s_next);
-             target_semd->s_key = key;
-             p->p_semkey = key;
-             INIT_LIST_HEAD(&target_semd->s_procQ);
-         }
+         target_semd = retrieve_free_semd(key, p);
+         if (target_semd==NULL) return TRUE;
     }
+    p->p_semkey = key;
+
 
     insertProcQ(&target_semd->s_procQ, p);                                  // Ora che abbiamo il semd appropriato aggiungiamo il pcb alla sua lista dei processi
     return FALSE;
@@ -49,6 +85,7 @@ int insertBlocked(int *key,pcb_t* p) {
 // Sposta il target_semd nella lista dei semd liberi se la sua coda dei processi è vuota
 void freeSemdIfEmpty(struct semd_t* target_semd) {
     if (list_empty(&target_semd->s_procQ)) {                                // Siccome in seguito alla rimozione la lista di processi è vuota ritorniamo il semd alla lista dei liberi
+        DEBUG_LOG("Freeing semd since it's empty");
         list_del(&target_semd->s_next);
         list_add(&target_semd->s_next, &semdFree_h);
     }

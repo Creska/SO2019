@@ -12,6 +12,8 @@
 #define POINTERS_BITS                   32
 #define POINTERS_DIGITS                 32/4
 
+#define SYS_TERM    1
+
 struct terminal {
     termreg_t *reg;
 };
@@ -75,7 +77,7 @@ void term_putstr(terminal* term_reg, const char *str) {
 /* This function places the specified character string in okbuf and
  *	causes the string to be written out to terminal0 */
 void addokbuf(char *strp) {
-    term_putstr(get_terminal(0), strp);
+    term_putstr(get_terminal(SYS_TERM), strp);
 }
 
 
@@ -84,7 +86,7 @@ void addokbuf(char *strp) {
  *	the system shuts down with a panic message */
 void adderrbuf(char *strp) {
 
-    term_putstr(get_terminal(0), strp);
+    term_putstr(get_terminal(SYS_TERM), strp);
 
     PANIC();
 }
@@ -115,29 +117,6 @@ char *int_to_str_binary(int i, char *b) {
     }
     p = num_to_str_buf(i, "01", 2, p);
     *p = '\0';
-    return b;
-}
-
-char* ptr_to_str(void* p, char *b) {
-    b[0] = '0';
-    b[1] = 'x';
-
-    char* buf_p = b+2;      // Add leading 0s
-    int digits = 0;
-    int i = (int)p;
-    while (i) {
-        i = i / 16;
-        digits++;
-    }
-    digits = POINTERS_DIGITS - digits;
-    while (digits) {
-        *buf_p = '0';
-        buf_p++;
-        digits--;
-    }
-
-    char* first_free_char = num_to_str_buf((int)p, "0123456789ABCD", 16, buf_p);
-    *first_free_char = '\0';
     return b;
 }
 

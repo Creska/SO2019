@@ -17,8 +17,7 @@ void reset_state(state_t* s) {
 }
 
 
-//state_t della new_area
-void set_pc(state_t * s, void (*ptr)()) {       //ptr puntatore all'handler assumendolo con la signature void handler()
+void set_pc(state_t * s, void (*ptr)()) {
 s->pc_epc = (unsigned int)ptr;
 s->reg_t9 = (unsigned int)ptr;
 }
@@ -31,10 +30,11 @@ void set_sp(state_t *s, unsigned int sp_val) {
 
 void set_kernel_mode(state_t *s, unsigned int on) {
     if (on) {
-        s->status = s->status & (~STATUS_KUc);                                            // the kernel mode is on when the bit is 0
+        s->status = s->status & (~STATUS_KUc);                                  // the kernel mode is on when the bit is 0
     } else {
         s->status = s->status | (~STATUS_KUc);
     }
+
 }
 
 void set_virtual_mem(state_t *s, unsigned int on)
@@ -50,7 +50,7 @@ void set_other_interrupts(state_t *s, unsigned int on) {
     if (on) {
         s->status = s->status | (STATUS_IM_MASK & ~STATUS_IM(IL_TIMER)) | (1 << STATUS_IEc_BIT);         // Turn on all bits of the interrupt mask (plus the global bit)
     } else {
-        s->status = s->status & ~(STATUS_IM_MASK & ~STATUS_IM(IL_TIMER));       // Turn off all bits
+        s->status = s->status & ~(STATUS_IM_MASK & ~STATUS_IM(IL_TIMER));                                // Turn off all bits
     }
 }
 
@@ -63,17 +63,17 @@ void set_interval_timer_interrupts(state_t *s, unsigned int on) {
 }
 
 
-unsigned int get_exccode(state_t* state) {
+enum exc_code get_exccode(state_t* state) {
     unsigned int val = CAUSE_GET_EXCCODE(state->cause);
 
     switch (val) {
         case EXC_BP:
-            return EXCODE_BP;
+            return E_BP;
 
         case EXC_SYS:
-            return EXCODE_SYS;
+            return E_SYS;
 
         default:
-            return EXCODE_OTHER;
+            return E_OTHER;
     }
 }

@@ -1,4 +1,5 @@
 #include "core/processes/pcb.h"
+#include "utils/debug.h"
 
 
 pcb_t pcbFree_table[MAXPROC];           // L'array in cui effettivamente risiedono i nostri PCB
@@ -8,14 +9,14 @@ struct list_head pcbFree_h;             // L'elemento sentinella della lista di 
 void initPcbs(void) {
     INIT_LIST_HEAD(&pcbFree_h);
 
-    for (int i = MAXPROC-1; i >= 0; --i) {                             // Aggiunge tutti i pcb alla lista dei pcb liberi
+    for (int i = MAXPROC-1; i >= 0; --i) {          // Aggiunge tutti i pcb alla lista dei pcb liberi
         freePcb(&pcbFree_table[i]);
     }
 }
 
 
 void freePcb(pcb_t *p) {
-    list_add(&p->p_next, &pcbFree_h);                               // Utilizziamo p_next per gestire la coda dei pcb liberi
+    list_add(&p->p_next, &pcbFree_h);              // Utilizziamo p_next per gestire la coda dei pcb liberi
 }
 
 
@@ -28,13 +29,21 @@ pcb_t *allocPcb(void) {
                                                                                 // recuperiamo il pcb e inizializziamo a 0/NULL tutti i valori
         struct pcb_t* first_free_pcb = container_of(first_list_head, struct pcb_t, p_next);
         first_free_pcb->priority = 0;
+        first_free_pcb->original_priority = 0;
         first_free_pcb->p_semkey = NULL;
         first_free_pcb->p_parent = NULL;
         first_free_pcb->p_child.next = NULL;
         first_free_pcb->p_child.prev = NULL;
+        first_free_pcb->kernel_timer = 0;
+        first_free_pcb->user_timer = 0;
+        first_free_pcb->tod_cache = 0;
+        first_free_pcb->tod_at_start = 0;
         INIT_LIST_HEAD(&first_free_pcb->p_next);
         INIT_LIST_HEAD(&first_free_pcb->p_sib);
         reset_state(&first_free_pcb->p_s);
+        for (int i = 0; i < 6; ++i) {
+            first_free_pcb->spec_areas[i] = NULL;
+        }
 
         return first_free_pcb;
     }
@@ -52,6 +61,7 @@ int emptyProcQ(struct list_head *head) {
 
 
 void insertProcQ(struct list_head* head, pcb_t* p) {
+    DEBUG_LOG_INT("Inserting process ", get_pcb_index(p));
     struct pcb_t *target_pcb;
     list_for_each_entry(target_pcb, head, p_next) {
         if (p->priority > target_pcb->priority) {                                   // Abbiamo incontrato il primo elemento con priorità minore, inseriamo p tra lui e quello precedente
@@ -196,6 +206,8 @@ struct pcb_t* nextSibling(struct pcb_t* target_sibling, struct pcb_t* first_sibl
     }
 }
 
-unsigned int get_process_index(pcb_t *p) {
+unsigned int get_pcb_index(pcb_t *p) {
     return p-pcbFree_table;
 }
+
+
